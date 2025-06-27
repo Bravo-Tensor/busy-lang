@@ -28,6 +28,13 @@ Here's what you need to know about BUSY:
 
 3. **Governance Layering**: Runtimes can be nested, inherited, peer-to-peer, or layered in non-hierarchical ways. These relationships express accountability, resource negotiation, and autonomy constraints.
 
+3.1. **Dynamic vs Static: Multi-Level Architecture (L0/L1/L2)**:
+   - **L0 (Core Value Stream)**: The operational layer that delivers customer value through people, process, and software
+   - **L1 (Management Layer)**: Works ON the process rather than IN it. Handles cross-process optimizations, product management, agile processes, and project execution. Individuals may split time (e.g., 80% L0 IC work, 20% L1 process improvement)
+   - **L2 (Strategic Layer)**: Leadership layer for OKRs, budgets, and resource allocation. Sets direction, prioritizes projects, and manages strategic initiatives like hiring/scaling
+   - Changes flow downward: L2 budget decisions → L1 project execution → L0 process updates and redeployment
+   - This architecture handles organizational dynamics by providing structured channels for evolution while maintaining operational stability
+
 4. **Responsibilities**: Declarative statements of what a runtime is accountable for (e.g., "manage inventory", "optimize margin"). These responsibilities will breakdown into one of two types of functional structures: Roles (Classes/Objects) with Job Functions (Functions/Methods) or Playbooks (Process/Procedure) with Steps (Control flow). Both compile the same way but have similar differences to object oriented vs functional programming.
 
 5. **Interfaces**: BUSY includes interfaces for input/output between runtimes, describing what information flows are expected and when. Inputs and outputs between Roles and Playbooks are generally considered deliverables, an organization of information into a formal document, report, or spec. For instance a Warehouse Manager role may be invoked by a weekly "Manage Inventory" playbook. The Manager may have a job function of "Reconcile Inventory" that is the first step of the playbook. The input to this job function is either a link, query, or spreadsheet of the known inventory. The output of this job is an updated version of this. The important features of that spreadsheet should ideally be defined to catch inconsistencies at compile time rather than runtime.
