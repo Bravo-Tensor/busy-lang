@@ -1,0 +1,262 @@
+# BUSY Language Grammar Specification
+
+## Overview
+BUSY is a YAML-based domain-specific language for describing business organizations as code. This specification defines the formal grammar and syntax.
+
+## Core Grammar Rules
+
+### 1. Program Structure
+```yaml
+# Top-level BUSY file
+version: "1.0"
+metadata:
+  name: string
+  description: string
+  layer: "L0" | "L1" | "L2"
+  
+imports:
+  - tool: string
+    version: string
+  - advisor: string
+    interface: string
+
+teams:
+  - team_definition
+
+```
+
+### 2. Team Definition
+```yaml
+team:
+  name: string
+  type: "stream-aligned" | "enabling" | "complicated-subsystem" | "platform"
+  description: string
+  
+  roles:
+    - role_definition
+    
+  playbooks:
+    - playbook_definition
+    
+  resources:
+    - resource_definition
+    
+  governance:
+    escalation_path: string
+    decision_authority: string[]
+```
+
+### 3. Role Definition (OOP-style)
+```yaml
+role:
+  name: string
+  inherits_from: string?
+  description: string
+  
+  onboarding:
+    - step: string
+      duration: duration
+      
+  tasks:
+    - task_definition
+    
+  responsibilities:
+    - string
+    
+  interfaces:
+    inputs: deliverable_spec[]
+    outputs: deliverable_spec[]
+```
+
+### 4. Playbook Definition (Functional-style)
+```yaml
+playbook:
+  name: string
+  description: string
+  cadence: cadence_spec
+  
+  inputs: deliverable_spec[]
+  outputs: deliverable_spec[]
+  
+  steps:
+    - step_definition
+    
+  issue_resolution:
+    - resolution_definition
+```
+
+### 5. Task/Step Definition
+```yaml
+task:
+  name: string
+  description: string
+  execution_type: "algorithmic" | "ai_agent" | "human" | "human_creative"
+  
+  inputs: deliverable_spec[]
+  outputs: deliverable_spec[]
+  
+  # For algorithmic tasks
+  algorithm: string?
+  
+  # For AI tasks
+  agent_prompt: string?
+  context_gathering: string[]?
+  
+  # For human tasks
+  ui_type: "form" | "meeting" | "writing_session" | "strategy_session"?
+  facilitation: facilitation_spec?
+  
+  # Exception handling
+  issues:
+    - issue_type: string
+      resolution: resolution_spec
+      
+  # Metadata
+  tags: string[]
+  estimated_duration: duration
+```
+
+### 6. Deliverable Specification
+```yaml
+deliverable:
+  name: string
+  type: "document" | "data" | "decision" | "approval"
+  format: string
+  schema: schema_definition?
+  required_fields: string[]?
+  validation_rules: validation_spec[]?
+```
+
+### 7. Resource Definition
+```yaml
+resource:
+  type: "time" | "people" | "capital" | "attention" | "tooling"
+  allocation: number
+  unit: string
+  constraints: constraint_spec[]?
+```
+
+### 8. Cadence Specification
+```yaml
+cadence:
+  frequency: "daily" | "weekly" | "monthly" | "quarterly" | "on_demand" | "triggered"
+  schedule: cron_expression?
+  trigger_events: string[]?
+```
+
+### 9. Issue Resolution
+```yaml
+resolution:
+  type: "escalate" | "override" | "delegate" | "pause" | "ai_assist"
+  target: string?
+  conditions: condition_spec[]?
+  timeout: duration?
+  fallback: resolution_spec?
+```
+
+### 10. Validation Rules
+```yaml
+validation:
+  rule_type: "required" | "format" | "range" | "dependency" | "conflict"
+  condition: string
+  error_message: string
+  severity: "error" | "warning" | "info"
+```
+
+## Type Definitions
+
+### Duration
+```
+duration: string  # "1h", "30m", "2d", "1w", etc.
+```
+
+### Cron Expression
+```
+cron_expression: string  # Standard cron format
+```
+
+### Schema Definition
+```yaml
+schema:
+  type: "json" | "csv" | "xml" | "custom"
+  definition: string | object
+```
+
+## Example Usage
+
+```yaml
+version: "1.0"
+metadata:
+  name: "GrowthOps Team"
+  description: "Sales lead qualification and conversion"
+  layer: "L0"
+
+imports:
+  - tool: "salesforce"
+    version: "^2.0"
+  - advisor: "sales-methodology"
+    interface: "mql-criteria"
+
+teams:
+  - team:
+      name: "GrowthOps"
+      type: "stream-aligned"
+      
+      roles:
+        - role:
+            name: "SDR"
+            description: "Sales Development Representative"
+            responsibilities:
+              - "Qualify inbound leads"
+              - "Book discovery meetings"
+            
+            tasks:
+              - task:
+                  name: "qualify_lead"
+                  execution_type: "human"
+                  ui_type: "form"
+                  inputs:
+                    - deliverable:
+                        name: "raw_lead"
+                        type: "data"
+                        required_fields: ["name", "email", "source"]
+                  outputs:
+                    - deliverable:
+                        name: "qualified_lead"
+                        type: "decision"
+                        validation_rules:
+                          - validation:
+                              rule_type: "required"
+                              condition: "status in ['qualified', 'disqualified']"
+                              error_message: "Lead must be qualified or disqualified"
+                  
+                  issues:
+                    - issue_type: "unclear_intent"
+                      resolution:
+                        type: "escalate"
+                        target: "AE"
+                        timeout: "2h"
+      
+      playbooks:
+        - playbook:
+            name: "Weekly Lead Review"
+            cadence:
+              frequency: "weekly"
+              schedule: "0 9 * * MON"
+            
+            steps:
+              - task:
+                  name: "review_pipeline"
+                  execution_type: "ai_agent"
+                  agent_prompt: "Analyze lead pipeline and identify bottlenecks"
+                  context_gathering: ["salesforce_data", "team_capacity"]
+```
+
+## Compilation Targets
+
+The BUSY compiler should generate:
+1. **Runtime Configuration**: JSON/YAML for Orgata runtime
+2. **UI Specifications**: React/Vue components for human interfaces  
+3. **AI Agent Configs**: Prompts and tool configurations
+4. **Integration Specs**: API calls and data transformations
+5. **Monitoring/Logging**: Telemetry and audit trail setup
