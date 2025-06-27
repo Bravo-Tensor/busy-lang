@@ -35,6 +35,15 @@ Here's what you need to know about BUSY:
    - Changes flow downward: L2 budget decisions → L1 project execution → L0 process updates and redeployment
    - This architecture handles organizational dynamics by providing structured channels for evolution while maintaining operational stability
 
+3.2. **Exception Handling for Unexpected Situations**:
+   - When processes encounter situations not accounted for at design time, they raise an "issue" (like a code exception)
+   - Execution freezes/pauses, logging state, parameters, and issue details for later review
+   - Governance-based resolution: person can manually override, escalate to manager/advisor, or consult AI assistance
+   - "Backend access" allows temporary data manipulation, validation overrides, or routing changes as needed
+   - All exceptions and resolutions are logged for retrospective analysis (typically in L1 layer)
+   - Like debugging software: identify root cause, update relevant .busy files, and redeploy the improved process
+   - Prevents rigid processes from forcing workarounds while maintaining governance and learning loops
+
 4. **Responsibilities**: Declarative statements of what a runtime is accountable for (e.g., "manage inventory", "optimize margin"). These responsibilities will breakdown into one of two types of functional structures: Roles (Classes/Objects) with Job Functions (Functions/Methods) or Playbooks (Process/Procedure) with Steps (Control flow). Both compile the same way but have similar differences to object oriented vs functional programming.
 
 5. **Interfaces**: BUSY includes interfaces for input/output between runtimes, describing what information flows are expected and when. Inputs and outputs between Roles and Playbooks are generally considered deliverables, an organization of information into a formal document, report, or spec. For instance a Warehouse Manager role may be invoked by a weekly "Manage Inventory" playbook. The Manager may have a job function of "Reconcile Inventory" that is the first step of the playbook. The input to this job function is either a link, query, or spreadsheet of the known inventory. The output of this job is an updated version of this. The important features of that spreadsheet should ideally be defined to catch inconsistencies at compile time rather than runtime.
