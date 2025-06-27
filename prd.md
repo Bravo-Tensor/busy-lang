@@ -55,6 +55,19 @@ Here's what you need to know about BUSY:
    - Example: enabling team creates processes/interfaces → compiles to "call service" → other teams integrate as "chat with expert" widget
    - Teams can integrate enabling team libraries for real-time expert consultation during process execution
 
+4.1. **Human Factors: Ambiguity, Politics, and Judgment Calls**:
+   - LLMs enable bidirectional translation: high-dimensional human judgment ↔ low-dimensional algorithmic execution
+   - Framework designed to maximize human time on creativity/nuanced decisions, minimize paper-pushing drudgery
+   - High-dimensional human problems get different interface generation approaches:
+     * AI-facilitated meetings with context gathering and decision assistance
+     * "Writing sessions" with AI as muse and reviewer for creative work
+     * Strategy sessions with AI pre-reads synthesizing market research and trends
+   - Process steps can be dynamically elevated when complexity is discovered:
+     * Simple algorithmic → AI agent decision-making → Full human-in-the-loop
+   - Context gathering: AI assembles all necessary background, research, and insights before human engagement
+   - Goal: Business-as-code becomes creativity amplifier, not creativity constraint
+   - Humans focus on high-value judgment while automation handles structured execution
+
 5. **Responsibilities**: Declarative statements of what a runtime is accountable for (e.g., "manage inventory", "optimize margin"). These responsibilities will breakdown into one of two types of functional structures: Roles (Classes/Objects) with Job Functions (Functions/Methods) or Playbooks (Process/Procedure) with Steps (Control flow). Both compile the same way but have similar differences to object oriented vs functional programming.
 
 6. **Interfaces**: BUSY includes interfaces for input/output between runtimes, describing what information flows are expected and when. Inputs and outputs between Roles and Playbooks are generally considered deliverables, an organization of information into a formal document, report, or spec. For instance a Warehouse Manager role may be invoked by a weekly "Manage Inventory" playbook. The Manager may have a job function of "Reconcile Inventory" that is the first step of the playbook. The input to this job function is either a link, query, or spreadsheet of the known inventory. The output of this job is an updated version of this. The important features of that spreadsheet should ideally be defined to catch inconsistencies at compile time rather than runtime.
