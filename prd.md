@@ -1,11 +1,3 @@
-**Prompt: Explain and help compile the BUSY language**
-
-You are an expert in domain-specific languages (DSLs), systems design, and compiler architecture. I’m building a language called **BUSY** (short for *Business System*), which is a structured way to describe the composition and interaction of business units, responsibilities, and operating environments. It is not a general-purpose language, but a semantic modeling language for organizations—similar to an operating system for businesses.
-
-Here's what you need to know about BUSY:
-
----
-
 **Core Concepts**:
 
 1. **Runtime**:
@@ -76,17 +68,6 @@ Here's what you need to know about BUSY:
 
 8. **Versioning and Change**: Runtimes evolve. BUSY includes constructs to express versioning, migration strategies, and change propagation rules. As issues are fixed discovered, optimizations explored and ideas had, the humans will return generate updates to the BUSY files that will follow the deployment cycle and deploy, following a traditional CI/CD and infrastructure-as-code paradigm.
 
----
-
-**Goal**: I want you to begin designing a compiler or interpreter for the BUSY language. The compiler should be able to:
-
-* Parse a BUSY file (a structured YAML file) into an abstract representation of business units and their relationships.
-* Validate internal consistency and surface governance mismatches, unnegotiated responsibilities, incoherent processes, or deliverables that don't match their template definition.
-* Output a visualization and a structured JSON schema representing the live organizational architecture, independent of the organization's available resources.
-* Eventually, we'll generate the Orgata runtime to actually host and interface with the running business.
-
----
-
 **Example Input (Pseudo-BUSY)**:
 
 ```busy
@@ -116,15 +97,3 @@ If there's disagreement about lead quality:
 
 Salesforce should be updated with notes and status for every lead worked.
 ```
-
----
-
-**Instructions**:
-
-1. Explain how you would structure a compiler pipeline for BUSY (tokenizer, parser, semantic validator, IR, etc.).
-2. Define a minimal but extensible grammar for BUSY. Use the busy-keywords.md for reference.
-3. Help build data structures to represent runtimes, responsibilities, and dependencies.
-4. Begin prototyping validation rules and conflict detection.
-5. Prepare outputs for visual inspection (e.g., Graphviz, Mermaid) or export to JSON for integration with other tools.
-
----
