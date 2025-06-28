@@ -50,12 +50,54 @@ The BUSY ecosystem consists of three primary components that work together to tr
 
 **Key Constraints**:
 - Process definitions specify: inputs required, execution steps, tools/imports needed, timing estimates
-- Roles assume generic capabilities - no specific person assignments
+- Roles and Playbooks are aliases for the same concept (class definitions) post-compilation
+- Team definitions are contextual charters, not redundant role listings
+- Roles/Playbooks assume generic capabilities - no specific person assignments
 - Dependencies and timing defined, but not detailed orchestration
 - Must be version controlled (git-based workflow)
-- Namespace structure: `Org->Team->Role` maps to file structure
+- Namespace structure: `Org->Layer->Team->(Roles|Playbooks)` maps to file structure
 - Compile-time validation for consistency and dependencies
 - Support for imports/packages for external dependencies
+
+**File/Folder Structure Model**:
+```
+org/
+  L0/                 # Operational layer
+    growthops/
+      team.busy       # Charter/context document
+      roles/
+        sdr.busy
+        ae.busy
+      playbooks/
+        lead-qualification.busy
+  L1/                 # Management layer  
+    process-optimization/
+      team.busy
+      roles/
+        process-analyst.busy
+      playbooks/
+        weekly-retrospective.busy
+  L2/                 # Strategic layer
+    executive/
+      team.busy
+      roles/
+        strategy-lead.busy
+      playbooks/
+        quarterly-planning.busy
+```
+
+**Team Definition Purpose**:
+- Provide context for LLM validation of new roles/playbooks
+- Document team boundaries and high-level responsibilities
+- Interface documentation for other teams and layers
+- Generate team "API documentation" from aggregate role/playbook definitions
+- NO manual maintenance of role/playbook lists (auto-discovered from filesystem)
+
+**Inter-Layer Interface Design Choices**:
+- **API Model**: L0 teams expose explicit interfaces, L1 "representatives" interact via defined contracts
+- **Server-Side Rendering Model**: L0 teams render higher-level interfaces directly to L1 consumers
+- **Choice deferred to implementation**: Both patterns supported, teams decide based on complexity and coupling needs
+- **Layer isolation enforced**: Regardless of interface style, layers run in separate Orgata runtime instances
 
 ### 2. BUSY Compiler
 
@@ -132,14 +174,13 @@ Output Artifacts
 
 ### 4. OSTEAOS (Operating System)
 
-**Purpose**: Resource allocation, isolation, and governance for business runtimes
+**Purpose**: System integrity, isolation, and governance for business runtimes
 
 **Core Functions**:
-- **Runtime Orchestration**: Translate recipe requirements into actual execution
 - **Runtime Isolation**: L0/L1/L2 boundary enforcement  
-- **Inter-Runtime Communication**: Message passing and negotiation
-- **Dynamic Resource Coordination**: Handle real-time constraint satisfaction and re-resourcing
-- **Security/Governance**: Permission and constraint enforcement
+- **Inter-Runtime Communication**: Message passing and negotiation between runtimes
+- **System Integrity**: Ensure runtimes don't crash or interfere with each other
+- **Security/Governance**: Permission and constraint enforcement across runtime boundaries
 - **Monitoring**: System-wide telemetry and health checks
 
 **Runtime Coordination Model**:
@@ -150,7 +191,7 @@ process_requirements:
   dependencies: ["input_data", "system_access"]
   tools_needed: ["import: salesforce", "import: email_system"]
   
-# OSTEAOS/Orgata handles runtime coordination
+# Orgata Runtime handles coordination
 runtime_coordination:
   constraint_satisfaction: "match available capabilities to requirements"
   dynamic_assignment: "assign actual people to generic roles at runtime"
