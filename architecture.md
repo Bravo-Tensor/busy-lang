@@ -16,12 +16,11 @@ The BUSY ecosystem consists of three primary components that work together to tr
 │                          OSTEAOS                                │
 │                    (Business Operating System)                  │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   L2 Runtime    │  │   L1 Runtime    │  │   L0 Runtime    │ │
-│  │   (Strategic)   │  │  (Management)   │  │ (Operational)   │ │
+│  │ Orgata Runtime  │  │ Orgata Runtime  │  │ Orgata Runtime  │ │
 │  │                 │  │                 │  │                 │ │
 │  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │ │
-│  │ │   Orgata    │ │  │ │   Orgata    │ │  │ │   Orgata    │ │ │
-│  │ │  Instance   │ │  │ │  Instance   │ │  │ │  Instance   │ │ │
+│  │ │L2 Instance  │ │  │ │L1 Instance  │ │  │ │L0 Instance  │ │ │
+│  │ │(Strategic)  │◄├──┤►│(Management) │◄├──┤►│(Operational)│ │ │
 │  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -47,9 +46,12 @@ The BUSY ecosystem consists of three primary components that work together to tr
 
 **Purpose**: Human-readable DSL for defining business processes
 **Format**: YAML-based with strict schema
-**Scope**: Team definitions, roles, playbooks, interfaces, resources
+**Scope**: Team definitions, roles, playbooks, interfaces, requirements
 
 **Key Constraints**:
+- Process definitions specify: inputs required, execution steps, tools/imports needed, timing estimates
+- Roles assume generic capabilities - no specific person assignments
+- Dependencies and timing defined, but not detailed orchestration
 - Must be version controlled (git-based workflow)
 - Namespace structure: `Org->Team->Role` maps to file structure
 - Compile-time validation for consistency and dependencies
@@ -133,27 +135,27 @@ Output Artifacts
 **Purpose**: Resource allocation, isolation, and governance for business runtimes
 
 **Core Functions**:
-- **Resource Management**: Time, people, capital, attention allocation
+- **Runtime Orchestration**: Translate recipe requirements into actual execution
 - **Runtime Isolation**: L0/L1/L2 boundary enforcement  
 - **Inter-Runtime Communication**: Message passing and negotiation
+- **Dynamic Resource Coordination**: Handle real-time constraint satisfaction and re-resourcing
 - **Security/Governance**: Permission and constraint enforcement
 - **Monitoring**: System-wide telemetry and health checks
 
-**Resource Types**:
+**Runtime Coordination Model**:
 ```yaml
-resources:
-  time:
-    allocation: hours_per_week
-    constraints: [business_hours, timezone]
-  people: 
-    allocation: fte_equivalent
-    constraints: [skills, availability]
-  capital:
-    allocation: budget_amount
-    constraints: [approval_levels, categories]
-  attention:
-    allocation: priority_weight
-    constraints: [focus_blocks, interruption_rules]
+# BUSY files define process-level requirements
+process_requirements:
+  timing_estimates: "2h prep, 30m execution"
+  dependencies: ["input_data", "system_access"]
+  tools_needed: ["import: salesforce", "import: email_system"]
+  
+# OSTEAOS/Orgata handles runtime coordination
+runtime_coordination:
+  constraint_satisfaction: "match available capabilities to requirements"
+  dynamic_assignment: "assign actual people to generic roles at runtime"
+  plan_adaptation: "handle changes as playbook progresses"
+  escalation_paths: "delegate to L1 manager when conflicts arise"
 ```
 
 ## Data Flow Architecture
