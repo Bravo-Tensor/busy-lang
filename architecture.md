@@ -183,20 +183,34 @@ Output Artifacts
 - **Security/Governance**: Permission and constraint enforcement across runtime boundaries
 - **Monitoring**: System-wide telemetry and health checks
 
-**Runtime Coordination Model**:
+**Resource Estimation and Feasibility Model**:
 ```yaml
 # BUSY files define process-level requirements
 process_requirements:
   timing_estimates: "2h prep, 30m execution"
   dependencies: ["input_data", "system_access"]
   tools_needed: ["import: salesforce", "import: email_system"]
+  cadence: "daily"
   
-# Orgata Runtime handles coordination
-runtime_coordination:
-  constraint_satisfaction: "match available capabilities to requirements"
-  dynamic_assignment: "assign actual people to generic roles at runtime"
-  plan_adaptation: "handle changes as playbook progresses"
-  escalation_paths: "delegate to L1 manager when conflicts arise"
+# Compiler generates resource estimation
+compiler_analysis:
+  estimated_capacity_needed:
+    daily_time_requirement: "2.5h per person per day"
+    concurrent_roles_needed: 2
+    tools_access_windows: ["9am-5pm for salesforce"]
+    dependency_wait_times: "15m avg for input_data"
+    
+  feasibility_check:
+    target_resources: "3 people, 8h/day available"
+    analysis: "FEASIBLE - 7.5h total capacity vs 5h estimated need"
+    bottlenecks: ["salesforce access contention during peak hours"]
+    recommendations: ["stagger execution times", "pre-cache input_data"]
+    
+# Alternative: Author sets constraints, compiler validates
+author_constraints:
+  available_capacity: "2 people, 6h/day"
+  required_completion: "daily by 3pm"
+  compiler_response: "NOT FEASIBLE - need 2.5h per person but only 1.5h scheduled slack time"
 ```
 
 ## Data Flow Architecture
