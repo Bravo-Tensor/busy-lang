@@ -1,0 +1,321 @@
+version: "1.0"
+metadata:
+  name: "Photo Production Playbook"
+  description: "Complete photography production workflow from shoot execution to delivery"
+  layer: "L0"
+
+imports:
+  - tool: "lightroom"
+    version: "^13.0"
+  - tool: "dropbox"
+    version: "^3.0"
+  - advisor: "photography-workflow"
+    interface: "production-standards"
+
+playbook:
+  name: "photo_production"
+  description: "End-to-end photo production from shoot execution to final client delivery"
+  cadence:
+    frequency: "triggered"
+    trigger_events: ["shoot_date_confirmed"]
+  
+  inputs:
+    - deliverable:
+        name: "comprehensive_shoot_brief"
+        type: "document"
+        format: "json"
+        required_fields: ["shoot_specifications", "location_logistics", "client_profile"]
+  
+  outputs:
+    - deliverable:
+        name: "final_deliverables"
+        type: "data"
+        format: "delivery_package"
+        validation_rules:
+          - validation:
+              rule_type: "required"
+              condition: "client_approved AND delivery_complete"
+              error_message: "Delivery requires client approval confirmation"
+  
+  steps:
+    - task:
+        name: "equipment_preparation"
+        description: "Prepare and check all photography equipment"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "45m"
+        
+        inputs:
+          - deliverable:
+              name: "comprehensive_shoot_brief"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "equipment_checklist_complete"
+              type: "decision"
+              format: "json"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "all_equipment_verified AND backup_equipment_ready"
+                    error_message: "Must verify all equipment and backup options"
+        
+        issues:
+          - issue_type: "equipment_malfunction"
+            resolution:
+              type: "escalate"
+              target: "equipment_backup_protocol"
+              timeout: "2h"
+    
+    - task:
+        name: "execute_photoshoot"
+        description: "Conduct photography session according to brief"
+        execution_type: "human_creative"
+        estimated_duration: "4h"
+        
+        inputs:
+          - deliverable:
+              name: "equipment_checklist_complete"
+              type: "decision"
+              format: "json"
+          - deliverable:
+              name: "comprehensive_shoot_brief"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "raw_image_collection"
+              type: "data"
+              format: "raw_files"
+              validation_rules:
+                - validation:
+                    rule_type: "range"
+                    condition: "image_count >= brief.minimum_shots * 1.5"
+                    error_message: "Must capture 150% of minimum required shots"
+        
+        issues:
+          - issue_type: "weather_conditions"
+            resolution:
+              type: "override"
+              conditions: ["indoor_backup_available"]
+              fallback:
+                type: "delegate"
+                target: "reschedule_protocol"
+          - issue_type: "technical_difficulties"
+            resolution:
+              type: "pause"
+              timeout: "30m"
+    
+    - task:
+        name: "immediate_backup"
+        description: "Secure backup of all captured images"
+        execution_type: "algorithmic"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "raw_image_collection"
+              type: "data"
+              format: "raw_files"
+        
+        outputs:
+          - deliverable:
+              name: "secured_images"
+              type: "data"
+              format: "backed_up_files"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "backup_locations >= 3"
+                    error_message: "Must have at least 3 backup locations"
+        
+        algorithm: "automated_multi_location_backup"
+    
+    - task:
+        name: "initial_cull_and_select"
+        description: "First pass selection of best images"
+        execution_type: "human_creative"
+        estimated_duration: "1.5h"
+        
+        inputs:
+          - deliverable:
+              name: "secured_images"
+              type: "data"
+              format: "backed_up_files"
+          - deliverable:
+              name: "comprehensive_shoot_brief"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "initial_selection"
+              type: "data"
+              format: "image_list"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "selected_images": "array",
+                    "selection_criteria": "object",
+                    "estimated_edit_time": "string"
+                  }
+    
+    - task:
+        name: "post_processing"
+        description: "Edit and enhance selected images"
+        execution_type: "human_creative"
+        estimated_duration: "6h"
+        
+        inputs:
+          - deliverable:
+              name: "initial_selection"
+              type: "data"
+              format: "image_list"
+        
+        outputs:
+          - deliverable:
+              name: "edited_images"
+              type: "data"
+              format: "processed_images"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "consistent_style AND color_corrected"
+                    error_message: "Images must have consistent style and color correction"
+        
+        issues:
+          - issue_type: "challenging_lighting_correction"
+            resolution:
+              type: "ai_assist"
+              agent_prompt: "Suggest advanced correction techniques for difficult lighting"
+    
+    - task:
+        name: "client_preview_gallery"
+        description: "Create preview gallery for client review"
+        execution_type: "algorithmic"
+        estimated_duration: "20m"
+        
+        inputs:
+          - deliverable:
+              name: "edited_images"
+              type: "data"
+              format: "processed_images"
+        
+        outputs:
+          - deliverable:
+              name: "preview_gallery"
+              type: "document"
+              format: "web_gallery"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "watermarked AND password_protected"
+                    error_message: "Preview must be watermarked and password protected"
+        
+        algorithm: "gallery_generation_with_watermarks"
+    
+    - task:
+        name: "client_review_and_feedback"
+        description: "Present gallery to client for review and selections"
+        execution_type: "human"
+        ui_type: "meeting"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "preview_gallery"
+              type: "document"
+              format: "web_gallery"
+        
+        outputs:
+          - deliverable:
+              name: "client_selections"
+              type: "data"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "approved_images": "array",
+                    "revision_requests": "array",
+                    "additional_edits": "array",
+                    "approval_status": "string"
+                  }
+        
+        facilitation:
+          agenda:
+            - "Gallery walkthrough (15m)"
+            - "Client feedback and selections (10m)"
+            - "Revision discussion and timeline (5m)"
+    
+    - task:
+        name: "final_delivery_preparation"
+        description: "Prepare final deliverables in all required formats"
+        execution_type: "algorithmic"
+        estimated_duration: "45m"
+        
+        inputs:
+          - deliverable:
+              name: "client_selections"
+              type: "data"
+              format: "json"
+          - deliverable:
+              name: "edited_images"
+              type: "data"
+              format: "processed_images"
+        
+        outputs:
+          - deliverable:
+              name: "delivery_package"
+              type: "data"
+              format: "final_deliverables"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "high_resolution": "folder_path",
+                    "web_optimized": "folder_path",
+                    "print_ready": "folder_path",
+                    "usage_rights": "document",
+                    "delivery_method": "string"
+                  }
+        
+        algorithm: "multi_format_export_and_packaging"
+    
+    - task:
+        name: "client_delivery"
+        description: "Deliver final images to client"
+        execution_type: "algorithmic"
+        estimated_duration: "15m"
+        
+        inputs:
+          - deliverable:
+              name: "delivery_package"
+              type: "data"
+              format: "final_deliverables"
+        
+        outputs:
+          - deliverable:
+              name: "delivery_confirmation"
+              type: "document"
+              format: "email"
+        
+        algorithm: "secure_delivery_with_confirmation"
+  
+  issue_resolution:
+    - resolution:
+        type: "escalate"
+        conditions: ["client_approval_pending > 7d"]
+        target: "project_coordinator"
+        timeout: "24h"
+    - resolution:
+        type: "pause"
+        conditions: ["technical_equipment_failure"]
+        timeout: "24h"
+        fallback:
+          type: "delegate"
+          target: "equipment_replacement_protocol"

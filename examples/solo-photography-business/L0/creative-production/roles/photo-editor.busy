@@ -1,0 +1,131 @@
+version: "1.0"
+metadata:
+  name: "Photo Editor Role"
+  description: "Post-processing specialist responsible for image editing and final delivery preparation"
+  layer: "L0"
+
+role:
+  name: "photo_editor"
+  description: "Technical and creative specialist responsible for post-processing, color correction, and final image preparation"
+  
+  onboarding:
+    - step: "Master editing software and workflow templates"
+      duration: "2h"
+    - step: "Learn brand style guide and editing standards"
+      duration: "1h"
+    - step: "Setup batch processing and export protocols"
+      duration: "45m"
+  
+  responsibilities:
+    - "Edit and enhance raw images according to style guide"
+    - "Perform color correction and technical adjustments"
+    - "Prepare final deliverables in required formats"
+    - "Maintain consistent visual brand across all work"
+  
+  tasks:
+    - task:
+        name: "cull_and_select"
+        description: "Review and select best images from shoot"
+        execution_type: "human_creative"
+        estimated_duration: "1h"
+        
+        inputs:
+          - deliverable:
+              name: "organized_raw_images"
+              type: "data"
+              format: "folder_structure"
+          - deliverable:
+              name: "client_specifications"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "selected_images"
+              type: "data"
+              format: "image_list"
+              validation_rules:
+                - validation:
+                    rule_type: "range"
+                    condition: "selected_count >= package.minimum_deliverables"
+                    error_message: "Must select minimum required deliverables"
+    
+    - task:
+        name: "edit_images"
+        description: "Apply post-processing and enhancements"
+        execution_type: "human_creative"
+        estimated_duration: "3h"
+        
+        inputs:
+          - deliverable:
+              name: "selected_images"
+              type: "data"
+              format: "image_list"
+          - deliverable:
+              name: "style_guide"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "edited_images"
+              type: "data"
+              format: "processed_images"
+              validation_rules:
+                - validation:
+                    rule_type: "format"
+                    condition: "export_format in ['JPEG', 'PNG', 'TIFF']"
+                    error_message: "Must export in approved formats"
+                - validation:
+                    rule_type: "required"
+                    condition: "includes_metadata"
+                    error_message: "Images must include copyright metadata"
+        
+        issues:
+          - issue_type: "challenging_lighting_conditions"
+            resolution:
+              type: "ai_assist"
+              agent_prompt: "Suggest advanced editing techniques for difficult lighting"
+              timeout: "15m"
+    
+    - task:
+        name: "prepare_delivery"
+        description: "Format and organize final deliverables"
+        execution_type: "algorithmic"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "edited_images"
+              type: "data"
+              format: "processed_images"
+        
+        outputs:
+          - deliverable:
+              name: "final_deliverables"
+              type: "data"
+              format: "delivery_package"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "high_res_folder": "path",
+                    "web_res_folder": "path", 
+                    "print_ready_folder": "path",
+                    "metadata": "object"
+                  }
+        
+        algorithm: "automated_export_and_packaging"
+  
+  interfaces:
+    inputs:
+      - deliverable:
+          name: "raw_content"
+          type: "data"
+          format: "image_files"
+    
+    outputs:
+      - deliverable:
+          name: "processed_deliverables"
+          type: "data"
+          format: "final_images"

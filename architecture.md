@@ -183,16 +183,20 @@ Output Artifacts
 - **Security/Governance**: Permission and constraint enforcement across runtime boundaries
 - **Monitoring**: System-wide telemetry and health checks
 
+----- below still needs review ------
 **Resource Estimation and Feasibility Model**:
 ```yaml
 # BUSY files define process-level requirements
-process_requirements:
-  timing_estimates: "2h prep, 30m execution"
-  dependencies: ["input_data", "system_access"]
-  tools_needed: ["import: salesforce", "import: email_system"]
+playbook_requirements:
+  timing_estimates: 
+    prep: "30m"
+    execution: "1hr"
+    cleanup: none
   cadence: "daily"
-  
-# Compiler generates resource estimation
+```
+
+**Compiler generated resource estimation
+```yaml  
 compiler_analysis:
   estimated_capacity_needed:
     daily_time_requirement: "2.5h per person per day"

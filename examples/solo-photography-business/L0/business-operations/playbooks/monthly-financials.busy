@@ -1,0 +1,309 @@
+version: "1.0"
+metadata:
+  name: "Monthly Financial Management Playbook"
+  description: "Monthly financial reporting and business health assessment"
+  layer: "L0"
+
+imports:
+  - tool: "quickbooks"
+    version: "^2024"
+  - tool: "excel"
+    version: "^365"
+  - advisor: "small-business-finance"
+    interface: "monthly-reporting"
+
+playbook:
+  name: "monthly_financials"
+  description: "Comprehensive monthly financial review and planning process"
+  cadence:
+    frequency: "monthly"
+    schedule: "0 9 1 * *"  # 9 AM on 1st of each month
+  
+  inputs:
+    - deliverable:
+        name: "monthly_transactions"
+        type: "data"
+        format: "accounting_data"
+        required_fields: ["income", "expenses", "accounts_receivable", "accounts_payable"]
+  
+  outputs:
+    - deliverable:
+        name: "financial_health_report"
+        type: "document"
+        format: "pdf"
+        validation_rules:
+          - validation:
+              rule_type: "required"
+              condition: "includes_pnl AND cash_flow AND recommendations"
+              error_message: "Report must include P&L, cash flow, and recommendations"
+  
+  steps:
+    - task:
+        name: "reconcile_accounts"
+        description: "Reconcile all business accounts and transactions"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "1h"
+        
+        inputs:
+          - deliverable:
+              name: "monthly_transactions"
+              type: "data"
+              format: "accounting_data"
+        
+        outputs:
+          - deliverable:
+              name: "reconciled_accounts"
+              type: "data"
+              format: "json"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "all_accounts_balanced"
+                    error_message: "All accounts must be reconciled and balanced"
+        
+        issues:
+          - issue_type: "unreconciled_transactions"
+            resolution:
+              type: "ai_assist"
+              agent_prompt: "Identify potential matches for unreconciled transactions"
+    
+    - task:
+        name: "generate_profit_loss"
+        description: "Create monthly profit and loss statement"
+        execution_type: "algorithmic"
+        estimated_duration: "15m"
+        
+        inputs:
+          - deliverable:
+              name: "reconciled_accounts"
+              type: "data"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "profit_loss_statement"
+              type: "document"
+              format: "financial_report"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "total_revenue": "number",
+                    "total_expenses": "number",
+                    "net_profit": "number",
+                    "expense_breakdown": "object",
+                    "revenue_sources": "object"
+                  }
+        
+        algorithm: "automated_pnl_generation"
+    
+    - task:
+        name: "cash_flow_analysis"
+        description: "Analyze cash flow patterns and projections"
+        execution_type: "algorithmic"
+        estimated_duration: "20m"
+        
+        inputs:
+          - deliverable:
+              name: "reconciled_accounts"
+              type: "data"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "cash_flow_report"
+              type: "document"
+              format: "financial_report"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "includes_3_month_projection"
+                    error_message: "Must include 3-month cash flow projection"
+        
+        algorithm: "cash_flow_analysis_with_projection"
+    
+    - task:
+        name: "expense_analysis"
+        description: "Categorize and analyze business expenses"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "45m"
+        
+        inputs:
+          - deliverable:
+              name: "profit_loss_statement"
+              type: "document"
+              format: "financial_report"
+        
+        outputs:
+          - deliverable:
+              name: "expense_analysis"
+              type: "document"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "fixed_expenses": "object",
+                    "variable_expenses": "object",
+                    "discretionary_expenses": "object",
+                    "expense_trends": "array",
+                    "optimization_opportunities": "array"
+                  }
+    
+    - task:
+        name: "tax_preparation_status"
+        description: "Review tax preparation and compliance status"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "profit_loss_statement"
+              type: "document"
+              format: "financial_report"
+          - deliverable:
+              name: "expense_analysis"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "tax_status_report"
+              type: "document"
+              format: "json"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "quarterly_estimates_calculated"
+                    error_message: "Must calculate quarterly tax estimates"
+        
+        issues:
+          - issue_type: "complex_deduction_questions"
+            resolution:
+              type: "escalate"
+              target: "tax_advisor"
+              timeout: "7d"
+    
+    - task:
+        name: "business_health_assessment"
+        description: "Assess overall business financial health"
+        execution_type: "ai_agent"
+        estimated_duration: "20m"
+        
+        inputs:
+          - deliverable:
+              name: "profit_loss_statement"
+              type: "document"
+              format: "financial_report"
+          - deliverable:
+              name: "cash_flow_report"
+              type: "document"
+              format: "financial_report"
+          - deliverable:
+              name: "expense_analysis"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "health_assessment"
+              type: "document"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "overall_score": "number",
+                    "strengths": "array",
+                    "concerns": "array",
+                    "recommendations": "array",
+                    "action_items": "array"
+                  }
+        
+        agent_prompt: "Analyze financial data and provide business health assessment with specific recommendations"
+        context_gathering: ["industry_benchmarks", "seasonal_trends"]
+    
+    - task:
+        name: "generate_monthly_report"
+        description: "Compile comprehensive monthly financial report"
+        execution_type: "algorithmic"
+        estimated_duration: "25m"
+        
+        inputs:
+          - deliverable:
+              name: "profit_loss_statement"
+              type: "document"
+              format: "financial_report"
+          - deliverable:
+              name: "cash_flow_report"
+              type: "document"
+              format: "financial_report"
+          - deliverable:
+              name: "expense_analysis"
+              type: "document"
+              format: "json"
+          - deliverable:
+              name: "health_assessment"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "comprehensive_monthly_report"
+              type: "document"
+              format: "pdf"
+        
+        algorithm: "financial_report_compilation"
+    
+    - task:
+        name: "planning_next_month"
+        description: "Plan financial goals and actions for next month"
+        execution_type: "human"
+        ui_type: "strategy_session"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "comprehensive_monthly_report"
+              type: "document"
+              format: "pdf"
+          - deliverable:
+              name: "health_assessment"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "next_month_financial_plan"
+              type: "document"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "revenue_targets": "object",
+                    "expense_budgets": "object",
+                    "action_items": "array",
+                    "monitoring_metrics": "array"
+                  }
+        
+        facilitation:
+          agenda:
+            - "Review previous month performance (10m)"
+            - "Identify improvement opportunities (10m)"
+            - "Set targets for next month (8m)"
+            - "Define action items and metrics (2m)"
+  
+  issue_resolution:
+    - resolution:
+        type: "escalate"
+        conditions: ["cash_flow_negative > 30d"]
+        target: "business_owner"
+        timeout: "24h"
+    - resolution:
+        type: "ai_assist"
+        conditions: ["expense_anomaly_detected"]
+        agent_prompt: "Investigate unusual expense patterns and suggest explanations"

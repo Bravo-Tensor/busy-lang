@@ -1,0 +1,241 @@
+version: "1.0"
+metadata:
+  name: "Client Onboarding Playbook"
+  description: "New client onboarding from booking confirmation to shoot preparation"
+  layer: "L0"
+
+imports:
+  - tool: "google-forms"
+    version: "^2.0"
+  - tool: "google-drive"
+    version: "^3.0"
+  - advisor: "client-experience"
+    interface: "onboarding-best-practices"
+
+playbook:
+  name: "client_onboarding"
+  description: "Comprehensive onboarding process to set expectations and gather shoot requirements"
+  cadence:
+    frequency: "triggered"
+    trigger_events: ["booking_confirmed"]
+  
+  inputs:
+    - deliverable:
+        name: "confirmed_booking"
+        type: "data"
+        format: "json"
+        required_fields: ["client_info", "event_details", "package_selected"]
+  
+  outputs:
+    - deliverable:
+        name: "onboarding_complete"
+        type: "decision"
+        format: "json"
+        validation_rules:
+          - validation:
+              rule_type: "required"
+              condition: "questionnaire_completed AND timeline_confirmed"
+              error_message: "Onboarding requires completed questionnaire and timeline"
+  
+  steps:
+    - task:
+        name: "send_welcome_package"
+        description: "Send welcome email with onboarding materials"
+        execution_type: "algorithmic"
+        estimated_duration: "10m"
+        
+        inputs:
+          - deliverable:
+              name: "confirmed_booking"
+              type: "data"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "welcome_email"
+              type: "document"
+              format: "email"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "includes_questionnaire_link AND preparation_guide"
+                    error_message: "Welcome email must include questionnaire and prep guide"
+        
+        algorithm: "personalized_welcome_generation"
+    
+    - task:
+        name: "client_questionnaire"
+        description: "Collect detailed shoot requirements and preferences"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "20m"
+        
+        inputs:
+          - deliverable:
+              name: "welcome_email"
+              type: "document"
+              format: "email"
+        
+        outputs:
+          - deliverable:
+              name: "client_questionnaire_responses"
+              type: "data"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "event_vision": "string",
+                    "must_have_shots": "array",
+                    "family_dynamics": "object",
+                    "location_preferences": "array",
+                    "style_references": "array",
+                    "special_requests": "string"
+                  }
+        
+        issues:
+          - issue_type: "incomplete_responses"
+            resolution:
+              type: "ai_assist"
+              agent_prompt: "Generate follow-up questions for missing information"
+    
+    - task:
+        name: "timeline_planning"
+        description: "Create detailed project timeline and milestones"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "client_questionnaire_responses"
+              type: "data"
+              format: "json"
+          - deliverable:
+              name: "confirmed_booking"
+              type: "data"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "project_timeline"
+              type: "document"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "shoot_date": "date",
+                    "pre_shoot_call": "date",
+                    "delivery_date": "date",
+                    "milestones": "array",
+                    "client_responsibilities": "array"
+                  }
+    
+    - task:
+        name: "location_scouting_coordination"
+        description: "Coordinate location details and logistics"
+        execution_type: "human"
+        ui_type: "form"
+        estimated_duration: "25m"
+        
+        inputs:
+          - deliverable:
+              name: "client_questionnaire_responses"
+              type: "data"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "location_details"
+              type: "document"
+              format: "json"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "includes_address AND parking_info AND backup_plan"
+                    error_message: "Location details must include address, parking, and backup"
+        
+        issues:
+          - issue_type: "location_access_restrictions"
+            resolution:
+              type: "escalate"
+              target: "client"
+              timeout: "48h"
+    
+    - task:
+        name: "pre_shoot_call"
+        description: "Final preparation call before shoot"
+        execution_type: "human"
+        ui_type: "meeting"
+        estimated_duration: "20m"
+        
+        inputs:
+          - deliverable:
+              name: "project_timeline"
+              type: "document"
+              format: "json"
+          - deliverable:
+              name: "location_details"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "shoot_readiness_confirmation"
+              type: "decision"
+              format: "json"
+        
+        facilitation:
+          agenda:
+            - "Final timeline confirmation (5m)"
+            - "Location and logistics review (8m)"
+            - "Shot list and expectations (5m)"
+            - "Day-of contact and contingencies (2m)"
+    
+    - task:
+        name: "shoot_preparation_handoff"
+        description: "Package all requirements for creative team"
+        execution_type: "algorithmic"
+        estimated_duration: "15m"
+        
+        inputs:
+          - deliverable:
+              name: "shoot_readiness_confirmation"
+              type: "decision"
+              format: "json"
+          - deliverable:
+              name: "client_questionnaire_responses"
+              type: "data"
+              format: "json"
+          - deliverable:
+              name: "location_details"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "comprehensive_shoot_brief"
+              type: "document"
+              format: "json"
+              schema:
+                type: "json"
+                definition: |
+                  {
+                    "client_profile": "object",
+                    "shoot_specifications": "object",
+                    "location_logistics": "object",
+                    "equipment_requirements": "array",
+                    "timeline": "object"
+                  }
+        
+        algorithm: "shoot_brief_compilation"
+  
+  issue_resolution:
+    - resolution:
+        type: "pause"
+        conditions: ["client_questionnaire_overdue > 72h"]
+        timeout: "5d"
+        fallback:
+          type: "escalate"
+          target: "project_coordinator"

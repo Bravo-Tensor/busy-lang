@@ -1,0 +1,111 @@
+version: "1.0"
+metadata:
+  name: "Photographer Role"
+  description: "Primary creative role responsible for photo capture and artistic direction"
+  layer: "L0"
+
+role:
+  name: "photographer"
+  description: "Creative lead responsible for photography execution, artistic direction, and technical image capture"
+  
+  onboarding:
+    - step: "Equipment checklist and maintenance protocols"
+      duration: "1h"
+    - step: "Style guide review and creative brief templates"
+      duration: "45m"
+    - step: "Backup and workflow procedures"
+      duration: "30m"
+  
+  responsibilities:
+    - "Execute photography shoots according to client specifications"
+    - "Provide artistic direction and creative guidance"
+    - "Ensure technical quality of all captured images"
+    - "Manage equipment and backup procedures during shoots"
+  
+  tasks:
+    - task:
+        name: "execute_photoshoot"
+        description: "Conduct photography session"
+        execution_type: "human_creative"
+        estimated_duration: "4h"
+        
+        inputs:
+          - deliverable:
+              name: "shoot_brief"
+              type: "document"
+              format: "json"
+              required_fields: ["shot_list", "style_requirements", "technical_specs"]
+          - deliverable:
+              name: "equipment_checklist"
+              type: "document"
+              format: "json"
+        
+        outputs:
+          - deliverable:
+              name: "raw_images"
+              type: "data"
+              format: "raw_files"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "image_count >= shot_list.minimum_shots"
+                    error_message: "Must capture minimum required shots"
+                - validation:
+                    rule_type: "format"
+                    condition: "all_files.format in ['RAW', 'DNG']"
+                    error_message: "All files must be in RAW format"
+        
+        issues:
+          - issue_type: "equipment_failure"
+            resolution:
+              type: "pause"
+              timeout: "30m"
+              fallback:
+                type: "delegate"
+                target: "backup_equipment"
+          - issue_type: "weather_conditions"
+            resolution:
+              type: "override"
+              conditions: ["indoor_alternative_available"]
+    
+    - task:
+        name: "backup_and_organize"
+        description: "Secure image backup and initial organization"
+        execution_type: "algorithmic"
+        estimated_duration: "30m"
+        
+        inputs:
+          - deliverable:
+              name: "raw_images"
+              type: "data"
+              format: "raw_files"
+        
+        outputs:
+          - deliverable:
+              name: "organized_raw_images"
+              type: "data"
+              format: "folder_structure"
+              validation_rules:
+                - validation:
+                    rule_type: "required"
+                    condition: "backup_copies >= 2"
+                    error_message: "Must have at least 2 backup copies"
+        
+        algorithm: "automated_folder_creation_and_backup"
+  
+  interfaces:
+    inputs:
+      - deliverable:
+          name: "shoot_schedule"
+          type: "data"
+          format: "calendar_event"
+    
+    outputs:
+      - deliverable:
+          name: "captured_content"
+          type: "data"
+          format: "image_collection"
+      - deliverable:
+          name: "shoot_notes"
+          type: "document"
+          format: "json"

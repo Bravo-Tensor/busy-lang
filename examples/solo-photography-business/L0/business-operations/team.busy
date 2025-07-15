@@ -1,0 +1,40 @@
+version: "1.0"
+metadata:
+  name: "Business Operations Team"
+  description: "Financial management, legal compliance, and business infrastructure"
+  layer: "L0"
+
+imports:
+  - tool: "quickbooks"
+    version: "^2024"
+  - tool: "docusign"
+    version: "^3.0"
+  - tool: "google-workspace"
+    version: "^2.0"
+  - advisor: "small-business-accounting"
+    interface: "tax-compliance"
+
+team:
+  name: "Business Operations"
+  type: "platform"
+  description: "Foundational business services supporting all other operations"
+  
+  governance:
+    escalation_path: "business_owner"
+    decision_authority: ["financial_decisions", "legal_compliance", "vendor_management"]
+  
+  interfaces:
+    external:
+      - "Banking and payment processors"
+      - "Insurance providers"
+      - "Tax authorities"
+      - "Equipment vendors"
+    internal:
+      - "Client Operations for contract management"
+      - "Creative Production for equipment tracking"
+  
+  success_metrics:
+    - "Invoice generation within 24h of delivery"
+    - "Payment collection within 30 days"
+    - "Expense tracking accuracy 100%"
+    - "Tax compliance 100%"

@@ -1,0 +1,39 @@
+version: "1.0"
+metadata:
+  name: "Client Operations Team"
+  description: "Manages client relationships, inquiries, bookings, and service delivery"
+  layer: "L0"
+
+imports:
+  - tool: "calendly"
+    version: "^3.0"
+  - tool: "gmail"
+    version: "^2.0"
+  - tool: "stripe"
+    version: "^4.0"
+  - advisor: "customer-service"
+    interface: "inquiry-response"
+
+team:
+  name: "Client Operations"
+  type: "stream-aligned"
+  description: "End-to-end client lifecycle management from initial inquiry to project delivery"
+  
+  governance:
+    escalation_path: "business_owner"
+    decision_authority: ["client_communications", "scheduling", "payment_processing"]
+  
+  interfaces:
+    external:
+      - "Client inquiries via website contact form"
+      - "Social media direct messages"
+      - "Referral contacts"
+    internal:
+      - "Creative Production team for shoot requirements"
+      - "Business Operations for invoicing and contracts"
+  
+  success_metrics:
+    - "Response time to inquiries < 4 hours"
+    - "Booking conversion rate > 30%"
+    - "Client satisfaction score > 4.5/5"
+    - "Payment collection rate > 95%"
