@@ -1,0 +1,558 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://busy-lang.org/schemas/busy-schema.json",
+  "title": "BUSY Language Schema",
+  "description": "Complete JSON Schema for BUSY language files (.busy)",
+  "type": "object",
+  "required": ["version", "metadata"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "description": "BUSY language version (semver)"
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata"
+    },
+    "imports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/import"
+      },
+      "description": "External tool and advisor imports"
+    },
+    "teams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/team"
+      },
+      "description": "Team definitions (team.busy files only)"
+    },
+    "team": {
+      "$ref": "#/definitions/team",
+      "description": "Single team definition (team.busy files only)"
+    },
+    "role": {
+      "$ref": "#/definitions/role",
+      "description": "Role definition (role files only)"
+    },
+    "playbook": {
+      "$ref": "#/definitions/playbook",
+      "description": "Playbook definition (playbook files only)"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "metadata": {
+      "type": "object",
+      "required": ["name", "description", "layer"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable name"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Detailed description"
+        },
+        "layer": {
+          "type": "string",
+          "enum": ["L0", "L1", "L2"],
+          "description": "Organizational layer (L0=Operational, L1=Management, L2=Strategic)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "import": {
+      "type": "object",
+      "oneOf": [
+        {
+          "required": ["tool", "version"],
+          "properties": {
+            "tool": {
+              "type": "string",
+              "description": "Tool name (e.g., salesforce, stripe)"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^[\\^~]?\\d+\\.\\d+(\\.\\d+)?$",
+              "description": "Version constraint (semver)"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": ["advisor", "interface"],
+          "properties": {
+            "advisor": {
+              "type": "string",
+              "description": "Advisor name"
+            },
+            "interface": {
+              "type": "string",
+              "description": "Interface specification"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "team": {
+      "type": "object",
+      "required": ["name", "type", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["stream-aligned", "enabling", "complicated-subsystem", "platform"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/role"
+          }
+        },
+        "playbooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/playbook"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resource"
+          }
+        },
+        "governance": {
+          "$ref": "#/definitions/governance"
+        },
+        "interfaces": {
+          "$ref": "#/definitions/team_interfaces"
+        },
+        "success_metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "role": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Role identifier (snake_case)"
+        },
+        "inherits_from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Parent role for inheritance"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "onboarding": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/onboarding_step"
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/task"
+          }
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "interfaces": {
+          "$ref": "#/definitions/role_interface"
+        }
+      },
+      "additionalProperties": false
+    },
+    "playbook": {
+      "type": "object",
+      "required": ["name", "description", "cadence"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "description": "Playbook identifier (kebab-case)"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cadence": {
+          "$ref": "#/definitions/cadence"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deliverable"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deliverable"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/task"
+          }
+        },
+        "issue_resolution": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resolution"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "required": ["name", "description", "execution_type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution_type": {
+          "type": "string",
+          "enum": ["algorithmic", "ai_agent", "human", "human_creative"]
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deliverable"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deliverable"
+          }
+        },
+        "estimated_duration": {
+          "type": "string",
+          "pattern": "^\\d+[mhd]$",
+          "description": "Duration in minutes (m), hours (h), or days (d)"
+        },
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm name for algorithmic tasks"
+        },
+        "agent_prompt": {
+          "type": "string",
+          "description": "AI agent prompt"
+        },
+        "context_gathering": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Context sources for AI agents"
+        },
+        "ui_type": {
+          "type": "string",
+          "enum": ["form", "meeting", "writing_session", "strategy_session"],
+          "description": "UI type for human tasks"
+        },
+        "facilitation": {
+          "$ref": "#/definitions/facilitation"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/issue"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "deliverable": {
+      "type": "object",
+      "required": ["name", "type", "format"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["document", "data", "decision", "approval"]
+        },
+        "format": {
+          "type": "string",
+          "examples": ["json", "pdf", "email", "csv", "xml"]
+        },
+        "schema": {
+          "$ref": "#/definitions/schema_definition"
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validation_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/validation"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "schema_definition": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["json", "csv", "xml", "custom"]
+        },
+        "definition": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "object"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "required": ["rule_type", "condition", "error_message"],
+      "properties": {
+        "rule_type": {
+          "type": "string",
+          "enum": ["required", "format", "range", "dependency", "conflict"]
+        },
+        "condition": {
+          "type": "string"
+        },
+        "error_message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning", "info"],
+          "default": "error"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cadence": {
+      "type": "object",
+      "required": ["frequency"],
+      "properties": {
+        "frequency": {
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly", "quarterly", "on_demand", "triggered"]
+        },
+        "schedule": {
+          "type": "string",
+          "description": "Cron expression for scheduled cadences"
+        },
+        "trigger_events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Event names that trigger execution"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resource": {
+      "type": "object",
+      "required": ["type", "allocation", "unit"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["time", "people", "capital", "attention", "tooling"]
+        },
+        "allocation": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "examples": ["hours/week", "FTE", "USD", "focus-hours/day"]
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "escalation_path": {
+          "type": "string"
+        },
+        "decision_authority": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "team_interfaces": {
+      "type": "object",
+      "properties": {
+        "external": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internal": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "role_interface": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deliverable"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deliverable"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "onboarding_step": {
+      "type": "object",
+      "required": ["step", "duration"],
+      "properties": {
+        "step": {
+          "type": "string",
+          "minLength": 1
+        },
+        "duration": {
+          "type": "string",
+          "pattern": "^\\d+[mhd]$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "facilitation": {
+      "type": "object",
+      "properties": {
+        "agenda": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "required": ["issue_type", "resolution"],
+      "properties": {
+        "issue_type": {
+          "type": "string"
+        },
+        "resolution": {
+          "$ref": "#/definitions/resolution"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["escalate", "override", "delegate", "pause", "ai_assist"]
+        },
+        "target": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^\\d+[mhd]$"
+        },
+        "fallback": {
+          "$ref": "#/definitions/resolution"
+        },
+        "agent_prompt": {
+          "type": "string",
+          "description": "AI agent prompt for ai_assist resolution"
+        },
+        "context_gathering": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Context sources for AI assistance"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
