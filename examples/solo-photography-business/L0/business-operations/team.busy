@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Business Operations Team"
   description: "Financial management, legal compliance, and business infrastructure"
@@ -6,11 +6,11 @@ metadata:
 
 imports:
   - tool: "quickbooks"
-    version: "^2024"
+    version: "^2024.0.0"
   - tool: "docusign"
-    version: "^3.0"
+    version: "^3.0.0"
   - tool: "google-workspace"
-    version: "^2.0"
+    version: "^2.0.0"
   - advisor: "small-business-accounting"
     interface: "tax-compliance"
 

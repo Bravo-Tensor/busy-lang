@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Project Coordinator Role"
   description: "Manages active client projects from booking to delivery"
@@ -23,79 +23,69 @@ role:
     - "Ensure delivery standards and timelines are met"
   
   tasks:
-    - task:
-        name: "project_kickoff"
-        description: "Initiate project workflow and timeline"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "30m"
-        
-        inputs:
-          - deliverable:
-              name: "signed_booking"
-              type: "document"
-              format: "pdf"
-              required_fields: ["client_details", "event_details", "package_specs"]
-        
-        outputs:
-          - deliverable:
-              name: "project_timeline"
-              type: "document"
-              format: "json"
-              validation_rules:
-                - validation:
-                    rule_type: "required"
-                    condition: "includes_shoot_date AND delivery_date"
-                    error_message: "Timeline must include key milestone dates"
+    - name: "project_kickoff"
+      description: "Initiate project workflow and timeline"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "30m"
+      
+      inputs:
+        - name: "signed_booking"
+          type: "document"
+          format: "pdf"
+          required_fields: ["client_details", "event_details", "package_specs"]
+      
+      outputs:
+        - name: "project_timeline"
+          type: "document"
+          format: "json"
+          validation_rules:
+            - rule_type: "required"
+              condition: "includes_shoot_date AND delivery_date"
+              error_message: "Timeline must include key milestone dates"
     
-    - task:
-        name: "pre_shoot_coordination"
-        description: "Coordinate shoot logistics and preparation"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "20m"
-        
-        inputs:
-          - deliverable:
-              name: "project_timeline"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "shoot_brief"
-              type: "document"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "location": "string",
-                    "equipment_needed": "array",
-                    "shot_list": "array",
-                    "timeline": "object"
-                  }
-        
-        issues:
-          - issue_type: "venue_access_issues"
-            resolution:
-              type: "escalate"
-              target: "client"
-              timeout: "24h"
+    - name: "pre_shoot_coordination"
+      description: "Coordinate shoot logistics and preparation"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "20m"
+      
+      inputs:
+        - name: "project_timeline"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "shoot_brief"
+          type: "document"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "location": "string",
+                "equipment_needed": "array",
+                "shot_list": "array",
+                "timeline": "object"
+              }
+      
+      issues:
+        - issue_type: "venue_access_issues"
+          resolution:
+            type: "escalate"
+            target: "client"
+            timeout: "24h"
   
   interfaces:
     inputs:
-      - deliverable:
-          name: "active_bookings"
-          type: "data"
-          format: "json"
+      - name: "active_bookings"
+        type: "data"
+        format: "json"
     
     outputs:
-      - deliverable:
-          name: "project_status_updates"
-          type: "data"
-          format: "json"
-      - deliverable:
-          name: "shoot_requirements"
-          type: "data"
-          format: "json"
+      - name: "project_status_updates"
+        type: "data"
+        format: "json"
+      - name: "shoot_requirements"
+        type: "data"
+        format: "json"

@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Inquiry Manager Role"
   description: "Handles initial client inquiries and lead qualification"
@@ -23,60 +23,53 @@ role:
     - "Maintain inquiry tracking and follow-up schedule"
   
   tasks:
-    - task:
-        name: "respond_to_inquiry"
-        description: "Initial response to prospective client inquiry"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "15m"
-        
-        inputs:
-          - deliverable:
-              name: "client_inquiry"
-              type: "data"
-              format: "email"
-              required_fields: ["name", "email", "event_type", "date", "budget_range"]
-        
-        outputs:
-          - deliverable:
-              name: "qualification_response"
-              type: "document"
-              format: "email"
-              validation_rules:
-                - validation:
-                    rule_type: "required"
-                    condition: "includes_pricing_guide AND includes_portfolio_link"
-                    error_message: "Response must include pricing guide and portfolio"
-        
-        issues:
-          - issue_type: "incomplete_inquiry"
-            resolution:
-              type: "ai_assist"
-              conditions: ["missing > 2 required fields"]
-              timeout: "1h"
+    - name: "respond_to_inquiry"
+      description: "Initial response to prospective client inquiry"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "15m"
+      
+      inputs:
+        - name: "client_inquiry"
+          type: "data"
+          format: "email"
+          required_fields: ["name", "email", "event_type", "date", "budget_range"]
+      
+      outputs:
+        - name: "qualification_response"
+          type: "document"
+          format: "email"
+          validation_rules:
+            - rule_type: "required"
+              condition: "includes_pricing_guide AND includes_portfolio_link"
+              error_message: "Response must include pricing guide and portfolio"
+      
+      issues:
+        - issue_type: "incomplete_inquiry"
+          resolution:
+            type: "ai_assist"
+            conditions: ["missing > 2 required fields"]
+            timeout: "1h"
   
   interfaces:
     inputs:
-      - deliverable:
-          name: "website_inquiries"
-          type: "data"
-          format: "json"
-      - deliverable:
-          name: "social_media_dms"
-          type: "data"
-          format: "json"
+      - name: "website_inquiries"
+        type: "data"
+        format: "json"
+      - name: "social_media_dms"
+        type: "data"
+        format: "json"
     
     outputs:
-      - deliverable:
-          name: "qualified_leads"
-          type: "data"
-          format: "json"
-          schema:
-            type: "json"
-            definition: |
-              {
-                "lead_id": "string",
-                "qualification_score": "number",
-                "next_action": "string",
-                "consultation_scheduled": "boolean"
-              }
+      - name: "qualified_leads"
+        type: "data"
+        format: "json"
+        schema:
+          type: "json"
+          definition: |
+            {
+              "lead_id": "string",
+              "qualification_score": "number",
+              "next_action": "string",
+              "consultation_scheduled": "boolean"
+            }

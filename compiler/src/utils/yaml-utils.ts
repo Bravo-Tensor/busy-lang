@@ -136,7 +136,7 @@ export class YamlParser {
   getPositionForPath(parsed: ParsedYaml, path: (string | number)[]): SourcePosition | null {
     try {
       // Navigate to the node at the specified path
-      let node = parsed.document.contents;
+      let node: YAML.Node | null = parsed.document.contents;
       
       for (const segment of path) {
         if (!node) break;
@@ -145,9 +145,9 @@ export class YamlParser {
           const pair = node.items.find(item => 
             YAML.isScalar(item.key) && item.key.value === segment
           );
-          node = pair?.value || null;
+          node = (pair?.value as YAML.Node) ?? null;
         } else if (typeof segment === 'number' && YAML.isSeq(node)) {
-          node = node.items[segment] || null;
+          node = (node.items[segment] as YAML.Node) ?? null;
         } else {
           return null;
         }
@@ -169,7 +169,7 @@ export class YamlParser {
   getRangeForPath(parsed: ParsedYaml, path: (string | number)[]): SourceRange | null {
     try {
       // Navigate to the node at the specified path
-      let node = parsed.document.contents;
+      let node: YAML.Node | null = parsed.document.contents;
       
       for (const segment of path) {
         if (!node) break;
@@ -178,9 +178,9 @@ export class YamlParser {
           const pair = node.items.find(item => 
             YAML.isScalar(item.key) && item.key.value === segment
           );
-          node = pair?.value || null;
+          node = (pair?.value as YAML.Node) ?? null;
         } else if (typeof segment === 'number' && YAML.isSeq(node)) {
-          node = node.items[segment] || null;
+          node = (node.items[segment] as YAML.Node) ?? null;
         } else {
           return null;
         }

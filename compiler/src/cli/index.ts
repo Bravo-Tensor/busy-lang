@@ -5,6 +5,23 @@
  * Command-line interface for the BUSY language compiler
  */
 
+// Register path mappings for compiled JS
+import { register } from 'tsconfig-paths';
+import * as path from 'path';
+
+// Register the path mappings
+register({
+  baseUrl: path.resolve(__dirname, '..'),
+  paths: {
+    '@/*': ['*'],
+    '@/ast/*': ['ast/*'],
+    '@/analysis/*': ['analysis/*'],
+    '@/core/*': ['core/*'],
+    '@/symbols/*': ['symbols/*'],
+    '@/utils/*': ['utils/*']
+  }
+});
+
 import { Command } from 'commander';
 import { ValidateCommand } from './commands/validate';
 import { AnalyzeCommand } from './commands/analyze';

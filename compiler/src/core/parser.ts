@@ -283,12 +283,12 @@ export class Parser {
         const filePath = scanResult.files[index];
         
         if (result.status === 'fulfilled') {
-          if (result.value.success) {
+          if (result.value.success && result.value.file) {
             parsedFiles.push(result.value.file);
           } else {
             parseErrors.push({
               filePath,
-              error: result.value.error,
+              error: result.value.error || new Error('Unknown parse error'),
               line: result.value.line,
               column: result.value.column
             });
@@ -305,12 +305,12 @@ export class Parser {
       for (const filePath of scanResult.files) {
         try {
           const result = await this.parseFile(filePath);
-          if (result.success) {
+          if (result.success && result.file) {
             parsedFiles.push(result.file);
           } else {
             parseErrors.push({
               filePath,
-              error: result.error,
+              error: result.error || new Error('Unknown parse error'),
               line: result.line,
               column: result.column
             });
@@ -476,7 +476,7 @@ export class Parser {
     const content = parsedFile.yaml.data;
     
     // Validate version format
-    if (!/^\\d+\\.\\d+(\\.\\d+)?$/.test(content.version)) {
+    if (!/^\d+\.\d+(\.\d+)?$/.test(content.version)) {
       errors.push(`Invalid version format '${content.version}'. Expected semver format (e.g., '1.0' or '1.0.0')`);
     }
     
@@ -600,7 +600,7 @@ export class Parser {
     }
     
     // Validate duration format
-    if (task.estimated_duration && !/^\\d+[mhd]$/.test(task.estimated_duration)) {
+    if (task.estimated_duration && !/^\d+[mhd]$/.test(task.estimated_duration)) {
       errors.push(`Invalid duration format '${task.estimated_duration}' for task '${task.name}'. Use format like '30m', '2h', '1d'`);
     }
   }

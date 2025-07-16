@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Vendor Management Playbook"
   description: "Vendor relationship management and procurement processes"
@@ -20,315 +20,277 @@ playbook:
     schedule: "0 10 1 */3 *"  # 10 AM on 1st of every 3rd month
   
   inputs:
-    - deliverable:
-        name: "vendor_requirements"
-        type: "data"
-        format: "json"
-        required_fields: ["service_type", "budget_range", "timeline", "quality_standards"]
+    - name: "vendor_requirements"
+      type: "data"
+      format: "json"
+      required_fields: ["service_type", "budget_range", "timeline", "quality_standards"]
   
   outputs:
-    - deliverable:
-        name: "vendor_portfolio_update"
-        type: "document"
-        format: "json"
-        validation_rules:
-          - validation:
-              rule_type: "required"
-              condition: "all_vendors_reviewed AND contracts_current"
-              error_message: "All vendors must be reviewed with current contracts"
+    - name: "vendor_portfolio_update"
+      type: "document"
+      format: "json"
+      validation_rules:
+        - rule_type: "required"
+          condition: "all_vendors_reviewed AND contracts_current"
+          error_message: "All vendors must be reviewed with current contracts"
   
   steps:
-    - task:
-        name: "vendor_needs_assessment"
-        description: "Assess current and future vendor requirements"
-        execution_type: "human"
-        ui_type: "strategy_session"
-        estimated_duration: "45m"
-        
-        inputs:
-          - deliverable:
-              name: "business_growth_projections"
-              type: "data"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "vendor_needs_analysis"
-              type: "document"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "current_vendors": "array",
-                    "service_gaps": "array",
-                    "future_requirements": "array",
-                    "budget_allocations": "object"
-                  }
-        
-        facilitation:
-          agenda:
-            - "Review current vendor performance (15m)"
-            - "Identify service gaps and needs (15m)"
-            - "Plan future vendor requirements (10m)"
-            - "Budget allocation planning (5m)"
+    - name: "vendor_needs_assessment"
+      description: "Assess current and future vendor requirements"
+      execution_type: "human"
+      ui_type: "strategy_session"
+      estimated_duration: "45m"
+      
+      inputs:
+        - name: "business_growth_projections"
+          type: "data"
+          format: "json"
+      
+      outputs:
+        - name: "vendor_needs_analysis"
+          type: "document"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "current_vendors": "array",
+                "service_gaps": "array",
+                "future_requirements": "array",
+                "budget_allocations": "object"
+              }
+      
+      facilitation:
+        agenda:
+          - "Review current vendor performance (15m)"
+          - "Identify service gaps and needs (15m)"
+          - "Plan future vendor requirements (10m)"
+          - "Budget allocation planning (5m)"
     
-    - task:
-        name: "vendor_research_and_sourcing"
-        description: "Research and identify potential new vendors"
-        execution_type: "ai_agent"
-        estimated_duration: "1h"
-        
-        inputs:
-          - deliverable:
-              name: "vendor_needs_analysis"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "vendor_candidates"
-              type: "document"
-              format: "json"
-              validation_rules:
-                - validation:
-                    rule_type: "range"
-                    condition: "candidates_per_category >= 3"
-                    error_message: "Must identify at least 3 candidates per service category"
-        
-        agent_prompt: "Research vendors for photography business needs including equipment suppliers, insurance providers, and professional services"
-        context_gathering: ["industry_directories", "vendor_reviews", "pricing_data"]
+    - name: "vendor_research_and_sourcing"
+      description: "Research and identify potential new vendors"
+      execution_type: "ai_agent"
+      estimated_duration: "1h"
+      
+      inputs:
+        - name: "vendor_needs_analysis"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "vendor_candidates"
+          type: "document"
+          format: "json"
+          validation_rules:
+            - rule_type: "range"
+              condition: "candidates_per_category >= 3"
+              error_message: "Must identify at least 3 candidates per service category"
+      
+      agent_prompt: "Research vendors for photography business needs including equipment suppliers, insurance providers, and professional services"
+      context_gathering: ["industry_directories", "vendor_reviews", "pricing_data"]
     
-    - task:
-        name: "vendor_evaluation"
-        description: "Evaluate vendor candidates against criteria"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "2h"
-        
-        inputs:
-          - deliverable:
-              name: "vendor_candidates"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "vendor_evaluation_matrix"
-              type: "document"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "evaluation_criteria": "object",
-                    "vendor_scores": "array",
-                    "recommendations": "array",
-                    "preferred_vendors": "array"
-                  }
-        
-        issues:
-          - issue_type: "insufficient_vendor_information"
-            resolution:
-              type: "ai_assist"
-              agent_prompt: "Generate follow-up questions for vendor information gaps"
+    - name: "vendor_evaluation"
+      description: "Evaluate vendor candidates against criteria"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "2h"
+      
+      inputs:
+        - name: "vendor_candidates"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "vendor_evaluation_matrix"
+          type: "document"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "evaluation_criteria": "object",
+                "vendor_scores": "array",
+                "recommendations": "array",
+                "preferred_vendors": "array"
+              }
+      
+      issues:
+        - issue_type: "insufficient_vendor_information"
+          resolution:
+            type: "ai_assist"
+            agent_prompt: "Generate follow-up questions for vendor information gaps"
     
-    - task:
-        name: "vendor_negotiations"
-        description: "Negotiate terms and contracts with selected vendors"
-        execution_type: "human"
-        ui_type: "meeting"
-        estimated_duration: "3h"
-        
-        inputs:
-          - deliverable:
-              name: "vendor_evaluation_matrix"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "negotiated_agreements"
-              type: "document"
-              format: "json"
-              validation_rules:
-                - validation:
-                    rule_type: "required"
-                    condition: "includes_pricing AND terms AND sla"
-                    error_message: "Agreements must include pricing, terms, and SLA"
-        
-        issues:
-          - issue_type: "unfavorable_terms"
-            resolution:
-              type: "escalate"
-              target: "business_owner"
-              timeout: "48h"
+    - name: "vendor_negotiations"
+      description: "Negotiate terms and contracts with selected vendors"
+      execution_type: "human"
+      ui_type: "meeting"
+      estimated_duration: "3h"
+      
+      inputs:
+        - name: "vendor_evaluation_matrix"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "negotiated_agreements"
+          type: "document"
+          format: "json"
+          validation_rules:
+            - rule_type: "required"
+              condition: "includes_pricing AND terms AND sla"
+              error_message: "Agreements must include pricing, terms, and SLA"
+      
+      issues:
+        - issue_type: "unfavorable_terms"
+          resolution:
+            type: "escalate"
+            target: "business_owner"
+            timeout: "48h"
     
-    - task:
-        name: "contract_creation_and_execution"
-        description: "Create formal contracts and execute agreements"
-        execution_type: "algorithmic"
-        estimated_duration: "1h"
-        
-        inputs:
-          - deliverable:
-              name: "negotiated_agreements"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "executed_contracts"
-              type: "document"
-              format: "pdf_collection"
-              validation_rules:
-                - validation:
-                    rule_type: "required"
-                    condition: "all_parties_signed"
-                    error_message: "All contracts must be fully executed"
-        
-        algorithm: "contract_generation_and_digital_signature"
+    - name: "contract_creation_and_execution"
+      description: "Create formal contracts and execute agreements"
+      execution_type: "algorithmic"
+      estimated_duration: "1h"
+      
+      inputs:
+        - name: "negotiated_agreements"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "executed_contracts"
+          type: "document"
+          format: "pdf_collection"
+          validation_rules:
+            - rule_type: "required"
+              condition: "all_parties_signed"
+              error_message: "All contracts must be fully executed"
+      
+      algorithm: "contract_generation_and_digital_signature"
     
-    - task:
-        name: "vendor_onboarding"
-        description: "Onboard new vendors and setup operational procedures"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "1.5h"
-        
-        inputs:
-          - deliverable:
-              name: "executed_contracts"
-              type: "document"
-              format: "pdf_collection"
-        
-        outputs:
-          - deliverable:
-              name: "vendor_onboarding_complete"
-              type: "document"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "vendor_profiles": "array",
-                    "contact_information": "object",
-                    "ordering_procedures": "object",
-                    "payment_terms": "object",
-                    "performance_metrics": "array"
-                  }
+    - name: "vendor_onboarding"
+      description: "Onboard new vendors and setup operational procedures"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "90m"
+      
+      inputs:
+        - name: "executed_contracts"
+          type: "document"
+          format: "pdf_collection"
+      
+      outputs:
+        - name: "vendor_onboarding_complete"
+          type: "document"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "vendor_profiles": "array",
+                "contact_information": "object",
+                "ordering_procedures": "object",
+                "payment_terms": "object",
+                "performance_metrics": "array"
+              }
     
-    - task:
-        name: "performance_monitoring_setup"
-        description: "Establish vendor performance monitoring system"
-        execution_type: "algorithmic"
-        estimated_duration: "30m"
-        
-        inputs:
-          - deliverable:
-              name: "vendor_onboarding_complete"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "monitoring_system"
-              type: "document"
-              format: "json"
-              validation_rules:
-                - validation:
-                    rule_type: "required"
-                    condition: "includes_kpis AND review_schedule"
-                    error_message: "Must define KPIs and review schedule"
-        
-        algorithm: "performance_tracking_system_setup"
+    - name: "performance_monitoring_setup"
+      description: "Establish vendor performance monitoring system"
+      execution_type: "algorithmic"
+      estimated_duration: "30m"
+      
+      inputs:
+        - name: "vendor_onboarding_complete"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "monitoring_system"
+          type: "document"
+          format: "json"
+          validation_rules:
+            - rule_type: "required"
+              condition: "includes_kpis AND review_schedule"
+              error_message: "Must define KPIs and review schedule"
+      
+      algorithm: "performance_tracking_system_setup"
     
-    - task:
-        name: "quarterly_vendor_review"
-        description: "Review vendor performance and relationship health"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "1h"
-        
-        inputs:
-          - deliverable:
-              name: "monitoring_system"
-              type: "document"
-              format: "json"
-          - deliverable:
-              name: "vendor_performance_data"
-              type: "data"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "vendor_performance_report"
-              type: "document"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "vendor_scorecards": "array",
-                    "performance_trends": "object",
-                    "improvement_areas": "array",
-                    "contract_renewal_recommendations": "array"
-                  }
-        
-        issues:
-          - issue_type: "poor_vendor_performance"
-            resolution:
-              type: "escalate"
-              target: "vendor_improvement_plan"
-              timeout: "14d"
+    - name: "quarterly_vendor_review"
+      description: "Review vendor performance and relationship health"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "1h"
+      
+      inputs:
+        - name: "monitoring_system"
+          type: "document"
+          format: "json"
+        - name: "vendor_performance_data"
+          type: "data"
+          format: "json"
+      
+      outputs:
+        - name: "vendor_performance_report"
+          type: "document"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "vendor_scorecards": "array",
+                "performance_trends": "object",
+                "improvement_areas": "array",
+                "contract_renewal_recommendations": "array"
+              }
+      
+      issues:
+        - issue_type: "poor_vendor_performance"
+          resolution:
+            type: "escalate"
+            target: "vendor_improvement_plan"
+            timeout: "14d"
     
-    - task:
-        name: "vendor_portfolio_optimization"
-        description: "Optimize vendor portfolio based on performance and needs"
-        execution_type: "human"
-        ui_type: "strategy_session"
-        estimated_duration: "45m"
-        
-        inputs:
-          - deliverable:
-              name: "vendor_performance_report"
-              type: "document"
-              format: "json"
-          - deliverable:
-              name: "vendor_needs_analysis"
-              type: "document"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "portfolio_optimization_plan"
-              type: "document"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "vendors_to_retain": "array",
-                    "vendors_to_discontinue": "array",
-                    "new_vendor_requirements": "array",
-                    "optimization_actions": "array"
-                  }
-        
-        facilitation:
-          agenda:
-            - "Performance review summary (15m)"
-            - "Cost-benefit analysis (15m)"
-            - "Optimization opportunities (10m)"
-            - "Action plan creation (5m)"
+    - name: "vendor_portfolio_optimization"
+      description: "Optimize vendor portfolio based on performance and needs"
+      execution_type: "human"
+      ui_type: "strategy_session"
+      estimated_duration: "45m"
+      
+      inputs:
+        - name: "vendor_performance_report"
+          type: "document"
+          format: "json"
+        - name: "vendor_needs_analysis"
+          type: "document"
+          format: "json"
+      
+      outputs:
+        - name: "portfolio_optimization_plan"
+          type: "document"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "vendors_to_retain": "array",
+                "vendors_to_discontinue": "array",
+                "new_vendor_requirements": "array",
+                "optimization_actions": "array"
+              }
+      
+      facilitation:
+        agenda:
+          - "Performance review summary (15m)"
+          - "Cost-benefit analysis (15m)"
+          - "Optimization opportunities (10m)"
+          - "Action plan creation (5m)"
   
   issue_resolution:
-    - resolution:
-        type: "escalate"
-        conditions: ["vendor_contract_dispute"]
-        target: "legal_advisor"
-        timeout: "72h"
-    - resolution:
-        type: "delegate"
-        conditions: ["emergency_vendor_replacement_needed"]
-        target: "expedited_sourcing_protocol"
-        timeout: "24h"
+    - type: "escalate"
+      conditions: ["vendor_contract_dispute"]
+      target: "legal_advisor"
+      timeout: "72h"
+    - type: "delegate"
+      conditions: ["emergency_vendor_replacement_needed"]
+      target: "expedited_sourcing_protocol"
+      timeout: "24h"

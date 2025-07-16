@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Inquiry to Booking Playbook"
   description: "End-to-end process from initial inquiry to confirmed booking"
@@ -20,182 +20,159 @@ playbook:
     trigger_events: ["new_inquiry_received"]
   
   inputs:
-    - deliverable:
-        name: "client_inquiry"
-        type: "data"
-        format: "email_or_form"
-        required_fields: ["contact_info", "event_type", "preferred_date"]
+    - name: "client_inquiry"
+      type: "data"
+      format: "email_or_form"
+      required_fields: ["contact_info", "event_type", "preferred_date"]
   
   outputs:
-    - deliverable:
-        name: "booking_confirmation"
-        type: "document"
-        format: "contract_and_invoice"
-        validation_rules:
-          - validation:
-              rule_type: "required"
-              condition: "signed_contract AND deposit_paid"
-              error_message: "Booking requires signed contract and deposit"
+    - name: "booking_confirmation"
+      type: "document"
+      format: "contract_and_invoice"
+      validation_rules:
+        - rule_type: "required"
+          condition: "signed_contract AND deposit_paid"
+          error_message: "Booking requires signed contract and deposit"
   
   steps:
-    - task:
-        name: "acknowledge_inquiry"
-        description: "Send immediate acknowledgment to prospect"
-        execution_type: "algorithmic"
-        estimated_duration: "2m"
-        
-        inputs:
-          - deliverable:
-              name: "client_inquiry"
-              type: "data"
-              format: "email_or_form"
-        
-        outputs:
-          - deliverable:
-              name: "acknowledgment_email"
-              type: "document"
-              format: "email"
-        
-        algorithm: "auto_response_generation"
+    - name: "acknowledge_inquiry"
+      description: "Send immediate acknowledgment to prospect"
+      execution_type: "algorithmic"
+      estimated_duration: "2m"
+      
+      inputs:
+        - name: "client_inquiry"
+          type: "data"
+          format: "email_or_form"
+      
+      outputs:
+        - name: "acknowledgment_email"
+          type: "document"
+          format: "email"
+      
+      algorithm: "auto_response_generation"
     
-    - task:
-        name: "qualify_lead"
-        description: "Assess fit and qualification criteria"
-        execution_type: "human"
-        ui_type: "form"
-        estimated_duration: "15m"
-        
-        inputs:
-          - deliverable:
-              name: "client_inquiry"
-              type: "data"
-              format: "email_or_form"
-        
-        outputs:
-          - deliverable:
-              name: "qualification_assessment"
-              type: "decision"
-              format: "json"
-              schema:
-                type: "json"
-                definition: |
-                  {
-                    "qualification_score": "number",
-                    "budget_match": "boolean",
-                    "timeline_feasible": "boolean",
-                    "style_alignment": "boolean",
-                    "next_action": "string"
-                  }
+    - name: "qualify_lead"
+      description: "Assess fit and qualification criteria"
+      execution_type: "human"
+      ui_type: "form"
+      estimated_duration: "15m"
+      
+      inputs:
+        - name: "client_inquiry"
+          type: "data"
+          format: "email_or_form"
+      
+      outputs:
+        - name: "qualification_assessment"
+          type: "decision"
+          format: "json"
+          schema:
+            type: "json"
+            definition: |
+              {
+                "qualification_score": "number",
+                "budget_match": "boolean",
+                "timeline_feasible": "boolean",
+                "style_alignment": "boolean",
+                "next_action": "string"
+              }
     
-    - task:
-        name: "send_portfolio_and_pricing"
-        description: "Provide portfolio examples and pricing information"
-        execution_type: "algorithmic"
-        estimated_duration: "5m"
-        
-        inputs:
-          - deliverable:
-              name: "qualification_assessment"
-              type: "decision"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "portfolio_package"
-              type: "document"
-              format: "email_with_attachments"
-        
-        algorithm: "personalized_portfolio_selection"
-        
-        issues:
-          - issue_type: "portfolio_mismatch"
-            resolution:
-              type: "ai_assist"
-              agent_prompt: "Select most relevant portfolio pieces for event type"
+    - name: "send_portfolio_and_pricing"
+      description: "Provide portfolio examples and pricing information"
+      execution_type: "algorithmic"
+      estimated_duration: "5m"
+      
+      inputs:
+        - name: "qualification_assessment"
+          type: "decision"
+          format: "json"
+      
+      outputs:
+        - name: "portfolio_package"
+          type: "document"
+          format: "email_with_attachments"
+      
+      algorithm: "personalized_portfolio_selection"
+      
+      issues:
+        - issue_type: "portfolio_mismatch"
+          resolution:
+            type: "ai_assist"
+            agent_prompt: "Select most relevant portfolio pieces for event type"
     
-    - task:
-        name: "schedule_consultation"
-        description: "Book consultation call with qualified prospect"
-        execution_type: "algorithmic"
-        estimated_duration: "3m"
-        
-        inputs:
-          - deliverable:
-              name: "qualification_assessment"
-              type: "decision"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "consultation_booking"
-              type: "data"
-              format: "calendar_event"
-        
-        algorithm: "calendar_integration_booking"
+    - name: "schedule_consultation"
+      description: "Book consultation call with qualified prospect"
+      execution_type: "algorithmic"
+      estimated_duration: "3m"
+      
+      inputs:
+        - name: "qualification_assessment"
+          type: "decision"
+          format: "json"
+      
+      outputs:
+        - name: "consultation_booking"
+          type: "data"
+          format: "calendar_event"
+      
+      algorithm: "calendar_integration_booking"
     
-    - task:
-        name: "conduct_consultation"
-        description: "Lead consultation call to close booking"
-        execution_type: "human"
-        ui_type: "meeting"
-        estimated_duration: "45m"
-        
-        inputs:
-          - deliverable:
-              name: "consultation_booking"
-              type: "data"
-              format: "calendar_event"
-          - deliverable:
-              name: "portfolio_package"
-              type: "document"
-              format: "email_with_attachments"
-        
-        outputs:
-          - deliverable:
-              name: "consultation_outcome"
-              type: "decision"
-              format: "json"
-        
-        facilitation:
-          agenda:
-            - "Rapport building and event vision (10m)"
-            - "Portfolio review and style discussion (15m)"
-            - "Package presentation and pricing (12m)"
-            - "Objection handling and negotiation (6m)"
-            - "Booking decision and next steps (2m)"
+    - name: "conduct_consultation"
+      description: "Lead consultation call to close booking"
+      execution_type: "human"
+      ui_type: "meeting"
+      estimated_duration: "45m"
+      
+      inputs:
+        - name: "consultation_booking"
+          type: "data"
+          format: "calendar_event"
+        - name: "portfolio_package"
+          type: "document"
+          format: "email_with_attachments"
+      
+      outputs:
+        - name: "consultation_outcome"
+          type: "decision"
+          format: "json"
+      
+      facilitation:
+        agenda:
+          - "Rapport building and event vision (10m)"
+          - "Portfolio review and style discussion (15m)"
+          - "Package presentation and pricing (12m)"
+          - "Objection handling and negotiation (6m)"
+          - "Booking decision and next steps (2m)"
     
-    - task:
-        name: "process_booking"
-        description: "Generate contract and process deposit"
-        execution_type: "algorithmic"
-        estimated_duration: "20m"
-        
-        inputs:
-          - deliverable:
-              name: "consultation_outcome"
-              type: "decision"
-              format: "json"
-        
-        outputs:
-          - deliverable:
-              name: "booking_package"
-              type: "document"
-              format: "contract_and_invoice"
-        
-        algorithm: "contract_generation_and_payment_processing"
-        
-        issues:
-          - issue_type: "payment_processing_error"
-            resolution:
-              type: "escalate"
-              target: "financial_manager"
-              timeout: "2h"
+    - name: "process_booking"
+      description: "Generate contract and process deposit"
+      execution_type: "algorithmic"
+      estimated_duration: "20m"
+      
+      inputs:
+        - name: "consultation_outcome"
+          type: "decision"
+          format: "json"
+      
+      outputs:
+        - name: "booking_package"
+          type: "document"
+          format: "contract_and_invoice"
+      
+      algorithm: "contract_generation_and_payment_processing"
+      
+      issues:
+        - issue_type: "payment_processing_error"
+          resolution:
+            type: "escalate"
+            target: "financial_manager"
+            timeout: "2h"
   
   issue_resolution:
-    - resolution:
-        type: "pause"
-        conditions: ["prospect_non_responsive > 48h"]
-        timeout: "7d"
-        fallback:
-          type: "delegate"
-          target: "follow_up_sequence"
+    - type: "pause"
+      conditions: ["prospect_non_responsive > 48h"]
+      timeout: "7d"
+      fallback:
+        type: "delegate"
+        target: "follow_up_sequence"

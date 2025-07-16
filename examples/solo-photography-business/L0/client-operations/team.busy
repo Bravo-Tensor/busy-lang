@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Client Operations Team"
   description: "Manages client relationships, inquiries, bookings, and service delivery"

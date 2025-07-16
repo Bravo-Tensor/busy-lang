@@ -9,17 +9,24 @@
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
-): (...args: Parameters<T>) => void {
+): (...args: Parameters<T>) => Promise<void> {
   let timeout: NodeJS.Timeout | null = null;
   
   return (...args: Parameters<T>) => {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    
-    timeout = setTimeout(() => {
-      timeout = null;
-      func(...args);
-    }, wait);
+    return new Promise<void>((resolve, reject) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      
+      timeout = setTimeout(async () => {
+        timeout = null;
+        try {
+          await func(...args);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      }, wait);
+    });
   };
 }

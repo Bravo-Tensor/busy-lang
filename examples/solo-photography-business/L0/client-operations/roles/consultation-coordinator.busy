@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.0.0"
 metadata:
   name: "Consultation Coordinator Role"
   description: "Manages consultation calls and booking conversions"
@@ -23,65 +23,59 @@ role:
     - "Process bookings and initiate contract workflow"
   
   tasks:
-    - task:
-        name: "conduct_consultation"
-        description: "Lead consultation call with prospect"
-        execution_type: "human"
-        ui_type: "meeting"
-        estimated_duration: "45m"
+    - name: "conduct_consultation"
+      description: "Lead consultation call with prospect"
+      execution_type: "human"
+      ui_type: "meeting"
+      estimated_duration: "45m"
+      
+      inputs:
+        - name: "qualified_lead"
+          type: "data"
+          format: "json"
+          required_fields: ["contact_info", "event_details", "qualification_score"]
+      
+      outputs:
+        - name: "consultation_outcome"
+          type: "decision"
+          format: "json"
+          validation_rules:
+            - rule_type: "required"
+              condition: "outcome in ['booked', 'follow_up', 'declined']"
+              error_message: "Must specify consultation outcome"
+      
+      facilitation:
+        agenda:
+          - "Introductions and rapport building (5m)"
+          - "Event details and vision discussion (15m)"
+          - "Package presentation (15m)"
+          - "Q&A and objection handling (8m)"
+          - "Next steps and booking (2m)"
         
-        inputs:
-          - deliverable:
-              name: "qualified_lead"
-              type: "data"
-              format: "json"
-              required_fields: ["contact_info", "event_details", "qualification_score"]
-        
-        outputs:
-          - deliverable:
-              name: "consultation_outcome"
-              type: "decision"
-              format: "json"
-              validation_rules:
-                - validation:
-                    rule_type: "required"
-                    condition: "outcome in ['booked', 'follow_up', 'declined']"
-                    error_message: "Must specify consultation outcome"
-        
-        facilitation:
-          agenda:
-            - "Introductions and rapport building (5m)"
-            - "Event details and vision discussion (15m)"
-            - "Package presentation (15m)"
-            - "Q&A and objection handling (8m)"
-            - "Next steps and booking (2m)"
-          
-        issues:
-          - issue_type: "pricing_objection"
-            resolution:
-              type: "delegate"
-              target: "business_owner"
-              conditions: ["custom_package_needed"]
+      issues:
+        - issue_type: "pricing_objection"
+          resolution:
+            type: "delegate"
+            target: "business_owner"
+            conditions: ["custom_package_needed"]
   
   interfaces:
     inputs:
-      - deliverable:
-          name: "consultation_schedule"
-          type: "data"
-          format: "calendar_event"
+      - name: "consultation_schedule"
+        type: "data"
+        format: "calendar_event"
     
     outputs:
-      - deliverable:
-          name: "bookings"
-          type: "data"
-          format: "json"
-          schema:
-            type: "json"
-            definition: |
-              {
-                "booking_id": "string",
-                "client_info": "object",
-                "package_selected": "string",
-                "event_date": "date",
-                "total_value": "number"
-              }
+      - name: "bookings"
+        type: "data"
+        format: "json"
+        schema:
+          type: "json"
+          definition: |
+            {
+              "booking_id": "string",
+              "client_info": "object",
+              "package_selected": "string",
+              "event_date": "date",
+              "total_value": "number"
+            }
