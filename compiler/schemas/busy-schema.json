@@ -154,12 +154,12 @@
       "properties": {
         "name": {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "description": "Role identifier (snake_case)"
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "Role identifier (kebab-case)"
         },
         "inherits_from": {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9_]*$",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
           "description": "Parent role for inheritance"
         },
         "description": {
@@ -197,7 +197,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9_-]*$",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
           "description": "Playbook identifier (kebab-case)"
         },
         "description": {

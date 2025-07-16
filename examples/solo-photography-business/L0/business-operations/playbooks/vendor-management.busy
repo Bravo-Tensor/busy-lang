@@ -13,7 +13,7 @@ imports:
     interface: "procurement-best-practices"
 
 playbook:
-  name: "vendor_management"
+  name: "vendor-management"
   description: "Systematic vendor evaluation, onboarding, and relationship management"
   cadence:
     frequency: "quarterly"

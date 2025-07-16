@@ -529,7 +529,7 @@ export interface SymbolReference {
   location: SourceLocation;
   
   /** Type of reference */
-  referenceType: 'input' | 'output' | 'inheritance' | 'call' | 'import' | 'escalation';
+  referenceType: 'input' | 'output' | 'inheritance' | 'call' | 'import' | 'escalation' | 'team_membership';
   
   /** Context of reference */
   context?: string;

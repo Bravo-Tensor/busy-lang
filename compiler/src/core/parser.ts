@@ -506,8 +506,8 @@ export class Parser {
    */
   private validateRole(role: Role, errors: string[], warnings: string[]): void {
     // Validate role name format
-    if (!/^[a-z][a-z0-9_]*$/.test(role.name)) {
-      errors.push(`Role name '${role.name}' must be snake_case (lowercase with underscores)`);
+    if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(role.name)) {
+      errors.push(`Role name '${role.name}' must be kebab-case (lowercase with hyphens)`);
     }
     
     // Check for empty tasks
@@ -532,8 +532,8 @@ export class Parser {
    */
   private validatePlaybook(playbook: Playbook, errors: string[], warnings: string[]): void {
     // Validate playbook name format
-    if (!/^[a-z][a-z0-9_-]*$/.test(playbook.name)) {
-      errors.push(`Playbook name '${playbook.name}' must be kebab-case or snake_case`);
+    if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(playbook.name)) {
+      errors.push(`Playbook name '${playbook.name}' must be kebab-case (lowercase with hyphens)`);
     }
     
     // Validate cadence

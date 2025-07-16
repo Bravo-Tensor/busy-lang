@@ -13,7 +13,7 @@ imports:
     interface: "conversion-optimization"
 
 playbook:
-  name: "inquiry_to_booking"
+  name: "inquiry-to-booking"
   description: "Systematic process for converting inquiries into confirmed bookings"
   cadence:
     frequency: "triggered"

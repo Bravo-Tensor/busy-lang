@@ -13,7 +13,7 @@ imports:
     interface: "monthly-reporting"
 
 playbook:
-  name: "monthly_financials"
+  name: "monthly-financials"
   description: "Comprehensive monthly financial review and planning process"
   cadence:
     frequency: "monthly"

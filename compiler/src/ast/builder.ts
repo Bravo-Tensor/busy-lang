@@ -380,9 +380,9 @@ export class ASTBuilder {
     
     const cadence = {
       type: 'Cadence' as const,
-      frequency: playbook.cadence.frequency,
-      schedule: playbook.cadence.schedule,
-      triggerEvents: playbook.cadence.trigger_events || [],
+      frequency: playbook.cadence?.frequency,
+      schedule: playbook.cadence?.schedule,
+      triggerEvents: playbook.cadence?.trigger_events || [],
       location: {
         file: parsedFile.filePath,
         path: [...basePath, 'cadence']

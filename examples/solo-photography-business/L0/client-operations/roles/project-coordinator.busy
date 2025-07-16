@@ -5,7 +5,7 @@ metadata:
   layer: "L0"
 
 role:
-  name: "project_coordinator"
+  name: "project-coordinator"
   description: "Coordinates project execution, timeline management, and client communications throughout the photography project lifecycle"
   
   onboarding:

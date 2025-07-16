@@ -13,7 +13,7 @@ imports:
     interface: "production-standards"
 
 playbook:
-  name: "photo_production"
+  name: "photo-production"
   description: "End-to-end photo production from shoot execution to final client delivery"
   cadence:
     frequency: "triggered"

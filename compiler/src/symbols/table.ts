@@ -284,6 +284,9 @@ export class SymbolTableBuilder {
       this.resolveRoleInheritance(fileNode.content, fileNode, symbolTable);
     }
     
+    // Resolve team-role relationships based on directory structure
+    this.resolveTeamRoleRelationships(fileNode, symbolTable);
+    
     // Resolve task input/output references
     this.resolveTaskReferences(fileNode, symbolTable);
     
@@ -293,6 +296,77 @@ export class SymbolTableBuilder {
     // - Trigger event references
   }
   
+  /**
+   * Resolve team-role relationships based on directory structure
+   */
+  private resolveTeamRoleRelationships(fileNode: BusyFileNode, symbolTable: SymbolTable): void {
+    // Check if this is a role file in a team directory structure
+    if (fileNode.content.type === 'Role') {
+      // Extract team name from file path
+      // Pattern: .../team-name/roles/role-name.busy
+      const pathParts = fileNode.filePath.split('/');
+      const roleIndex = pathParts.findIndex(part => part === 'roles');
+      
+      if (roleIndex > 0) {
+        const teamDirName = pathParts[roleIndex - 1];
+        
+        // Find the team symbol for this directory
+        const teamSymbol = Array.from(symbolTable.teams.values()).find(team => 
+          team.file.includes(teamDirName) && team.file.endsWith('team.busy')
+        );
+        
+        if (teamSymbol) {
+          // Add reference from team to role
+          const reference: SymbolReference = {
+            file: fileNode.filePath,
+            location: fileNode.content.location!,
+            referenceType: 'team_membership',
+            context: `Role '${fileNode.content.name}' is part of team '${teamSymbol.name}'`
+          };
+          
+          // Add reference to role symbol
+          const roleSymbol = symbolTable.roles.get(fileNode.content.name);
+          if (roleSymbol) {
+            roleSymbol.references.push(reference);
+          }
+        }
+      }
+    }
+    
+    // Check if this is a playbook file in a team directory structure  
+    if (fileNode.content.type === 'Playbook') {
+      // Extract team name from file path
+      // Pattern: .../team-name/playbooks/playbook-name.busy
+      const pathParts = fileNode.filePath.split('/');
+      const playbookIndex = pathParts.findIndex(part => part === 'playbooks');
+      
+      if (playbookIndex > 0) {
+        const teamDirName = pathParts[playbookIndex - 1];
+        
+        // Find the team symbol for this directory
+        const teamSymbol = Array.from(symbolTable.teams.values()).find(team => 
+          team.file.includes(teamDirName) && team.file.endsWith('team.busy')
+        );
+        
+        if (teamSymbol) {
+          // Add reference from team to playbook
+          const reference: SymbolReference = {
+            file: fileNode.filePath,
+            location: fileNode.content.location!,
+            referenceType: 'team_membership',
+            context: `Playbook '${fileNode.content.name}' is part of team '${teamSymbol.name}'`
+          };
+          
+          // Add reference to playbook symbol
+          const playbookSymbol = symbolTable.playbooks.get(fileNode.content.name);
+          if (playbookSymbol) {
+            playbookSymbol.references.push(reference);
+          }
+        }
+      }
+    }
+  }
+
   /**
    * Resolve role inheritance relationships
    */
@@ -406,15 +480,190 @@ export class SymbolTableBuilder {
       symbol.isUsed = symbol.references.length > 0;
     }
     
+    // Keep track of files with used content for tool/advisor marking
+    const filesWithUsedContent = new Set<string>();
+    
     // Special case: deliverables are used if they have both producers and consumers
     for (const deliverable of symbolTable.deliverables.values()) {
       deliverable.isUsed = deliverable.producers.length > 0 && deliverable.consumers.length > 0;
     }
     
-    // Special case: playbooks with external triggers are considered used
+    // Special case: deliverables that are inputs/outputs of used playbooks are considered used
     for (const playbook of symbolTable.playbooks.values()) {
+      if (playbook.isUsed) {
+        const playbookNode = playbook.node as PlaybookNode;
+        // Mark playbook inputs as used
+        for (const input of playbookNode.inputs) {
+          const deliverableSymbol = symbolTable.deliverables.get(input.name);
+          if (deliverableSymbol) {
+            deliverableSymbol.isUsed = true;
+          }
+        }
+        // Mark playbook outputs as used
+        for (const output of playbookNode.outputs) {
+          const deliverableSymbol = symbolTable.deliverables.get(output.name);
+          if (deliverableSymbol) {
+            deliverableSymbol.isUsed = true;
+          }
+        }
+      }
+    }
+    
+    // Special case: deliverables that are inputs/outputs of used roles are considered used
+    for (const role of symbolTable.roles.values()) {
+      if (role.isUsed) {
+        const roleNode = role.node as RoleNode;
+        if (roleNode.interfaces) {
+          // Mark role interface inputs as used
+          for (const input of roleNode.interfaces.inputs) {
+            const deliverableSymbol = symbolTable.deliverables.get(input.name);
+            if (deliverableSymbol) {
+              deliverableSymbol.isUsed = true;
+            }
+          }
+          // Mark role interface outputs as used
+          for (const output of roleNode.interfaces.outputs) {
+            const deliverableSymbol = symbolTable.deliverables.get(output.name);
+            if (deliverableSymbol) {
+              deliverableSymbol.isUsed = true;
+            }
+          }
+        }
+      }
+    }
+    
+    // Special case: playbooks with external triggers or cadence are considered used
+    for (const playbook of symbolTable.playbooks.values()) {
+      // Playbooks with external triggers
       if (playbook.triggerEvents.some(event => event.startsWith('external_'))) {
         playbook.isUsed = true;
+      }
+      
+      // Playbooks with scheduled cadence are also considered used
+      const playbookNode = playbook.node as PlaybookNode;
+      if (playbookNode.cadence && (playbookNode.cadence.frequency || playbookNode.cadence.schedule)) {
+        playbook.isUsed = true;
+      }
+    }
+    
+    // Special case: tasks within playbooks are considered used if the playbook is used
+    for (const playbook of symbolTable.playbooks.values()) {
+      if (playbook.isUsed) {
+        for (const stepName of playbook.steps) {
+          const taskSymbol = symbolTable.tasks.get(stepName);
+          if (taskSymbol) {
+            taskSymbol.isUsed = true;
+            
+            // Mark task inputs and outputs as used
+            const taskNode = taskSymbol.node as TaskNode;
+            for (const input of taskNode.inputs) {
+              const deliverableSymbol = symbolTable.deliverables.get(input.name);
+              if (deliverableSymbol) {
+                deliverableSymbol.isUsed = true;
+              }
+            }
+            for (const output of taskNode.outputs) {
+              const deliverableSymbol = symbolTable.deliverables.get(output.name);
+              if (deliverableSymbol) {
+                deliverableSymbol.isUsed = true;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Special case: tasks within roles are considered used if the role is used
+    for (const role of symbolTable.roles.values()) {
+      if (role.isUsed) {
+        for (const taskName of role.tasks) {
+          const taskSymbol = symbolTable.tasks.get(taskName);
+          if (taskSymbol) {
+            taskSymbol.isUsed = true;
+            
+            // Mark task inputs and outputs as used
+            const taskNode = taskSymbol.node as TaskNode;
+            for (const input of taskNode.inputs) {
+              const deliverableSymbol = symbolTable.deliverables.get(input.name);
+              if (deliverableSymbol) {
+                deliverableSymbol.isUsed = true;
+              }
+            }
+            for (const output of taskNode.outputs) {
+              const deliverableSymbol = symbolTable.deliverables.get(output.name);
+              if (deliverableSymbol) {
+                deliverableSymbol.isUsed = true;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Special case: teams are considered used by default (they represent organizational structure)
+    for (const team of symbolTable.teams.values()) {
+      team.isUsed = true;
+    }
+    
+    // Collect files with used content
+    for (const team of symbolTable.teams.values()) {
+      if (team.isUsed) {
+        filesWithUsedContent.add(team.file);
+      }
+    }
+    for (const role of symbolTable.roles.values()) {
+      if (role.isUsed) {
+        filesWithUsedContent.add(role.file);
+      }
+    }
+    for (const playbook of symbolTable.playbooks.values()) {
+      if (playbook.isUsed) {
+        filesWithUsedContent.add(playbook.file);
+      }
+    }
+    
+    // Special case: tools and advisors are used if they're imported in any file with used content
+    // First, build a map of all tool/advisor imports across all files
+    const toolImports = new Map<string, Set<string>>(); // tool name -> set of files that import it
+    const advisorImports = new Map<string, Set<string>>(); // advisor name -> set of files that import it
+    
+    for (const tool of symbolTable.tools.values()) {
+      if (!toolImports.has(tool.name)) {
+        toolImports.set(tool.name, new Set());
+      }
+      toolImports.get(tool.name)!.add(tool.file);
+    }
+    
+    for (const advisor of symbolTable.advisors.values()) {
+      if (!advisorImports.has(advisor.name)) {
+        advisorImports.set(advisor.name, new Set());
+      }
+      advisorImports.get(advisor.name)!.add(advisor.file);
+    }
+    
+    // Mark tools as used if any file that imports them has used content
+    for (const tool of symbolTable.tools.values()) {
+      const importingFiles = toolImports.get(tool.name);
+      if (importingFiles) {
+        for (const file of importingFiles) {
+          if (filesWithUsedContent.has(file)) {
+            tool.isUsed = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Mark advisors as used if any file that imports them has used content
+    for (const advisor of symbolTable.advisors.values()) {
+      const importingFiles = advisorImports.get(advisor.name);
+      if (importingFiles) {
+        for (const file of importingFiles) {
+          if (filesWithUsedContent.has(file)) {
+            advisor.isUsed = true;
+            break;
+          }
+        }
       }
     }
   }

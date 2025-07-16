@@ -67,6 +67,34 @@ program
     }
   });
 
+// Analyze command
+program
+  .command('analyze')
+  .description('Perform comprehensive analysis including semantic validation, dependency resolution, and quality checks')
+  .argument('[path]', 'Path to BUSY repository or file', '.')
+  .option('-f, --format <type>', 'Output format (console, json, html)', 'console')
+  .option('-o, --output <file>', 'Output file path')
+  .option('--performance', 'Include performance analysis')
+  .option('--security', 'Include security analysis') 
+  .option('--quality', 'Include quality analysis')
+  .option('--detailed', 'Show detailed metrics and analysis')
+  .option('--timeout <seconds>', 'Maximum analysis time in seconds', '30')
+  .option('--only <passes>', 'Run only specified analysis passes (comma-separated)')
+  .option('--allow-errors', 'Continue analysis despite errors')
+  .action(async (path, options, command) => {
+    try {
+      const analyzeCommand = new AnalyzeCommand();
+      await analyzeCommand.execute(path, {
+        ...options,
+        ...command.parent?.opts(),
+        only: options.only ? options.only.split(',') : undefined
+      });
+    } catch (error) {
+      console.error(chalk.red('Error:'), (error as Error).message);
+      process.exit(1);
+    }
+  });
+
 // Analyze command variations
 program
   .command('interfaces')

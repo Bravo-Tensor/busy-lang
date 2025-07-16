@@ -5,7 +5,7 @@ metadata:
   layer: "L0"
 
 role:
-  name: "financial_manager"
+  name: "financial-manager"
   description: "Responsible for all financial operations including invoicing, payment processing, expense tracking, and financial reporting"
   
   onboarding:

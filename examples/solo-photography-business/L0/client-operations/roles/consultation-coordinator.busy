@@ -5,7 +5,7 @@ metadata:
   layer: "L0"
 
 role:
-  name: "consultation_coordinator"
+  name: "consultation-coordinator"
   description: "Conducts consultation calls, presents packages, and converts prospects to bookings"
   
   onboarding:
@@ -61,6 +61,9 @@ role:
   
   interfaces:
     inputs:
+      - name: "qualified_leads"
+        type: "data"
+        format: "json"
       - name: "consultation_schedule"
         type: "data"
         format: "calendar_event"

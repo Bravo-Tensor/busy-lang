@@ -5,7 +5,7 @@ metadata:
   layer: "L0"
 
 role:
-  name: "photo_editor"
+  name: "photo-editor"
   description: "Technical and creative specialist responsible for post-processing, color correction, and final image preparation"
   
   onboarding:
