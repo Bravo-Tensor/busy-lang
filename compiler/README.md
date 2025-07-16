@@ -291,6 +291,25 @@ The compiler is optimized for large repositories:
 - Medium repos (10-100 files): <1s  
 - Large repos (100-1000 files): <10s
 
+## Documentation
+
+The compiler includes comprehensive documentation organized into focused areas:
+
+### For Users and Developers
+- **[docs/](./docs/)** - Complete documentation suite
+  - Language reference and syntax guide
+  - Developer workflow and best practices  
+  - Validation error reference and troubleshooting
+  - Compiler architecture and implementation details
+
+### For Project Evolution
+- **[design-docs/](./design-docs/)** - Design documents for iterative improvements
+  - Specification change proposals
+  - Implementation planning and task breakdowns
+  - Historical record of project evolution
+
+Start with [docs/DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md) for a complete guide to available documentation.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
