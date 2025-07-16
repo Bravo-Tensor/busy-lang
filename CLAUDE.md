@@ -32,19 +32,35 @@ Key architectural concepts:
 
 ## Development Status
 
-This is currently a specification-only project. No implementation exists yet. The documentation defines:
+This project now includes a working BUSY compiler implementation in the `compiler/` directory alongside the original specifications.
 
-- Multi-layer organizational architecture (L0/L1/L2)
-- YAML-based grammar for business process definitions
-- Compilation pipeline from .busy files to runtime configurations
-- Integration patterns for external tools and dependencies
+## Project Workflow
+
+**Implementation**: Claude performs all development work including coding, testing, and documentation updates.
+**Review**: User reviews design documents, provides feedback, and approves implementation plans.
+**No Migration Concerns**: This is a greenfield project with no existing BUSY files in production.
+
+## Documentation Standards
+
+**Avoid Repetition**: Design documents should complement, not duplicate each other:
+- README: High-level summary only
+- Design documents: Detailed specifications 
+- Implementation plans: Specific tasks and estimates
+
+**Concise Communication**: Shorter documentation is preferred. Provide essential information without redundancy across files.
 
 ## Working with This Codebase
 
-Since this is a documentation repository:
-- Focus on understanding the architectural concepts in `architecture.md`
-- Reference `grammar-spec.md` for language syntax details
-- Use `prd.md` for high-level product concepts
-- No build/test/lint commands are available as no code implementation exists yet
+**Compiler Development**: 
+- Use `npm run analyze` to validate example files
+- Follow existing naming conventions (kebab-case for BUSY entities)
+- Maintain 100% health score in analysis results
+- Update documentation when making language changes
+
+**Design Process**:
+- Use migration-style design docs in `design-docs/###-description/`
+- Create comprehensive design documents before implementation
+- Break down work into specific, actionable tasks
+- Focus on single-developer implementation estimates
 
 When discussing or modifying the specifications, consider the layer-first architecture and the balance between human creativity and process automation.

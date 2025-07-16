@@ -507,26 +507,19 @@ task:
 - **Core Architecture**: Changes don't affect core compilation pipeline
 - **Backwards Compatibility**: Clear migration path exists
 
-## Migration Strategy
+## Example File Updates
 
-### 1. Automated Migration Tools
-Create migration scripts to:
-- Remove role interfaces from existing files
-- Update import syntax
-- Convert decision/approval deliverables to data type
-- Provide warnings for documents that need definition files
+Since this is a greenfield project with no production BUSY files, the only "migration" needed is updating the example files in the compiler project:
 
-### 2. Migration Process
-1. **Backup**: Create backup of existing files
-2. **Schema Update**: Deploy new schema
-3. **Automated Migration**: Run migration scripts
-4. **Manual Review**: Review and update document references
-5. **Validation**: Ensure all files pass validation
-6. **Testing**: Verify functionality
+### Example Files to Update
+- `compiler/examples/solo-photography-business/` - All .busy files
+- Any test fixtures or documentation examples
 
-### 3. Documentation Support
-- Migration guide for users
-- Examples of before/after transformations
+### Update Process
+1. **Schema Update**: Deploy new schema validation
+2. **Example Updates**: Update all example files to new syntax
+3. **Validation**: Ensure 100% health score on all examples
+4. **Documentation**: Update language reference and guides
 - Troubleshooting guide for common issues
 
 ## Future Considerations
