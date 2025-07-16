@@ -84,8 +84,8 @@ export interface BusyFileNode extends ASTNode {
   /** Imports declared in this file */
   imports: ImportNode[];
   
-  /** Content node (team, role, or playbook) */
-  content: TeamNode | RoleNode | PlaybookNode;
+  /** Content node (team, role, playbook, or document) */
+  content: TeamNode | RoleNode | PlaybookNode | DocumentNode;
   
   /** Namespace information */
   namespace: NamespaceInfo;
@@ -123,11 +123,8 @@ export interface ImportNode extends ASTNode {
   /** Tool or advisor name */
   name: string;
   
-  /** Version constraint (for tools) */
-  version?: string;
-  
-  /** Interface specification (for advisors) */
-  interface?: string;
+  /** Capability needed from tool or advisor */
+  capability: string;
 }
 
 /**
@@ -221,6 +218,63 @@ export interface PlaybookNode extends ASTNode {
 }
 
 /**
+ * Document node
+ */
+export interface DocumentNode extends ASTNode {
+  type: 'Document';
+  
+  /** File metadata */
+  metadata: FileMetadata;
+  
+  /** Content organization type */
+  contentType: 'structured' | 'narrative';
+  
+  /** Document sections (for structured content) */
+  sections?: DocumentSectionNode[];
+  
+  /** Free-form content (for narrative documents) */
+  narrativeContent?: string;
+}
+
+/**
+ * Document section node
+ */
+export interface DocumentSectionNode extends ASTNode {
+  type: 'DocumentSection';
+  
+  /** Section name */
+  name: string;
+  
+  /** Section type */
+  sectionType: 'text' | 'list' | 'table' | 'form';
+  
+  /** Structured fields (for form sections) */
+  fields?: DocumentFieldNode[];
+  
+  /** Content (for text sections) */
+  content?: string;
+}
+
+/**
+ * Document field node
+ */
+export interface DocumentFieldNode extends ASTNode {
+  type: 'DocumentField';
+  
+  /** Field name */
+  name: string;
+  
+  /** Field data type */
+  fieldType: 'text' | 'number' | 'date' | 'boolean' | 'select';
+  
+  /** Whether field is required */
+  required: boolean;
+  
+  /** Options for select fields */
+  options?: string[];
+}
+
+/**
  * Task node
  */
 export interface TaskNode extends ASTNode {
@@ -264,6 +318,9 @@ export interface TaskNode extends ASTNode {
   
   /** Tags */
   tags: string[];
+  
+  /** Hierarchical subtasks */
+  subtasks?: TaskNode[];
 }
 
 /**
@@ -276,7 +333,10 @@ export interface DeliverableNode extends ASTNode {
   name: string;
   
   /** Deliverable type */
-  deliverableType: 'document' | 'data' | 'decision' | 'approval';
+  deliverableType: 'document' | 'data';
+  
+  /** Document definition reference (for document type) */
+  documentDefinition?: string;
   
   /** Format specification */
   format: string;
@@ -485,6 +545,9 @@ export interface SymbolTable {
   
   /** All defined teams */
   teams: Map<string, TeamSymbol>;
+  
+  /** All defined documents */
+  documents: Map<string, DocumentSymbol>;
 }
 
 /**
@@ -516,7 +579,7 @@ export interface Symbol {
 /**
  * Symbol types
  */
-export type SymbolType = 'role' | 'playbook' | 'task' | 'deliverable' | 'tool' | 'advisor' | 'team';
+export type SymbolType = 'role' | 'playbook' | 'task' | 'deliverable' | 'tool' | 'advisor' | 'team' | 'document';
 
 /**
  * Symbol reference
@@ -573,13 +636,13 @@ export interface DeliverableSymbol extends Symbol {
 export interface ToolSymbol extends Symbol {
   symbolType: 'tool';
   node: ImportNode;
-  version?: string;
+  capability: string;
 }
 
 export interface AdvisorSymbol extends Symbol {
   symbolType: 'advisor';
   node: ImportNode;
-  interface?: string;
+  capability: string;
 }
 
 export interface TeamSymbol extends Symbol {
@@ -588,6 +651,13 @@ export interface TeamSymbol extends Symbol {
   teamType: TeamNode['teamType'];
   roles: string[];
   playbooks: string[];
+}
+
+export interface DocumentSymbol extends Symbol {
+  symbolType: 'document';
+  node: DocumentNode;
+  contentType: DocumentNode['contentType'];
+  sections: string[];
 }
 
 /**

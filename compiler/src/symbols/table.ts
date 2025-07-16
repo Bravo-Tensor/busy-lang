@@ -14,10 +14,12 @@ import type {
   ToolSymbol,
   AdvisorSymbol,
   TeamSymbol,
+  DocumentSymbol,
   SymbolReference,
   RoleNode,
   PlaybookNode,
   TeamNode,
+  DocumentNode,
   TaskNode,
   DeliverableNode,
   ImportNode
@@ -39,7 +41,8 @@ export class SymbolTableBuilder {
       deliverables: new Map(),
       tools: new Map(),
       advisors: new Map(),
-      teams: new Map()
+      teams: new Map(),
+      documents: new Map()
     };
     
     // First pass: collect all definitions
@@ -78,6 +81,9 @@ export class SymbolTableBuilder {
       case 'Playbook':
         this.addPlaybookSymbol(fileNode.content, fileNode, symbolTable);
         break;
+      case 'Document':
+        this.addDocumentSymbol(fileNode.content, fileNode, symbolTable);
+        break;
     }
   }
   
@@ -93,8 +99,7 @@ export class SymbolTableBuilder {
       references: [],
       isUsed: false,
       namespace: fileNode.namespace,
-      version: importNode.version,
-      interface: importNode.interface
+      capability: importNode.capability
     };
     
     if (importNode.importType === 'tool') {
@@ -140,6 +145,32 @@ export class SymbolTableBuilder {
   }
   
   /**
+   * Add document symbol
+   */
+  private addDocumentSymbol(documentNode: DocumentNode, fileNode: BusyFileNode, symbolTable: SymbolTable): void {
+    const sectionNames: string[] = [];
+    
+    // Collect section names
+    for (const section of documentNode.sections || []) {
+      sectionNames.push(section.name);
+    }
+    
+    const documentSymbol: DocumentSymbol = {
+      name: documentNode.metadata.name,
+      file: fileNode.filePath,
+      symbolType: 'document',
+      node: documentNode,
+      references: [],
+      isUsed: false,
+      namespace: fileNode.namespace,
+      contentType: documentNode.contentType,
+      sections: sectionNames
+    };
+    
+    symbolTable.documents.set(documentNode.metadata.name, documentSymbol);
+  }
+  
+  /**
    * Add role symbol
    */
   private addRoleSymbol(roleNode: RoleNode, fileNode: BusyFileNode, symbolTable: SymbolTable): void {
@@ -151,15 +182,6 @@ export class SymbolTableBuilder {
       taskNames.push(taskNode.name);
     }
     
-    // Add role interface deliverables
-    if (roleNode.interfaces) {
-      for (const input of roleNode.interfaces.inputs) {
-        this.addDeliverableSymbol(input, fileNode, symbolTable);
-      }
-      for (const output of roleNode.interfaces.outputs) {
-        this.addDeliverableSymbol(output, fileNode, symbolTable);
-      }
-    }
     
     const roleSymbol: RoleSymbol = {
       name: roleNode.name,
@@ -229,6 +251,11 @@ export class SymbolTableBuilder {
     for (const output of taskNode.outputs) {
       this.addDeliverableSymbol(output, fileNode, symbolTable);
       outputNames.push(output.name);
+    }
+    
+    // Add subtasks recursively
+    for (const subtask of taskNode.subtasks || []) {
+      this.addTaskSymbol(subtask, fileNode, symbolTable);
     }
     
     const taskSymbol: TaskSymbol = {
@@ -434,7 +461,7 @@ export class SymbolTableBuilder {
   /**
    * Visit all tasks in a content node
    */
-  private visitTasks(node: TeamNode | RoleNode | PlaybookNode, visitor: (task: TaskNode) => void): void {
+  private visitTasks(node: TeamNode | RoleNode | PlaybookNode | DocumentNode, visitor: (task: TaskNode) => void): void {
     switch (node.type) {
       case 'Team':
         for (const role of node.roles) {
@@ -458,6 +485,9 @@ export class SymbolTableBuilder {
           visitor(step);
         }
         break;
+      case 'Document':
+        // Documents don't contain tasks directly
+        break;
     }
   }
   
@@ -473,7 +503,8 @@ export class SymbolTableBuilder {
       ...symbolTable.deliverables.values(),
       ...symbolTable.tools.values(),
       ...symbolTable.advisors.values(),
-      ...symbolTable.teams.values()
+      ...symbolTable.teams.values(),
+      ...symbolTable.documents.values()
     ];
     
     for (const symbol of allSymbols) {
@@ -509,24 +540,14 @@ export class SymbolTableBuilder {
       }
     }
     
-    // Special case: deliverables that are inputs/outputs of used roles are considered used
-    for (const role of symbolTable.roles.values()) {
-      if (role.isUsed) {
-        const roleNode = role.node as RoleNode;
-        if (roleNode.interfaces) {
-          // Mark role interface inputs as used
-          for (const input of roleNode.interfaces.inputs) {
-            const deliverableSymbol = symbolTable.deliverables.get(input.name);
-            if (deliverableSymbol) {
-              deliverableSymbol.isUsed = true;
-            }
-          }
-          // Mark role interface outputs as used
-          for (const output of roleNode.interfaces.outputs) {
-            const deliverableSymbol = symbolTable.deliverables.get(output.name);
-            if (deliverableSymbol) {
-              deliverableSymbol.isUsed = true;
-            }
+    // Special case: documents are considered used if they're referenced as document_definition in deliverables
+    for (const deliverable of symbolTable.deliverables.values()) {
+      if (deliverable.isUsed) {
+        const deliverableNode = deliverable.node as DeliverableNode;
+        if (deliverableNode.documentDefinition) {
+          const documentSymbol = symbolTable.documents.get(deliverableNode.documentDefinition);
+          if (documentSymbol) {
+            documentSymbol.isUsed = true;
           }
         }
       }
@@ -619,6 +640,11 @@ export class SymbolTableBuilder {
     for (const playbook of symbolTable.playbooks.values()) {
       if (playbook.isUsed) {
         filesWithUsedContent.add(playbook.file);
+      }
+    }
+    for (const document of symbolTable.documents.values()) {
+      if (document.isUsed) {
+        filesWithUsedContent.add(document.file);
       }
     }
     

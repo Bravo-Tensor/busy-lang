@@ -94,21 +94,21 @@ export interface BusyFileContent {
   teams?: Team[];
   role?: Role;
   playbook?: Playbook;
+  document?: Document;
 }
 
 /**
  * BUSY file types
  */
-export type BusyFileType = 'team' | 'role' | 'playbook';
+export type BusyFileType = 'team' | 'role' | 'playbook' | 'document';
 
 /**
  * Import definition
  */
 export interface Import {
   tool?: string;
-  version?: string;
+  capability?: string;
   advisor?: string;
-  interface?: string;
 }
 
 /**
@@ -136,7 +136,6 @@ export interface Role {
   onboarding?: OnboardingStep[];
   tasks?: Task[];
   responsibilities?: string[];
-  interfaces?: RoleInterface;
 }
 
 /**
@@ -150,6 +149,40 @@ export interface Playbook {
   outputs?: Deliverable[];
   steps?: Task[];
   issue_resolution?: Resolution[];
+}
+
+/**
+ * Document definition
+ */
+export interface Document {
+  metadata: {
+    name: string;
+    description: string;
+    layer: string;
+  };
+  content_type: 'structured' | 'narrative';
+  sections?: DocumentSection[];
+  narrative_content?: string;
+}
+
+/**
+ * Document section
+ */
+export interface DocumentSection {
+  name: string;
+  type: 'text' | 'list' | 'table' | 'form';
+  fields?: DocumentField[];
+  content?: string;
+}
+
+/**
+ * Document field
+ */
+export interface DocumentField {
+  name: string;
+  type: 'text' | 'number' | 'date' | 'boolean' | 'select';
+  required?: boolean;
+  options?: string[];
 }
 
 /**
@@ -169,6 +202,7 @@ export interface Task {
   facilitation?: Facilitation;
   issues?: Issue[];
   tags?: string[];
+  subtasks?: Task[];
 }
 
 /**
@@ -176,7 +210,8 @@ export interface Task {
  */
 export interface Deliverable {
   name: string;
-  type: 'document' | 'data' | 'decision' | 'approval';
+  type: 'document' | 'data';
+  document_definition?: string;
   format: string;
   schema?: SchemaDefinition;
   required_fields?: string[];
@@ -358,7 +393,7 @@ export class Parser {
       if (!fileType) {
         return {
           success: false,
-          error: new Error('Unable to determine file type - missing team, role, or playbook definition'),
+          error: new Error('Unable to determine file type - missing team, role, playbook, or document definition'),
         };
       }
       
@@ -407,6 +442,7 @@ export class Parser {
     if (content.team || content.teams) return 'team';
     if (content.role) return 'role';
     if (content.playbook) return 'playbook';
+    if ((content as any).document) return 'document';
     return null;
   }
   

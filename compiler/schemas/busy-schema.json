@@ -39,6 +39,10 @@
     "playbook": {
       "$ref": "#/definitions/playbook",
       "description": "Playbook definition (playbook files only)"
+    },
+    "document": {
+      "$ref": "#/definitions/document",
+      "description": "Document definition (document files only)"
     }
   },
   "additionalProperties": false,
@@ -69,30 +73,29 @@
       "type": "object",
       "oneOf": [
         {
-          "required": ["tool", "version"],
+          "required": ["tool", "capability"],
           "properties": {
             "tool": {
               "type": "string",
               "description": "Tool name (e.g., salesforce, stripe)"
             },
-            "version": {
+            "capability": {
               "type": "string",
-              "pattern": "^[\\^~]?\\d+\\.\\d+(\\.\\d+)?$",
-              "description": "Version constraint (semver)"
+              "description": "Specific capability needed from the tool"
             }
           },
           "additionalProperties": false
         },
         {
-          "required": ["advisor", "interface"],
+          "required": ["advisor", "capability"],
           "properties": {
             "advisor": {
               "type": "string",
               "description": "Advisor name"
             },
-            "interface": {
+            "capability": {
               "type": "string",
-              "description": "Interface specification"
+              "description": "Specific capability needed from the advisor"
             }
           },
           "additionalProperties": false
@@ -184,9 +187,6 @@
             "type": "string",
             "minLength": 1
           }
-        },
-        "interfaces": {
-          "$ref": "#/definitions/role_interface"
         }
       },
       "additionalProperties": false
@@ -301,6 +301,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "subtasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/task"
+          },
+          "description": "Hierarchical subtasks within this task"
         }
       },
       "additionalProperties": false
@@ -315,7 +322,11 @@
         },
         "type": {
           "type": "string",
-          "enum": ["document", "data", "decision", "approval"]
+          "enum": ["document", "data"]
+        },
+        "document_definition": {
+          "type": "string",
+          "description": "Reference to document definition for document type deliverables"
         },
         "format": {
           "type": "string",
@@ -458,20 +469,83 @@
       },
       "additionalProperties": false
     },
-    "role_interface": {
+    "document": {
       "type": "object",
+      "required": ["metadata", "content_type"],
       "properties": {
-        "inputs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/deliverable"
-          }
+        "metadata": {
+          "$ref": "#/definitions/metadata"
         },
-        "outputs": {
+        "content_type": {
+          "type": "string",
+          "enum": ["structured", "narrative"],
+          "description": "Document content organization type"
+        },
+        "sections": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/deliverable"
-          }
+            "$ref": "#/definitions/document_section"
+          },
+          "description": "Document sections for structured content"
+        },
+        "narrative_content": {
+          "type": "string",
+          "description": "Free-form content for narrative documents"
+        }
+      },
+      "additionalProperties": false
+    },
+    "document_section": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Section name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "list", "table", "form"],
+          "description": "Section content type"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/document_field"
+          },
+          "description": "Structured fields for form sections"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content for text sections"
+        }
+      },
+      "additionalProperties": false
+    },
+    "document_field": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Field name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "number", "date", "boolean", "select"],
+          "description": "Field data type"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether field is required"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Options for select fields"
         }
       },
       "additionalProperties": false

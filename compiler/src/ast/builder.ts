@@ -10,6 +10,9 @@ import type {
   TeamNode, 
   RoleNode, 
   PlaybookNode,
+  DocumentNode,
+  DocumentSectionNode,
+  DocumentFieldNode,
   TaskNode,
   DeliverableNode,
   ImportNode,
@@ -176,7 +179,7 @@ export class ASTBuilder {
     const imports = this.buildImports(content.imports || [], parsedFile);
     
     // Build content node based on file type
-    let contentNode: TeamNode | RoleNode | PlaybookNode;
+    let contentNode: TeamNode | RoleNode | PlaybookNode | DocumentNode;
     
     switch (parsedFile.fileType) {
       case 'team':
@@ -187,6 +190,9 @@ export class ASTBuilder {
         break;
       case 'playbook':
         contentNode = this.buildPlaybookNode(content.playbook!, parsedFile);
+        break;
+      case 'document':
+        contentNode = this.buildDocumentNode(content.document!, parsedFile);
         break;
       default:
         throw new Error(`Unknown file type: ${parsedFile.fileType}`);
@@ -238,8 +244,7 @@ export class ASTBuilder {
         type: 'Import',
         importType: imp.tool ? 'tool' : 'advisor',
         name: imp.tool || imp.advisor,
-        version: imp.version,
-        interface: imp.interface,
+        capability: imp.capability || '',
         location: {
           file: parsedFile.filePath,
           path: ['imports', index]
@@ -414,6 +419,88 @@ export class ASTBuilder {
   }
   
   /**
+   * Build document node
+   */
+  private buildDocumentNode(document: any, parsedFile: ParsedFile, basePath: (string | number)[] = ['document']): DocumentNode {
+    const sections = (document.sections || []).map((section: any, index: number) => 
+      this.buildDocumentSectionNode(section, parsedFile, [...basePath, 'sections', index])
+    );
+    
+    const documentNode: DocumentNode = {
+      type: 'Document',
+      metadata: {
+        version: parsedFile.yaml.data.version,
+        name: document.metadata.name,
+        description: document.metadata.description,
+        layer: document.metadata.layer
+      },
+      contentType: document.content_type,
+      sections: sections,
+      narrativeContent: document.narrative_content,
+      location: {
+        file: parsedFile.filePath,
+        path: basePath
+      },
+      children: sections
+    };
+    
+    // Set parent references
+    for (const child of documentNode.children || []) {
+      child.parent = documentNode;
+    }
+    
+    return documentNode;
+  }
+  
+  /**
+   * Build document section node
+   */
+  private buildDocumentSectionNode(section: any, parsedFile: ParsedFile, basePath: (string | number)[]): DocumentSectionNode {
+    const fields = (section.fields || []).map((field: any, index: number) => 
+      this.buildDocumentFieldNode(field, parsedFile, [...basePath, 'fields', index])
+    );
+    
+    const sectionNode: DocumentSectionNode = {
+      type: 'DocumentSection',
+      name: section.name,
+      sectionType: section.type,
+      fields: fields,
+      content: section.content,
+      location: {
+        file: parsedFile.filePath,
+        path: basePath
+      },
+      children: fields
+    };
+    
+    // Set parent references
+    for (const child of sectionNode.children || []) {
+      child.parent = sectionNode;
+    }
+    
+    return sectionNode;
+  }
+  
+  /**
+   * Build document field node
+   */
+  private buildDocumentFieldNode(field: any, parsedFile: ParsedFile, basePath: (string | number)[]): DocumentFieldNode {
+    const fieldNode: DocumentFieldNode = {
+      type: 'DocumentField',
+      name: field.name,
+      fieldType: field.type,
+      required: field.required || false,
+      options: field.options,
+      location: {
+        file: parsedFile.filePath,
+        path: basePath
+      }
+    };
+    
+    return fieldNode;
+  }
+  
+  /**
    * Build task node
    */
   private buildTaskNode(task: any, parsedFile: ParsedFile, basePath: (string | number)[]): TaskNode {
@@ -423,6 +510,10 @@ export class ASTBuilder {
     
     const outputs = (task.outputs || []).map((output: any, index: number) => 
       this.buildDeliverableNode(output, parsedFile, [...basePath, 'outputs', index])
+    );
+    
+    const subtasks = (task.subtasks || []).map((subtask: any, index: number) => 
+      this.buildTaskNode(subtask, parsedFile, [...basePath, 'subtasks', index])
     );
     
     const taskNode: TaskNode = {
@@ -447,11 +538,12 @@ export class ASTBuilder {
       } : undefined,
       issues: [], // TODO: Implement issues parsing
       tags: task.tags || [],
+      subtasks: subtasks,
       location: {
         file: parsedFile.filePath,
         path: basePath
       },
-      children: [...inputs, ...outputs]
+      children: [...inputs, ...outputs, ...subtasks]
     };
     
     // Set parent references
@@ -470,6 +562,7 @@ export class ASTBuilder {
       type: 'Deliverable',
       name: deliverable.name,
       deliverableType: deliverable.type,
+      documentDefinition: deliverable.document_definition,
       format: deliverable.format,
       schema: deliverable.schema ? {
         type: 'Schema',
@@ -551,6 +644,7 @@ export class ASTBuilder {
            symbols.deliverables.size + 
            symbols.tools.size + 
            symbols.advisors.size + 
-           symbols.teams.size;
+           symbols.teams.size + 
+           symbols.documents.size;
   }
 }

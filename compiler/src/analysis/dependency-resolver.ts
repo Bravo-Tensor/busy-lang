@@ -194,7 +194,8 @@ export class DependencyResolver {
            ast.symbols.deliverables.get(symbolName) ||
            ast.symbols.tools.get(symbolName) ||
            ast.symbols.advisors.get(symbolName) ||
-           ast.symbols.teams.get(symbolName);
+           ast.symbols.teams.get(symbolName) ||
+           ast.symbols.documents.get(symbolName);
   }
 
   /**

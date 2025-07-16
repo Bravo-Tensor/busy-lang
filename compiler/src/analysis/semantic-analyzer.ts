@@ -11,6 +11,7 @@ import type {
   SymbolReference,
   RoleNode,
   PlaybookNode,
+  DocumentNode,
   TaskNode,
   ImportNode 
 } from '@/ast/nodes';
@@ -83,7 +84,7 @@ export class SemanticAnalyzer {
 
       result.info.push({
         code: 'SEMANTIC_ANALYSIS_COMPLETE',
-        message: `Semantic analysis completed. Analyzed ${ast.symbols.roles.size + ast.symbols.playbooks.size + ast.symbols.tasks.size} symbols.`,
+        message: `Semantic analysis completed. Analyzed ${ast.symbols.roles.size + ast.symbols.playbooks.size + ast.symbols.tasks.size + ast.symbols.documents.size} symbols.`,
         location: 'semantic-analyzer',
         category: 'metric'
       });
@@ -131,6 +132,10 @@ export class SemanticAnalyzer {
     }
     
     for (const [symbolName, symbol] of ast.symbols.teams) {
+      result.symbolUsage.set(symbolName, this.createSymbolUsageInfo(symbol));
+    }
+    
+    for (const [symbolName, symbol] of ast.symbols.documents) {
       result.symbolUsage.set(symbolName, this.createSymbolUsageInfo(symbol));
     }
 
@@ -240,6 +245,9 @@ export class SemanticAnalyzer {
       case 'Team':
         // Team usage analysis would go here
         break;
+      case 'Document':
+        await this.analyzeDocumentUsage(file.content as DocumentNode, file, result);
+        break;
     }
   }
 
@@ -323,6 +331,54 @@ export class SemanticAnalyzer {
     // Analyze step usage
     for (const step of playbook.steps) {
       await this.analyzeTaskUsage(step, file, result);
+    }
+  }
+
+  /**
+   * Analyze document symbol usage
+   */
+  private async analyzeDocumentUsage(document: DocumentNode, file: BusyFileNode, result: SemanticAnalysisResult): Promise<void> {
+    // Analyze document sections for structural completeness
+    if (document.contentType === 'structured' && document.sections) {
+      for (const section of document.sections) {
+        // Check if section has required fields for form types
+        if (section.sectionType === 'form' && (!section.fields || section.fields.length === 0)) {
+          result.warnings.push({
+            code: 'EMPTY_FORM_SECTION',
+            message: `Document section '${section.name}' is marked as form type but has no fields`,
+            location: `${file.filePath}:document:${document.metadata.name}:section:${section.name}`,
+            category: 'best_practice',
+            recommendation: `Add fields to form section '${section.name}' or change section type`
+          });
+        }
+        
+        // Check for required fields in forms
+        if (section.fields) {
+          const requiredFieldCount = section.fields.filter(field => field.required).length;
+          if (requiredFieldCount === 0 && section.fields.length > 0) {
+            result.warnings.push({
+              code: 'NO_REQUIRED_FIELDS',
+              message: `Form section '${section.name}' has no required fields`,
+              location: `${file.filePath}:document:${document.metadata.name}:section:${section.name}`,
+              category: 'best_practice',
+              recommendation: `Consider marking critical fields as required in section '${section.name}'`
+            });
+          }
+        }
+      }
+    }
+    
+    // Analyze narrative content completeness
+    if (document.contentType === 'narrative') {
+      if (!document.narrativeContent || document.narrativeContent.trim().length === 0) {
+        result.warnings.push({
+          code: 'EMPTY_NARRATIVE_DOCUMENT',
+          message: `Document '${document.metadata.name}' is marked as narrative but has no content`,
+          location: `${file.filePath}:document:${document.metadata.name}`,
+          category: 'best_practice',
+          recommendation: `Add narrative content to document '${document.metadata.name}' or change to structured type`
+        });
+      }
     }
   }
 
