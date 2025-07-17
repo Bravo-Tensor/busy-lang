@@ -46,8 +46,11 @@ organization/
 │   │   ├── roles/         # Role definitions
 │   │   │   ├── role-name.busy
 │   │   │   └── ...
-│   │   └── playbooks/     # Playbook definitions
-│   │       ├── playbook-name.busy
+│   │   ├── playbooks/     # Playbook definitions
+│   │   │   ├── playbook-name.busy
+│   │   │   └── ...
+│   │   └── documents/     # Document templates
+│   │       ├── document-name.busy
 │   │       └── ...
 │   └── ...
 ├── L1/                    # Management layer
@@ -65,12 +68,12 @@ metadata:                 # REQUIRED: File metadata
   description: "..."      # REQUIRED: Detailed description
   layer: "L0"             # REQUIRED: L0, L1, or L2
 
-# Optional imports
+# Optional imports (capability-based)
 imports:
   - tool: "toolname"      # External tool import
-    capability: "crm-management"  # Capability specification
+    capability: "crm-management"  # Capability specification (NO version numbers)
   - advisor: "advisorname"  # AI advisor import
-    capability: "contract-review"  # Capability specification
+    capability: "contract-review"  # Capability specification (NO version numbers)
 
 # Content (one of):
 team: {...}               # Team definition

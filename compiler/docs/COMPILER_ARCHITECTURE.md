@@ -447,8 +447,21 @@ interface SymbolUsageInfo {
 **Detection Algorithm**:
 1. **Mark Phase**: Mark all directly referenced symbols
 2. **Sweep Phase**: Mark transitively referenced symbols
-3. **Usage Analysis**: Analyze usage patterns
-4. **Report Generation**: Report unused symbols
+3. **Usage Analysis**: Analyze usage patterns and reference counts
+4. **Location Extraction**: Extract precise file and line information from AST nodes
+5. **Report Generation**: Report unused symbols with specific locations
+
+**Enhanced Location Tracking**:
+- **File and Line Numbers**: Precise location information for all dead code warnings
+- **YAML Position Tracking**: Accurate line/column positions from YAML parser
+- **AST Node Integration**: Location information embedded in all AST nodes
+- **Error Context**: Rich context for debugging unused symbols
+
+**Warning Format**:
+```
+DEAD_CODE: Symbol 'unused_task' is defined but never used
+   at client-onboarding.busy:122
+```
 
 **Special Cases**:
 - **Teams**: Always considered used (organizational structure)
