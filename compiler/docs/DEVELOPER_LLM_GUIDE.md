@@ -199,12 +199,12 @@ role:
       # Define inputs/outputs for clarity
       inputs:
         - name: "[input_name]"
-          type: "[document|data|decision|approval]"
+          type: "[document|data]"
           format: "[json|pdf|email|etc]"
       
       outputs:
         - name: "[output_name]"
-          type: "[document|data|decision|approval]"
+          type: "[document|data]"
           format: "[json|pdf|email|etc]"
 ```
 
@@ -508,29 +508,12 @@ playbook:
 # Producer role
 role:
   name: "data-analyst"
-  interfaces:
-    outputs:
-      - name: "analysis_report"
-        type: "document"
-        format: "json"
-        schema:
-          type: "json"
-          definition: |
-            {
-              "insights": "array",
-              "metrics": "object",
-              "recommendations": "array"
-            }
+  # Interfaces removed - use task inputs/outputs instead
 
 # Consumer role
 role:
   name: "product-manager"
-  interfaces:
-    inputs:
-      - name: "analysis_report"
-        type: "document"
-        format: "json"
-        # Must match producer schema
+  # Interfaces removed - use task inputs/outputs instead
 ```
 
 ## Troubleshooting
@@ -714,9 +697,9 @@ metadata:
 
 imports:
   - tool: "salesforce"
-    version: "^2.0.0"
+    capability: "crm-management"
   - advisor: "customer-success-advisor"
-    interface: "relationship-management"
+    capability: "relationship-management"
 
 role:
   name: "customer-success-manager"
@@ -807,22 +790,6 @@ role:
       
       tags: ["monitoring", "daily", "automation"]
   
-  interfaces:
-    inputs:
-      - name: "customer_assignments"
-        type: "data"
-        format: "json"
-      - name: "support_escalations"
-        type: "data"
-        format: "json"
-    
-    outputs:
-      - name: "customer_status_updates"
-        type: "data"
-        format: "json"
-      - name: "expansion_opportunities"
-        type: "data"
-        format: "json"
 ```
 
 ### Complete Playbook Example

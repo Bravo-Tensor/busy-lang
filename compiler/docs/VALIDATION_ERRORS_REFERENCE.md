@@ -21,7 +21,7 @@ These errors occur when BUSY files don't conform to the JSON schema.
 - **Invalid layer value**: `metadata.layer must be one of: L0, L1, L2`
 - **Invalid team type**: `team.type must be one of: stream-aligned, enabling, complicated-subsystem, platform`
 - **Invalid execution type**: `execution_type must be one of: algorithmic, ai_agent, human, human_creative`
-- **Invalid deliverable type**: `deliverable.type must be one of: document, data, decision, approval`
+- **Invalid deliverable type**: `deliverable.type must be one of: document, data`
 - **Invalid frequency**: `cadence.frequency must be one of: daily, weekly, monthly, quarterly, on_demand, triggered`
 - **Invalid resolution type**: `resolution.type must be one of: escalate, override, delegate, pause, ai_assist`
 - **Invalid ui_type**: `ui_type must be one of: form, meeting, writing_session, strategy_session`

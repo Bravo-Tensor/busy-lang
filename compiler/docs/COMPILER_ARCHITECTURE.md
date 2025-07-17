@@ -221,11 +221,11 @@ interface SemanticAnalysisResult {
 - Type compatibility verification
 - Schema validation
 
-#### Interface Validator (`src/analysis/interface-validator.ts`)
-**Purpose**: Interface compatibility verification
+#### Task Dependency Validator (`src/analysis/task-validator.ts`)
+**Purpose**: Task input/output compatibility verification
 
 **Responsibilities**:
-- Input/output matching
+- Input/output matching between tasks
 - Format compatibility checking
 - Required field validation
 - Interface evolution tracking
@@ -336,7 +336,7 @@ class Analyzer {
       this.semanticAnalyzer,
       this.dependencyResolver,
       this.typeChecker,
-      this.interfaceValidator,
+      this.taskValidator,
       this.governanceValidator,
       this.resourceAnalyzer,
       this.performanceAnalyzer,
@@ -360,9 +360,9 @@ class Analyzer {
 1. **Semantic Analysis** (foundation)
 2. **Dependency Resolution** (requires symbols)
 3. **Type Checking** (requires dependencies)
-4. **Interface Validation** (requires types)
+4. **Task Validation** (requires types)
 5. **Governance Validation** (requires structure)
-6. **Resource Analysis** (requires interfaces)
+6. **Resource Analysis** (requires task dependencies)
 7. **Performance Analysis** (requires resources)
 8. **Security Analysis** (requires all structure)
 9. **Quality Analysis** (requires complete analysis)

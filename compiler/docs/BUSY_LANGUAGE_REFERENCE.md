@@ -32,6 +32,7 @@ BUSY (Business Unified Specification YAML) is a domain-specific language for des
 - **Team Files** (`team.busy`): Define team structure and composition
 - **Role Files** (`*.busy` in role directories): Define individual contributor roles
 - **Playbook Files** (`*.busy` in playbook directories): Define repeatable processes
+- **Document Files** (`*.busy` in document directories): Define structured document templates
 
 ## File Structure
 
@@ -67,14 +68,15 @@ metadata:                 # REQUIRED: File metadata
 # Optional imports
 imports:
   - tool: "toolname"      # External tool import
-    version: "1.0.0"      # Version constraint
+    capability: "crm-management"  # Capability specification
   - advisor: "advisorname"  # AI advisor import
-    interface: "interface"  # Interface specification
+    capability: "contract-review"  # Capability specification
 
 # Content (one of):
 team: {...}               # Team definition
 role: {...}               # Role definition  
 playbook: {...}           # Playbook definition
+document: {...}           # Document definition
 ```
 
 ## Syntax Reference
@@ -110,16 +112,17 @@ metadata:
 ```yaml
 imports:
   - tool: "salesforce"
-    version: "^2.0.0"
+    capability: "crm-management"
   - advisor: "legal-advisor"
-    interface: "contract-review"
+    capability: "contract-review"
 ```
 
 **Rules**:
 - **Required**: No
-- **Tool imports**: Require `tool` and `version` fields
-- **Advisor imports**: Require `advisor` and `interface` fields
-- **Version format**: Semantic version with optional `^` or `~` prefix
+- **Tool imports**: Require `tool` and `capability` fields
+- **Advisor imports**: Require `advisor` and `capability` fields
+- **Capability format**: Descriptive string identifying the specific functionality needed
+- **Capability examples**: `accounting`, `photo-editing`, `scheduling`, `contract-review`
 
 ### Team Definition
 
@@ -193,16 +196,6 @@ role:
       execution_type: "human"
       # ... task fields
   
-  # Optional interfaces
-  interfaces:
-    inputs:
-      - name: "project_requirements"
-        type: "document"
-        format: "json"
-    outputs:
-      - name: "project_plan"
-        type: "document"
-        format: "pdf"
 ```
 
 **Rules**:
@@ -295,6 +288,23 @@ playbook:
   
   # Optional tags
   tags: ["legal", "compliance", "contract"]
+  
+  # Optional subtasks for complex tasks
+  subtasks:
+    - name: "extract_requirements"
+      description: "Extract key requirements from contract draft"
+      execution_type: "human"
+      estimated_duration: "30m"
+      
+      inputs:
+        - name: "draft_contract"
+          type: "document"
+          format: "pdf"
+      
+      outputs:
+        - name: "requirements_list"
+          type: "data"
+          format: "json"
 ```
 
 **Rules**:
@@ -303,6 +313,7 @@ playbook:
 - **Execution types**: `"algorithmic"`, `"ai_agent"`, `"human"`, `"human_creative"`
 - **Duration format**: `\d+[mhd]`
 - **UI types**: `"form"`, `"meeting"`, `"writing_session"`, `"strategy_session"`
+- **Subtasks**: Optional array of child tasks for complex operations
 
 ### Deliverable Definition
 
@@ -339,9 +350,56 @@ playbook:
 **Rules**:
 - **Required**: `name`, `type`, `format`
 - **Name format**: snake_case (`^[a-z][a-z0-9_]*$`)
-- **Types**: `"document"`, `"data"`, `"decision"`, `"approval"`
+- **Types**: `"document"`, `"data"`
 - **Validation rule types**: `"required"`, `"format"`, `"range"`, `"dependency"`, `"conflict"`
 - **Severities**: `"error"`, `"warning"`, `"info"`
+- **Document definition**: Optional reference to a document definition file for structured documents
+
+### Document Definition
+
+Document definitions are first-class entities that define structured document templates:
+
+```yaml
+document:
+  metadata:
+    name: "client-contract"
+    description: "Standard client photography contract"
+    version: "1.0.0"
+  
+  content_type: "structured"  # or "narrative"
+  
+  # For structured documents
+  sections:
+    - name: "client_information"
+      description: "Client details and contact information"
+      fields:
+        - name: "client_name"
+          type: "text"
+          required: true
+        - name: "email"
+          type: "email"
+          required: true
+    
+    - name: "event_details"
+      description: "Event specifications and requirements"
+      fields:
+        - name: "event_date"
+          type: "date"
+          required: true
+        - name: "location"
+          type: "text"
+          required: true
+  
+  # For narrative documents
+  narrative_content: "Template content with {{placeholders}}"
+```
+
+**Rules**:
+- **Required**: `metadata`, `content_type`
+- **Content types**: `"structured"`, `"narrative"`
+- **Structured documents**: Must include `sections` with `fields`
+- **Narrative documents**: Must include `narrative_content`
+- **Field types**: `"text"`, `"email"`, `"date"`, `"number"`, `"boolean"`, `"select"`
 
 ### Issue Resolution
 
@@ -529,12 +587,12 @@ role:
       
       inputs:
         - name: "[input_deliverable]"
-          type: "[document|data|decision|approval]"
+          type: "[document|data]"
           format: "[json|pdf|email|etc]"
       
       outputs:
         - name: "[output_deliverable]"
-          type: "[document|data|decision|approval]"
+          type: "[document|data]"
           format: "[json|pdf|email|etc]"
 ```
 
@@ -556,12 +614,12 @@ playbook:
   
   inputs:
     - name: "[input_deliverable]"
-      type: "[document|data|decision|approval]"
+      type: "[document|data]"
       format: "[json|pdf|email|etc]"
   
   outputs:
     - name: "[output_deliverable]"
-      type: "[document|data|decision|approval]"
+      type: "[document|data]"
       format: "[json|pdf|email|etc]"
   
   steps:
