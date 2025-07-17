@@ -6,11 +6,11 @@ metadata:
 
 imports:
   - tool: "google-sheets"
-    version: "^2.0"
+    capability: "spreadsheet-management"
   - tool: "docusign"
-    version: "^3.0"
+    capability: "digital-signing"
   - advisor: "vendor-management"
-    interface: "procurement-best-practices"
+    capability: "procurement-best-practices"
 
 playbook:
   name: "vendor-management"

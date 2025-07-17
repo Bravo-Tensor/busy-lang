@@ -101,19 +101,3 @@ role:
             target: "business_owner"
             timeout: "7d"
   
-  interfaces:
-    inputs:
-      - name: "project_completions"
-        type: "data"
-        format: "json"
-      - name: "expense_receipts"
-        type: "data"
-        format: "mixed"
-    
-    outputs:
-      - name: "financial_reports"
-        type: "document"
-        format: "pdf"
-      - name: "tax_documents"
-        type: "document"
-        format: "pdf"

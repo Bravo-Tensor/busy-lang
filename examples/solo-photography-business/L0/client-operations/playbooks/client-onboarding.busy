@@ -6,11 +6,11 @@ metadata:
 
 imports:
   - tool: "google-forms"
-    version: "^2.0"
+    capability: "form-management"
   - tool: "google-drive"
-    version: "^3.0"
+    capability: "file-storage"
   - advisor: "client-experience"
-    interface: "onboarding-best-practices"
+    capability: "onboarding-best-practices"
 
 playbook:
   name: "client-onboarding"
@@ -27,7 +27,7 @@ playbook:
   
   outputs:
     - name: "onboarding_complete"
-      type: "decision"
+      type: "data"
       format: "json"
       validation_rules:
         - rule_type: "required"
@@ -117,6 +117,55 @@ playbook:
                 "milestones": "array",
                 "client_responsibilities": "array"
               }
+      
+      subtasks:
+        - name: "gather_timeline_requirements"
+          description: "Extract timing constraints from client responses"
+          execution_type: "human"
+          estimated_duration: "10m"
+          
+          inputs:
+            - name: "client_questionnaire_responses"
+              type: "data"
+              format: "json"
+            - name: "confirmed_booking"
+              type: "data"
+              format: "json"
+          
+          outputs:
+            - name: "timeline_constraints"
+              type: "data"
+              format: "json"
+        
+        - name: "schedule_key_milestones"
+          description: "Define and schedule critical project milestones"
+          execution_type: "human"
+          estimated_duration: "15m"
+          
+          inputs:
+            - name: "timeline_constraints"
+              type: "data"
+              format: "json"
+          
+          outputs:
+            - name: "milestone_schedule"
+              type: "data"
+              format: "json"
+        
+        - name: "finalize_project_timeline"
+          description: "Create final timeline document with all details"
+          execution_type: "human"
+          estimated_duration: "5m"
+          
+          inputs:
+            - name: "milestone_schedule"
+              type: "data"
+              format: "json"
+          
+          outputs:
+            - name: "project_timeline"
+              type: "document"
+              format: "json"
     
     - name: "location_scouting_coordination"
       description: "Coordinate location details and logistics"
@@ -161,7 +210,7 @@ playbook:
       
       outputs:
         - name: "shoot_readiness_confirmation"
-          type: "decision"
+          type: "data"
           format: "json"
       
       facilitation:
@@ -178,7 +227,7 @@ playbook:
       
       inputs:
         - name: "shoot_readiness_confirmation"
-          type: "decision"
+          type: "data"
           format: "json"
         - name: "client_questionnaire_responses"
           type: "data"
@@ -190,6 +239,7 @@ playbook:
       outputs:
         - name: "comprehensive_shoot_brief"
           type: "document"
+          document_definition: "shoot-brief"
           format: "json"
           schema:
             type: "json"

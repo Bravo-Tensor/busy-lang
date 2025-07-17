@@ -50,26 +50,3 @@ role:
             type: "ai_assist"
             conditions: ["missing > 2 required fields"]
             timeout: "1h"
-  
-  interfaces:
-    inputs:
-      - name: "website_inquiries"
-        type: "data"
-        format: "json"
-      - name: "social_media_dms"
-        type: "data"
-        format: "json"
-    
-    outputs:
-      - name: "qualified_leads"
-        type: "data"
-        format: "json"
-        schema:
-          type: "json"
-          definition: |
-            {
-              "lead_id": "string",
-              "qualification_score": "number",
-              "next_action": "string",
-              "consultation_scheduled": "boolean"
-            }

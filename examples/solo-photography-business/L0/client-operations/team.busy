@@ -6,13 +6,13 @@ metadata:
 
 imports:
   - tool: "calendly"
-    version: "^3.0"
+    capability: "scheduling"
   - tool: "gmail"
-    version: "^2.0"
+    capability: "email-management"
   - tool: "stripe"
-    version: "^4.0"
+    capability: "payment-processing"
   - advisor: "customer-service"
-    interface: "inquiry-response"
+    capability: "inquiry-response"
 
 team:
   name: "Client Operations"

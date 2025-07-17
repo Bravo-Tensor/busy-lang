@@ -105,20 +105,3 @@ role:
             type: "ai_assist"
             agent_prompt: "Research latest regulations affecting photography business"
             context_gathering: ["industry_updates", "legal_changes"]
-  
-  interfaces:
-    inputs:
-      - name: "new_bookings"
-        type: "data"
-        format: "json"
-      - name: "vendor_requirements"
-        type: "data"
-        format: "json"
-    
-    outputs:
-      - name: "executed_contracts"
-        type: "document"
-        format: "pdf"
-      - name: "compliance_reports"
-        type: "document"
-        format: "pdf"

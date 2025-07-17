@@ -1,0 +1,56 @@
+version: "1.0.0"
+metadata:
+  name: "Solo Photography Business Plan"
+  description: "Strategic business planning document for photography business"
+  layer: "L0"
+
+document:
+  metadata:
+    name: "business-plan"
+    description: "Comprehensive business strategy and operational plan"
+    layer: "L0"
+  
+  content_type: "narrative"
+  
+  narrative_content: |
+    # Solo Photography Business Strategic Plan
+    
+    ## Executive Summary
+    This document outlines the strategic direction and operational framework for a solo photography business specializing in event and portrait photography. The business model emphasizes quality, efficiency, and scalable processes while maintaining the personal touch that clients value.
+    
+    ## Business Vision & Mission
+    **Vision**: To become the premier solo photography service in the region, known for exceptional quality, reliability, and client experience.
+    
+    **Mission**: To capture life's most important moments with artistic excellence while building sustainable business processes that ensure consistent quality and client satisfaction.
+    
+    ## Market Analysis
+    The photography market shows strong demand for personalized services, particularly in:
+    - Wedding and engagement photography
+    - Portrait sessions (individual, family, corporate)
+    - Small event coverage
+    - Commercial photography for small businesses
+    
+    ## Service Offerings
+    1. **Wedding Photography**: Complete coverage from engagement to ceremony
+    2. **Portrait Sessions**: Individual, family, and corporate headshots
+    3. **Event Photography**: Small to medium events, celebrations, corporate functions
+    4. **Commercial Photography**: Product photography, business marketing materials
+    
+    ## Operational Strategy
+    The business leverages the BUSY framework to ensure:
+    - Consistent quality through standardized playbooks
+    - Efficient resource allocation across L0 operational teams
+    - Clear role definitions and task automation where possible
+    - Scalable processes that maintain quality as demand grows
+    
+    ## Technology Stack
+    - Adobe Creative Suite for post-processing
+    - Cloud storage solutions for backup and client delivery
+    - CRM systems for client management and booking
+    - Automated workflow tools for efficiency
+    
+    ## Financial Projections
+    Year 1 targets include establishing client base, refining processes, and achieving break-even by month 8. Growth strategy focuses on referrals and targeted marketing.
+    
+    ## Risk Management
+    Key risks include equipment failure, seasonal demand fluctuations, and competitive pressure. Mitigation strategies include equipment insurance, diversified service offerings, and continuous skill development.

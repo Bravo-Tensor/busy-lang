@@ -6,11 +6,11 @@ metadata:
 
 imports:
   - tool: "calendly"
-    version: "^3.0"
+    capability: "scheduling"
   - tool: "stripe"
-    version: "^4.0"
+    capability: "payment-processing"
   - advisor: "sales-process"
-    interface: "conversion-optimization"
+    capability: "conversion-optimization"
 
 playbook:
   name: "inquiry-to-booking"
@@ -65,7 +65,7 @@ playbook:
       
       outputs:
         - name: "qualification_assessment"
-          type: "decision"
+          type: "data"
           format: "json"
           schema:
             type: "json"
@@ -85,7 +85,7 @@ playbook:
       
       inputs:
         - name: "qualification_assessment"
-          type: "decision"
+          type: "data"
           format: "json"
       
       outputs:
@@ -108,7 +108,7 @@ playbook:
       
       inputs:
         - name: "qualification_assessment"
-          type: "decision"
+          type: "data"
           format: "json"
       
       outputs:
@@ -134,7 +134,7 @@ playbook:
       
       outputs:
         - name: "consultation_outcome"
-          type: "decision"
+          type: "data"
           format: "json"
       
       facilitation:
@@ -152,7 +152,7 @@ playbook:
       
       inputs:
         - name: "consultation_outcome"
-          type: "decision"
+          type: "data"
           format: "json"
       
       outputs:

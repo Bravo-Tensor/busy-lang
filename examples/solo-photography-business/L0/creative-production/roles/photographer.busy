@@ -31,6 +31,7 @@ role:
       inputs:
         - name: "shoot_brief"
           type: "document"
+          document_definition: "shoot-brief"
           format: "json"
           required_fields: ["shot_list", "style_requirements", "technical_specs"]
         - name: "equipment_checklist"
@@ -83,16 +84,3 @@ role:
       
       algorithm: "automated_folder_creation_and_backup"
   
-  interfaces:
-    inputs:
-      - name: "shoot_schedule"
-        type: "data"
-        format: "calendar_event"
-    
-    outputs:
-      - name: "captured_content"
-        type: "data"
-        format: "image_collection"
-      - name: "shoot_notes"
-        type: "document"
-        format: "json"

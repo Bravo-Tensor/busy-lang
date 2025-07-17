@@ -6,11 +6,11 @@ metadata:
 
 imports:
   - tool: "quickbooks"
-    version: "^2024.0.0"
+    capability: "accounting"
   - tool: "excel"
-    version: "^365.0.0"
+    capability: "spreadsheet-management"
   - advisor: "small-business-finance"
-    interface: "monthly-reporting"
+    capability: "monthly-reporting"
 
 playbook:
   name: "monthly-financials"

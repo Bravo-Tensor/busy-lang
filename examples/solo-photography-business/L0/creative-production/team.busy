@@ -6,13 +6,13 @@ metadata:
 
 imports:
   - tool: "lightroom"
-    version: "^13.0"
+    capability: "photo-editing"
   - tool: "photoshop"
-    version: "^24.0"
+    capability: "image-manipulation"
   - tool: "dropbox"
-    version: "^3.0"
+    capability: "file-storage"
   - advisor: "photography-techniques"
-    interface: "style-guide"
+    capability: "style-guide"
 
 team:
   name: "Creative Production"

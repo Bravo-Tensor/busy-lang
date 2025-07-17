@@ -58,6 +58,7 @@ role:
       outputs:
         - name: "shoot_brief"
           type: "document"
+          document_definition: "shoot-brief"
           format: "json"
           schema:
             type: "json"
@@ -75,17 +76,3 @@ role:
             type: "escalate"
             target: "client"
             timeout: "24h"
-  
-  interfaces:
-    inputs:
-      - name: "active_bookings"
-        type: "data"
-        format: "json"
-    
-    outputs:
-      - name: "project_status_updates"
-        type: "data"
-        format: "json"
-      - name: "shoot_requirements"
-        type: "data"
-        format: "json"

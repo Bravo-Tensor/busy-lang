@@ -6,11 +6,11 @@ metadata:
 
 imports:
   - tool: "lightroom"
-    version: "^13.0"
+    capability: "photo-editing"
   - tool: "dropbox"
-    version: "^3.0"
+    capability: "cloud-storage"
   - advisor: "photography-workflow"
-    interface: "production-standards"
+    capability: "production-standards"
 
 playbook:
   name: "photo-production"
@@ -22,6 +22,7 @@ playbook:
   inputs:
     - name: "comprehensive_shoot_brief"
       type: "document"
+      document_definition: "shoot-brief"
       format: "json"
       required_fields: ["shoot_specifications", "location_logistics", "client_profile"]
   
@@ -44,11 +45,12 @@ playbook:
       inputs:
         - name: "comprehensive_shoot_brief"
           type: "document"
+          document_definition: "shoot-brief"
           format: "json"
       
       outputs:
         - name: "equipment_checklist_complete"
-          type: "decision"
+          type: "data"
           format: "json"
           validation_rules:
             - rule_type: "required"
@@ -69,10 +71,11 @@ playbook:
       
       inputs:
         - name: "equipment_checklist_complete"
-          type: "decision"
+          type: "data"
           format: "json"
         - name: "comprehensive_shoot_brief"
           type: "document"
+          document_definition: "shoot-brief"
           format: "json"
       
       outputs:
@@ -129,6 +132,7 @@ playbook:
           format: "backed_up_files"
         - name: "comprehensive_shoot_brief"
           type: "document"
+          document_definition: "shoot-brief"
           format: "json"
       
       outputs:
@@ -162,6 +166,67 @@ playbook:
             - rule_type: "required"
               condition: "consistent_style AND color_corrected"
               error_message: "Images must have consistent style and color correction"
+      
+      subtasks:
+        - name: "color_correction"
+          description: "Apply color correction and white balance"
+          execution_type: "human_creative"
+          estimated_duration: "90m"
+          
+          inputs:
+            - name: "initial_selection"
+              type: "data"
+              format: "image_list"
+          
+          outputs:
+            - name: "color_corrected_images"
+              type: "data"
+              format: "image_list"
+        
+        - name: "creative_enhancement"
+          description: "Apply artistic edits and style adjustments"
+          execution_type: "human_creative"
+          estimated_duration: "120m"
+          
+          inputs:
+            - name: "color_corrected_images"
+              type: "data"
+              format: "image_list"
+          
+          outputs:
+            - name: "enhanced_images"
+              type: "data"
+              format: "image_list"
+        
+        - name: "final_processing"
+          description: "Apply final touches and prepare for delivery"
+          execution_type: "human_creative"
+          estimated_duration: "90m"
+          
+          inputs:
+            - name: "enhanced_images"
+              type: "data"
+              format: "image_list"
+          
+          outputs:
+            - name: "edited_images"
+              type: "data"
+              format: "processed_images"
+        
+        - name: "quality_review"
+          description: "Review all edited images for consistency"
+          execution_type: "human"
+          estimated_duration: "60m"
+          
+          inputs:
+            - name: "edited_images"
+              type: "data"
+              format: "processed_images"
+          
+          outputs:
+            - name: "quality_approved_images"
+              type: "data"
+              format: "processed_images"
       
       issues:
         - issue_type: "challenging_lighting_correction"

@@ -103,13 +103,3 @@ role:
       
       algorithm: "automated_export_and_packaging"
   
-  interfaces:
-    inputs:
-      - name: "raw_content"
-        type: "data"
-        format: "image_files"
-    
-    outputs:
-      - name: "processed_deliverables"
-        type: "data"
-        format: "final_images"

@@ -6,13 +6,13 @@ metadata:
 
 imports:
   - tool: "quickbooks"
-    version: "^2024.0.0"
+    capability: "accounting"
   - tool: "docusign"
-    version: "^3.0.0"
+    capability: "digital-signing"
   - tool: "google-workspace"
-    version: "^2.0.0"
+    capability: "productivity-suite"
   - advisor: "small-business-accounting"
-    interface: "tax-compliance"
+    capability: "tax-compliance"
 
 team:
   name: "Business Operations"
