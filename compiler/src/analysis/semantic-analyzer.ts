@@ -262,10 +262,20 @@ export class SemanticAnalyzer {
       // Check if import is actually used
       const isUsed = this.isImportUsed(importNode, file);
       if (!isUsed) {
+        const fileName = file.filePath.split('/').pop() || file.filePath;
+        let location = `${fileName}:import:${importNode.name}`;
+        
+        // Use location information from the import node if available
+        if (importNode.location?.position) {
+          location = `${fileName}:${importNode.location.position.line}`;
+        } else if (importNode.location?.range?.start) {
+          location = `${fileName}:${importNode.location.range.start.line}`;
+        }
+        
         result.warnings.push({
           code: 'UNUSED_IMPORT',
           message: `Import '${importNode.name}' is declared but never used`,
-          location: `${file.filePath}:import:${importNode.name}`,
+          location: location,
           category: 'optimization',
           recommendation: `Remove unused import '${importNode.name}'`
         });
@@ -454,13 +464,46 @@ export class SemanticAnalyzer {
   /**
    * Check for dead code (unused symbols)
    */
-  private async checkDeadCode(_ast: BusyAST, result: SemanticAnalysisResult): Promise<void> {
+  private async checkDeadCode(ast: BusyAST, result: SemanticAnalysisResult): Promise<void> {
+    // Collect all symbols from the symbol table
+    const allSymbols = new Map<string, Symbol>();
+    
+    // Add all symbol types to the map
+    for (const [name, symbol] of ast.symbols.roles) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.playbooks) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.tasks) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.deliverables) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.tools) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.advisors) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.teams) allSymbols.set(name, symbol);
+    for (const [name, symbol] of ast.symbols.documents) allSymbols.set(name, symbol);
+    
     for (const [symbolName, usage] of result.symbolUsage) {
       if (usage.isDeadCode) {
+        const symbol = allSymbols.get(symbolName);
+        let location = `symbol:${symbolName}`;
+        
+        // Extract file and line information from the symbol
+        if (symbol) {
+          const filePath = symbol.file;
+          const fileName = filePath.split('/').pop() || filePath;
+          
+          if (symbol.node?.location?.position) {
+            // Use line number if available
+            location = `${fileName}:${symbol.node.location.position.line}`;
+          } else if (symbol.node?.location?.range?.start) {
+            // Use range start if position not available
+            location = `${fileName}:${symbol.node.location.range.start.line}`;
+          } else {
+            // Fallback to just filename
+            location = `${fileName}:${symbolName}`;
+          }
+        }
+        
         result.warnings.push({
           code: 'DEAD_CODE',
           message: `Symbol '${symbolName}' is defined but never used`,
-          location: `symbol:${symbolName}`,
+          location: location,
           category: 'optimization',
           recommendation: `Remove unused symbol '${symbolName}' or add references to it`
         });

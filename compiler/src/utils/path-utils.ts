@@ -8,13 +8,13 @@ import { glob } from 'glob';
 
 /**
  * BUSY namespace structure validation
- * Expected: org/layer/team/(roles|playbooks)/file.busy
+ * Expected: org/layer/team/(roles|playbooks|documents)/file.busy
  */
 export interface NamespaceInfo {
   org: string;
   layer: 'L0' | 'L1' | 'L2';
   team: string;
-  category: 'roles' | 'playbooks' | 'team';
+  category: 'roles' | 'playbooks' | 'documents' | 'team';
   filename: string;
   isValid: boolean;
   errors: string[];
@@ -53,25 +53,25 @@ export function parseNamespace(filePath: string): NamespaceInfo {
   
   const team = layerIndex + 1 < parts.length ? parts[layerIndex + 1] : '';
   
-  // Determine category (roles, playbooks, or team file)
-  let category: 'roles' | 'playbooks' | 'team' = 'team';
+  // Determine category (roles, playbooks, documents, or team file)
+  let category: 'roles' | 'playbooks' | 'documents' | 'team' = 'team';
   const filename = path.basename(filePath, '.busy');
   
   if (layerIndex + 2 < parts.length) {
     const categoryPart = parts[layerIndex + 2];
-    if (categoryPart === 'roles' || categoryPart === 'playbooks') {
+    if (categoryPart === 'roles' || categoryPart === 'playbooks' || categoryPart === 'documents') {
       category = categoryPart;
     } else if (filename === 'team') {
       category = 'team';
     } else {
-      errors.push(`Invalid category '${categoryPart}'. Expected 'roles', 'playbooks', or team.busy file`);
+      errors.push(`Invalid category '${categoryPart}'. Expected 'roles', 'playbooks', 'documents', or team.busy file`);
     }
   } else if (filename === 'team') {
     category = 'team';
   }
   
   // Validate filename patterns
-  if (category === 'roles' || category === 'playbooks') {
+  if (category === 'roles' || category === 'playbooks' || category === 'documents') {
     if (!/^[a-z][a-z0-9-_]*$/.test(filename)) {
       errors.push(`Invalid filename '${filename}'. Must be lowercase with dashes/underscores only`);
     }
