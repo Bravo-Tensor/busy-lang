@@ -203,7 +203,7 @@ export class YamlParser {
    * Convert character offset to line/column position
    */
   private getPositionFromOffset(source: string, offset: number): SourcePosition {
-    const lines = source.substring(0, offset).split('\\n');
+    const lines = source.substring(0, offset).split('\n');
     const line = lines.length;
     const column = lines[lines.length - 1].length + 1;
     

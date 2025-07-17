@@ -25,6 +25,7 @@ import type {
   NamespaceInfo
 } from './nodes';
 import { SymbolTableBuilder } from '@/symbols/table';
+import { YamlParser } from '@/utils/yaml-utils';
 
 /**
  * AST Builder result
@@ -77,11 +78,41 @@ export interface BuildWarning {
  */
 export class ASTBuilder {
   private symbolTableBuilder: SymbolTableBuilder;
+  private yamlParser: YamlParser;
   private errors: BuildError[] = [];
   private warnings: BuildWarning[] = [];
   
   constructor() {
     this.symbolTableBuilder = new SymbolTableBuilder();
+    this.yamlParser = new YamlParser();
+  }
+  
+  /**
+   * Create location object with position information
+   */
+  private createLocation(parsedFile: ParsedFile, path: (string | number)[]): SourceLocation {
+    const location: SourceLocation = {
+      file: parsedFile.filePath,
+      path: path
+    };
+    
+    // Try to get position information from YAML
+    try {
+      const position = this.yamlParser.getPositionForPath(parsedFile.yaml, path);
+      if (position) {
+        location.position = position;
+      }
+      
+      const range = this.yamlParser.getRangeForPath(parsedFile.yaml, path);
+      if (range) {
+        location.range = range;
+      }
+    } catch (error) {
+      // If position extraction fails, just use the basic location
+      // This ensures the system is robust even if position tracking fails
+    }
+    
+    return location;
   }
   
   /**
@@ -219,10 +250,7 @@ export class ASTBuilder {
       imports,
       content: contentNode,
       namespace,
-      location: {
-        file: parsedFile.filePath,
-        path: []
-      },
+      location: this.createLocation(parsedFile, []),
       children: [contentNode, ...imports]
     };
     
@@ -245,10 +273,7 @@ export class ASTBuilder {
         importType: imp.tool ? 'tool' : 'advisor',
         name: imp.tool || imp.advisor,
         capability: imp.capability || '',
-        location: {
-          file: parsedFile.filePath,
-          path: ['imports', index]
-        }
+        location: this.createLocation(parsedFile, ['imports', index])
       };
       
       return importNode;
@@ -283,25 +308,16 @@ export class ASTBuilder {
         type: 'Governance',
         escalationPath: team.governance.escalation_path,
         decisionAuthority: team.governance.decision_authority || [],
-        location: {
-          file: parsedFile.filePath,
-          path: ['team', 'governance']
-        }
+        location: this.createLocation(parsedFile, ['team', 'governance'])
       } : undefined,
       interfaces: team.interfaces ? {
         type: 'TeamInterfaces',
         external: team.interfaces.external || [],
         internal: team.interfaces.internal || [],
-        location: {
-          file: parsedFile.filePath,
-          path: ['team', 'interfaces']
-        }
+        location: this.createLocation(parsedFile, ['team', 'interfaces'])
       } : undefined,
       successMetrics: team.success_metrics || [],
-      location: {
-        file: parsedFile.filePath,
-        path: ['team']
-      },
+      location: this.createLocation(parsedFile, ['team']),
       children: [...roles, ...playbooks, ...resources]
     };
     
@@ -325,10 +341,7 @@ export class ASTBuilder {
       type: 'OnboardingStep' as const,
       step: step.step,
       duration: step.duration,
-      location: {
-        file: parsedFile.filePath,
-        path: [...basePath, 'onboarding', index]
-      }
+      location: this.createLocation(parsedFile, [...basePath, 'onboarding', index])
     }));
     
     const roleNode: RoleNode = {
@@ -347,15 +360,9 @@ export class ASTBuilder {
         outputs: (role.interfaces.outputs || []).map((output: any, index: number) => 
           this.buildDeliverableNode(output, parsedFile, [...basePath, 'interfaces', 'outputs', index])
         ),
-        location: {
-          file: parsedFile.filePath,
-          path: [...basePath, 'interfaces']
-        }
+        location: this.createLocation(parsedFile, [...basePath, 'interfaces'])
       } : undefined,
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      },
+      location: this.createLocation(parsedFile, basePath),
       children: [...tasks, ...onboarding]
     };
     
@@ -388,10 +395,7 @@ export class ASTBuilder {
       frequency: playbook.cadence?.frequency,
       schedule: playbook.cadence?.schedule,
       triggerEvents: playbook.cadence?.trigger_events || [],
-      location: {
-        file: parsedFile.filePath,
-        path: [...basePath, 'cadence']
-      }
+      location: this.createLocation(parsedFile, [...basePath, 'cadence'])
     };
 
     const playbookNode: PlaybookNode = {
@@ -403,10 +407,7 @@ export class ASTBuilder {
       outputs,
       steps,
       issueResolution: [], // TODO: Implement issue resolution parsing
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      },
+      location: this.createLocation(parsedFile, basePath),
       children: [cadence, ...inputs, ...outputs, ...steps]
     };
     
@@ -437,10 +438,7 @@ export class ASTBuilder {
       contentType: document.content_type,
       sections: sections,
       narrativeContent: document.narrative_content,
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      },
+      location: this.createLocation(parsedFile, basePath),
       children: sections
     };
     
@@ -466,10 +464,7 @@ export class ASTBuilder {
       sectionType: section.type,
       fields: fields,
       content: section.content,
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      },
+      location: this.createLocation(parsedFile, basePath),
       children: fields
     };
     
@@ -491,10 +486,7 @@ export class ASTBuilder {
       fieldType: field.type,
       required: field.required || false,
       options: field.options,
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      }
+      location: this.createLocation(parsedFile, basePath)
     };
     
     return fieldNode;
@@ -531,18 +523,12 @@ export class ASTBuilder {
       facilitation: task.facilitation ? {
         type: 'Facilitation',
         agenda: task.facilitation.agenda || [],
-        location: {
-          file: parsedFile.filePath,
-          path: [...basePath, 'facilitation']
-        }
+        location: this.createLocation(parsedFile, [...basePath, 'facilitation'])
       } : undefined,
       issues: [], // TODO: Implement issues parsing
       tags: task.tags || [],
       subtasks: subtasks,
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      },
+      location: this.createLocation(parsedFile, basePath),
       children: [...inputs, ...outputs, ...subtasks]
     };
     
@@ -568,10 +554,7 @@ export class ASTBuilder {
         type: 'Schema',
         schemaType: deliverable.schema.type,
         definition: deliverable.schema.definition,
-        location: {
-          file: parsedFile.filePath,
-          path: [...basePath, 'schema']
-        }
+        location: this.createLocation(parsedFile, [...basePath, 'schema'])
       } : undefined,
       requiredFields: deliverable.required_fields || [],
       validationRules: (deliverable.validation_rules || []).map((rule: any, index: number) => ({
@@ -580,15 +563,9 @@ export class ASTBuilder {
         condition: rule.condition,
         errorMessage: rule.error_message,
         severity: rule.severity || 'error',
-        location: {
-          file: parsedFile.filePath,
-          path: [...basePath, 'validation_rules', index]
-        }
+        location: this.createLocation(parsedFile, [...basePath, 'validation_rules', index])
       })),
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      }
+      location: this.createLocation(parsedFile, basePath)
     };
   }
   
@@ -602,10 +579,7 @@ export class ASTBuilder {
       allocation: resource.allocation,
       unit: resource.unit,
       constraints: resource.constraints || [],
-      location: {
-        file: parsedFile.filePath,
-        path: basePath
-      }
+      location: this.createLocation(parsedFile, basePath)
     };
   }
   
