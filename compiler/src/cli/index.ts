@@ -26,6 +26,7 @@ import { Command } from 'commander';
 import { ValidateCommand } from './commands/validate';
 import { AnalyzeCommand } from './commands/analyze';
 import { WatchCommand } from './commands/watch';
+import createGenerateRuntimeCommand from './commands/generate-runtime';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -195,6 +196,9 @@ program
       process.exit(1);
     }
   });
+
+// Generate Runtime command
+program.addCommand(createGenerateRuntimeCommand());
 
 // Global error handling
 process.on('uncaughtException', (error) => {
