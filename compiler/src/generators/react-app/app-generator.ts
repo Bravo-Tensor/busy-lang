@@ -2,6 +2,7 @@ import { AnalysisResult } from '../../analysis/types';
 import { PlaybookNode, TaskNode } from '../../ast/nodes';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { ExecutionEngineGenerator } from '../services/execution-engine-generator';
 
 export interface ReactAppGenerationOptions {
   outputPath: string;
@@ -12,7 +13,15 @@ export interface ReactAppGenerationOptions {
 }
 
 export class ReactAppGenerator {
-  constructor(private options: ReactAppGenerationOptions) {}
+  private executionEngineGenerator: ExecutionEngineGenerator;
+
+  constructor(private options: ReactAppGenerationOptions) {
+    this.executionEngineGenerator = new ExecutionEngineGenerator({
+      outputPath: this.options.outputPath,
+      includeAIAgents: true,
+      includeFileSystem: true
+    });
+  }
 
   async generateApp(analysisResult: AnalysisResult): Promise<void> {
     await this.createProjectStructure();
@@ -22,15 +31,22 @@ export class ReactAppGenerator {
     await this.generateMainPages(analysisResult);
     await this.generateComponents(analysisResult);
     await this.generateServices(analysisResult);
+    await this.generateExecutionServices(analysisResult);
     await this.generateUtils();
 
     console.log(`React application generated successfully at ${this.options.outputPath}`);
+  }
+
+  private async generateExecutionServices(analysisResult: AnalysisResult): Promise<void> {
+    console.log('🔧 Generating comprehensive process execution engine...');
+    await this.executionEngineGenerator.generateExecutionEngine(analysisResult);
   }
 
   private async createProjectStructure(): Promise<void> {
     const dirs = [
       'src/components',
       'src/pages/api/process',
+      'src/pages/api/process/[instanceId]',
       'src/pages/api/task',
       'src/pages/playbook/[id]',
       'src/lib',
@@ -1280,31 +1296,37 @@ export default function FormField({
     // Generate API routes for process management
     const processApiRoute = `
 import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '../../../lib/prisma';
+import { ProcessExecutionServiceImpl } from '../../../services/process-execution-service';
+
+const processService = new ProcessExecutionServiceImpl();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       const { playbookId, initialData } = req.body;
 
-      // Create new playbook instance
-      const instance = await prisma.playbookInstance.create({
-        data: {
-          playbookId,
-          status: 'started',
-          clientName: initialData.clientName || 'Unnamed Client',
-          currentStep: 0,
-          dataJson: JSON.stringify(initialData),
-          clientFolderPath: null // Will be set after folder creation
-        }
-      });
+      // Validate input
+      if (!playbookId || typeof playbookId !== 'number') {
+        return res.status(400).json({ error: 'Valid playbookId is required' });
+      }
 
-      // TODO: Create client folder
+      if (!initialData || typeof initialData !== 'object') {
+        return res.status(400).json({ error: 'Initial data is required' });
+      }
+
+      // Start playbook using the comprehensive execution service
+      const processState = await processService.startPlaybook(playbookId, initialData);
       
-      res.status(200).json({ instanceId: instance.id });
+      res.status(200).json({ 
+        instanceId: processState.instanceId,
+        processState 
+      });
     } catch (error) {
       console.error('Error starting playbook:', error);
-      res.status(500).json({ error: 'Failed to start playbook' });
+      res.status(500).json({ 
+        error: 'Failed to start playbook',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   } else {
     res.setHeader('Allow', ['POST']);
@@ -1322,71 +1344,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Generate step execution API
     const stepExecutionRoute = `
 import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '../../../lib/prisma';
+import { ProcessExecutionServiceImpl } from '../../../services/process-execution-service';
+
+const processService = new ProcessExecutionServiceImpl();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       const { instanceId, outputData } = req.body;
 
-      // Get current instance
-      const instance = await prisma.playbookInstance.findUnique({
-        where: { id: instanceId },
-        include: { playbook: { include: { tasks: true } } }
-      });
-
-      if (!instance) {
-        return res.status(404).json({ error: 'Process instance not found' });
+      // Validate input
+      if (!instanceId || typeof instanceId !== 'number') {
+        return res.status(400).json({ error: 'Valid instanceId is required' });
       }
 
-      // Create task instance record
-      const currentTask = instance.playbook.tasks[instance.currentStep];
-      if (currentTask) {
-        await prisma.taskInstance.create({
-          data: {
-            playbookInstanceId: instanceId,
-            taskId: currentTask.id,
-            status: 'completed',
-            outputDataJson: JSON.stringify(outputData),
-            completedAt: new Date()
-          }
+      if (!outputData || typeof outputData !== 'object') {
+        return res.status(400).json({ error: 'Output data is required' });
+      }
+
+      // Execute step using the comprehensive execution service
+      const result = await processService.executeCurrentStep(instanceId, outputData);
+
+      if (result.success) {
+        res.status(200).json({ 
+          success: true, 
+          result,
+          isComplete: result.nextStep === undefined || result.shouldPause
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          errors: result.errors || ['Unknown error occurred']
         });
       }
-
-      // Update process state
-      const nextStep = instance.currentStep + 1;
-      const isComplete = nextStep >= instance.playbook.tasks.length;
-
-      await prisma.playbookInstance.update({
-        where: { id: instanceId },
-        data: {
-          currentStep: nextStep,
-          status: isComplete ? 'completed' : 'in_progress',
-          completedAt: isComplete ? new Date() : null,
-          dataJson: JSON.stringify({
-            ...JSON.parse(instance.dataJson || '{}'),
-            [\`step_\${instance.currentStep}\`]: outputData
-          })
-        }
-      });
-
-      // Create state transition record
-      await prisma.stateTransition.create({
-        data: {
-          instanceId,
-          instanceType: 'playbook',
-          fromStatus: instance.status,
-          toStatus: isComplete ? 'completed' : 'in_progress',
-          notes: \`Completed step \${instance.currentStep + 1}\`
-        }
-      });
-
-      // TODO: Update client folder with new data
-
-      res.status(200).json({ success: true, isComplete });
     } catch (error) {
       console.error('Error executing step:', error);
-      res.status(500).json({ error: 'Failed to execute step' });
+      res.status(500).json({ 
+        error: 'Failed to execute step',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   } else {
     res.setHeader('Allow', ['POST']);
@@ -1398,6 +1394,96 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await fs.writeFile(
       path.join(this.options.outputPath, 'src/pages/api/process/execute-step.ts'),
       stepExecutionRoute,
+      'utf-8'
+    );
+
+    // Generate process state API
+    const processStateRoute = `
+import { NextApiRequest, NextApiResponse } from 'next';
+import { ProcessExecutionServiceImpl } from '../../../../services/process-execution-service';
+
+const processService = new ProcessExecutionServiceImpl();
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'GET') {
+    try {
+      const instanceId = parseInt(req.query.instanceId as string);
+
+      if (!instanceId || isNaN(instanceId)) {
+        return res.status(400).json({ error: 'Valid instanceId is required' });
+      }
+
+      const processState = await processService.getProcessState(instanceId);
+      res.status(200).json({ processState });
+    } catch (error) {
+      console.error('Error getting process state:', error);
+      res.status(500).json({ 
+        error: 'Failed to get process state',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  } else {
+    res.setHeader('Allow', ['GET']);
+    res.status(405).end('Method Not Allowed');
+  }
+}`;
+
+    await fs.writeFile(
+      path.join(this.options.outputPath, 'src/pages/api/process/[instanceId]/state.ts'),
+      processStateRoute,
+      'utf-8'
+    );
+
+    // Generate process control API (pause/resume/cancel)
+    const processControlRoute = `
+import { NextApiRequest, NextApiResponse } from 'next';
+import { ProcessExecutionServiceImpl } from '../../../../services/process-execution-service';
+
+const processService = new ProcessExecutionServiceImpl();
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    try {
+      const instanceId = parseInt(req.query.instanceId as string);
+      const { action } = req.body;
+
+      if (!instanceId || isNaN(instanceId)) {
+        return res.status(400).json({ error: 'Valid instanceId is required' });
+      }
+
+      if (!action || !['pause', 'resume', 'cancel'].includes(action)) {
+        return res.status(400).json({ error: 'Valid action (pause, resume, cancel) is required' });
+      }
+
+      switch (action) {
+        case 'pause':
+          await processService.pauseProcess(instanceId);
+          break;
+        case 'resume':
+          await processService.resumeProcess(instanceId);
+          break;
+        case 'cancel':
+          await processService.cancelProcess(instanceId);
+          break;
+      }
+
+      res.status(200).json({ success: true, action });
+    } catch (error) {
+      console.error('Error controlling process:', error);
+      res.status(500).json({ 
+        error: 'Failed to control process',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  } else {
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end('Method Not Allowed');
+  }
+}`;
+
+    await fs.writeFile(
+      path.join(this.options.outputPath, 'src/pages/api/process/[instanceId]/control.ts'),
+      processControlRoute,
       'utf-8'
     );
 
