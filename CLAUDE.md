@@ -4,16 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the BUSY Language project - a domain-specific language for describing business organizations as code. The project consists of documentation defining the language specification, architecture, and product requirements.
+This is the BUSY Language project - a domain-specific language for describing business organizations as code. The project includes a complete compiler implementation alongside comprehensive design documentation.
 
 ## Project Structure
 
-This is a documentation-only repository containing:
+This repository contains:
 
-- `architecture.md` - Complete system architecture specification for the BUSY ecosystem
-- `grammar-spec.md` - Formal grammar specification for the BUSY language
-- `prd.md` - Product requirements document with core concepts
-- `grammar.md` - Additional grammar documentation
+**Design Documentation:**
+- `design-docs/` - Complete design documentation organized by migration-style numbering
+  - `001-initial-specification/` - Core BUSY language specification and grammar
+  - `002-runtime-architecture/` - Runtime system design and implementation
+  - `003-compiler-implementation/` - Compiler development plan and architecture
+  - `004-specification-changes/` - Proposed language enhancements
+  - `ARCHITECTURE_OVERVIEW.md` - Complete system architecture overview
+
+**Implementation:**
+- `compiler/` - Complete TypeScript compiler implementation
+- `examples/` - Example BUSY business implementations
 
 ## Architecture Understanding
 
@@ -58,7 +65,8 @@ This project now includes a working BUSY compiler implementation in the `compile
 - Update documentation when making language changes
 
 **Design Process**:
-- Use migration-style design docs in `design-docs/###-description/`
+- All design documentation is in root-level `design-docs/` directory
+- Use migration-style numbering: `001-description`, `002-description`, etc.
 - Create comprehensive design documents before implementation
 - Break down work into specific, actionable tasks
 - Focus on single-developer implementation estimates
