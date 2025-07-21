@@ -87,6 +87,35 @@ export interface ReconcileOptions {
   stagedOnly?: boolean;
   baseBranch?: string;
   createBranch?: boolean;
+  delegate?: boolean;
+  delegateFormat?: 'structured' | 'commands' | 'interactive';
+}
+
+export interface DelegationRequest {
+  id: string;
+  sourceFile: string;
+  targetFile: string;
+  changes: string;
+  relationship: string;
+  context: ProjectContext;
+  prompt: string;
+  confidence: number;
+}
+
+export interface ProjectContext {
+  projectType: string;
+  frameworks: string[];
+  relatedFiles: string[];
+  fileContent?: string;
+}
+
+export interface DelegationOutput {
+  reconciliations: DelegationRequest[];
+  summary: {
+    totalRequests: number;
+    highConfidence: number;
+    requiresReview: number;
+  };
 }
 
 export interface KnitConfig {
@@ -118,6 +147,30 @@ export interface KnitConfig {
   reconciliation: {
     includeUncommitted: boolean;
     includeStagedOnly: boolean;
+  };
+  /** LLM delegation configuration */
+  delegation: {
+    enabled: boolean;
+    defaultMode: 'structured' | 'commands' | 'interactive';
+    contextLevel: 'minimal' | 'full';
+  };
+  /** Link analysis configuration */
+  linkAnalysis: {
+    autoAnalyzeNewFiles: boolean;
+    confidenceThreshold: number;
+    autoAddThreshold: number;
+    patterns: 'default' | string; // Path to custom patterns or 'default'
+    watchForChanges: boolean;
+  };
+  /** Claude Code integration */
+  claudeIntegration: {
+    enabled: boolean;
+    commands: string[];
+    autoTrigger: {
+      onFileCreate: boolean;
+      onSignificantChange: boolean;
+      significantChangeThreshold: number;
+    };
   };
   /** File patterns to ignore */
   ignore: string[];

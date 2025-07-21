@@ -7,5 +7,4 @@
 */.env.test.local
 */.env.production.local
 */.next
-*/.knit
 */.DS_Store

@@ -5,7 +5,8 @@ import { DependencyGraphManager } from './dependency-graph';
 import { GitManager } from './git-integration';
 import { HashTracker } from './hash-tracker';
 import { GitReconciler } from '../reconciliation/git-reconciler';
-import { KnitConfig, ReconciliationRules, ReconcileOptions } from '../types';
+import { LinkAnalyzer, LinkSuggestion } from '../analysis/link-analyzer';
+import { KnitConfig, ReconciliationRules, ReconcileOptions, DelegationOutput } from '../types';
 
 export class KnitManager {
   private projectRoot: string;
@@ -14,6 +15,7 @@ export class KnitManager {
   private hashTracker: HashTracker;
   private config: KnitConfig;
   private reconciler: GitReconciler;
+  private linkAnalyzer: LinkAnalyzer;
 
   constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
@@ -28,6 +30,7 @@ export class KnitManager {
       this.gitManager,
       this.hashTracker
     );
+    this.linkAnalyzer = new LinkAnalyzer(projectRoot, this.depGraph, this.config);
   }
 
   /**
@@ -103,6 +106,19 @@ export class KnitManager {
       return;
     }
 
+    // Handle delegation mode
+    if (options.delegate) {
+      const delegationOutput = await this.reconciler.processReconciliation(session, false, true) as DelegationOutput;
+      
+      if (delegationOutput.reconciliations.length === 0) {
+        console.log(chalk.yellow('ℹ️  No reconciliation requests needed'));
+        return;
+      }
+
+      await this.outputDelegationRequests(delegationOutput, options.delegateFormat || 'structured');
+      return;
+    }
+
     // Handle dry-run mode
     if (options.mode === 'dry-run') {
       console.log(chalk.cyan('\n🔍 Dry run - changes that would be made:'));
@@ -148,6 +164,100 @@ export class KnitManager {
         console.log(chalk.gray(`   git commit -m "Reconcile dependencies"`));
       }
     }
+  }
+
+  /**
+   * Output delegation requests in the specified format
+   */
+  private async outputDelegationRequests(
+    delegationOutput: DelegationOutput, 
+    format: 'structured' | 'commands' | 'interactive'
+  ): Promise<void> {
+    console.log(chalk.blue(`🤖 Generated ${delegationOutput.reconciliations.length} reconciliation requests`));
+    console.log(chalk.cyan(`📊 Summary: ${delegationOutput.summary.highConfidence} high-confidence, ${delegationOutput.summary.requiresReview} need review`));
+
+    switch (format) {
+      case 'structured':
+        await this.outputStructuredJSON(delegationOutput);
+        break;
+      case 'commands':
+        await this.outputCommands(delegationOutput);
+        break;
+      case 'interactive':
+        await this.outputInteractive(delegationOutput);
+        break;
+      default:
+        throw new Error(`Unknown delegation format: ${format}`);
+    }
+  }
+
+  /**
+   * Output structured JSON for Claude Code processing
+   */
+  private async outputStructuredJSON(delegationOutput: DelegationOutput): Promise<void> {
+    console.log(chalk.gray('\n--- DELEGATION REQUESTS (JSON) ---'));
+    console.log(JSON.stringify({
+      type: 'knit_delegation',
+      timestamp: new Date().toISOString(),
+      ...delegationOutput
+    }, null, 2));
+    console.log(chalk.gray('--- END DELEGATION REQUESTS ---\n'));
+    
+    console.log(chalk.cyan('💡 Claude Code Integration:'));
+    console.log('1. Copy the JSON above');
+    console.log('2. In Claude Code, use: "Process these knit reconciliation requests"');
+    console.log('3. Paste the JSON to have Claude Code handle the reconciliation');
+  }
+
+  /**
+   * Output as executable commands
+   */
+  private async outputCommands(delegationOutput: DelegationOutput): Promise<void> {
+    console.log(chalk.gray('\n--- RECONCILIATION COMMANDS ---'));
+    
+    delegationOutput.reconciliations.forEach((request, index) => {
+      console.log(`# Request ${index + 1}: ${request.sourceFile} → ${request.targetFile}`);
+      console.log(`# Relationship: ${request.relationship} (confidence: ${(request.confidence * 100).toFixed(0)}%)`);
+      console.log(`# ${request.prompt.split('\n')[0]}`);
+      console.log(`claude-code edit "${request.targetFile}" --context "${request.sourceFile}" --changes "${request.changes.replace(/"/g, '\\"')}"`);
+      console.log('');
+    });
+    
+    console.log(chalk.gray('--- END COMMANDS ---\n'));
+    
+    console.log(chalk.cyan('💡 Usage:'));
+    console.log('1. Copy and execute commands above');
+    console.log('2. Or pipe to Claude Code: knit reconcile --delegate --format commands | claude-code batch');
+  }
+
+  /**
+   * Output interactive prompts
+   */
+  private async outputInteractive(delegationOutput: DelegationOutput): Promise<void> {
+    console.log(chalk.cyan('\n🤖 Interactive Reconciliation Mode\n'));
+    
+    for (const [index, request] of delegationOutput.reconciliations.entries()) {
+      const confidenceColor = request.confidence >= 0.8 ? chalk.green : 
+                             request.confidence >= 0.6 ? chalk.yellow : chalk.red;
+      
+      console.log(chalk.bold(`Request ${index + 1}/${delegationOutput.reconciliations.length}:`));
+      console.log(`Source: ${chalk.blue(request.sourceFile)}`);
+      console.log(`Target: ${chalk.blue(request.targetFile)}`);
+      console.log(`Relationship: ${request.relationship}`);
+      console.log(`Confidence: ${confidenceColor((request.confidence * 100).toFixed(0) + '%')}`);
+      console.log('');
+      console.log(chalk.bold('Changes needed:'));
+      console.log(request.prompt);
+      console.log('');
+      console.log(chalk.bold('File content preview:'));
+      console.log(chalk.gray(request.context.fileContent?.slice(0, 200) + '...'));
+      console.log('');
+      console.log(chalk.cyan('--- Ready for Claude Code processing ---'));
+      console.log('');
+    }
+    
+    console.log(chalk.green(`✅ ${delegationOutput.reconciliations.length} reconciliation requests prepared`));
+    console.log(chalk.cyan('💡 Copy the prompts above and process them with Claude Code'));
   }
 
   /**
@@ -293,6 +403,103 @@ export class KnitManager {
   }
 
   /**
+   * Analyze file for dependency link suggestions
+   */
+  async analyzeLinks(filePath?: string, options: {
+    threshold?: number;
+    autoAdd?: boolean;
+    projectSetup?: boolean;
+  } = {}): Promise<void> {
+    await this.loadConfig();
+    await this.depGraph.load();
+
+    const threshold = options.threshold || 0.7;
+    const autoAddThreshold = 0.85;
+
+    console.log(chalk.blue('🔍 Analyzing dependency relationships...'));
+
+    if (options.projectSetup) {
+      // Full project analysis
+      const result = await this.linkAnalyzer.analyzeProject(threshold, autoAddThreshold);
+      
+      console.log(chalk.green(`\n✅ Project analysis completed!`));
+      console.log(`📊 Found ${result.suggestions.length} total suggestions`);
+      console.log(`🚀 Auto-added ${result.autoAdded.length} high-confidence links`);
+      
+      const manualReview = result.suggestions.filter(s => s.confidence < autoAddThreshold);
+      if (manualReview.length > 0) {
+        console.log(chalk.yellow(`\n📋 ${manualReview.length} suggestions need manual review:`));
+        this.displayLinkSuggestions(manualReview.slice(0, 10));
+      }
+      
+    } else if (filePath) {
+      // Single file analysis
+      const suggestions = await this.linkAnalyzer.analyzeFile(filePath, threshold);
+      
+      if (suggestions.length === 0) {
+        console.log(chalk.yellow(`ℹ️  No dependency suggestions found for ${filePath}`));
+        return;
+      }
+      
+      console.log(chalk.green(`\n📋 Found ${suggestions.length} dependency suggestions for ${filePath}:`));
+      this.displayLinkSuggestions(suggestions);
+      
+      if (options.autoAdd) {
+        const highConfidence = suggestions.filter(s => s.confidence >= autoAddThreshold);
+        for (const suggestion of highConfidence) {
+          try {
+            await this.addDependency(suggestion.sourceFile, suggestion.targetFile);
+            console.log(chalk.green(`✅ Added: ${suggestion.sourceFile} → ${suggestion.targetFile}`));
+          } catch (error) {
+            console.warn(chalk.yellow(`Warning: Could not add dependency: ${error instanceof Error ? error.message : 'Unknown error'}`));
+          }
+        }
+      }
+      
+    } else {
+      console.log(chalk.red('❌ Please specify a file path or use --project-setup'));
+      return;
+    }
+  }
+
+  /**
+   * Set up knit with intelligent initial links for new projects
+   */
+  async setupProject(): Promise<void> {
+    console.log(chalk.blue('🚀 Setting up knit with intelligent project analysis...'));
+    
+    await this.initialize();
+    await this.analyzeLinks(undefined, { projectSetup: true, autoAdd: true });
+    
+    console.log(chalk.green('\n✅ Knit project setup completed!'));
+    console.log(chalk.cyan('💡 Use "knit status" to review dependency relationships'));
+    console.log(chalk.cyan('💡 Use "knit reconcile" to start dependency reconciliation'));
+  }
+
+  /**
+   * Display link suggestions in a formatted way
+   */
+  private displayLinkSuggestions(suggestions: LinkSuggestion[]): void {
+    suggestions.forEach((suggestion, index) => {
+      const confidenceColor = suggestion.confidence >= 0.8 ? chalk.green : 
+                             suggestion.confidence >= 0.6 ? chalk.yellow : chalk.red;
+      const confidenceText = confidenceColor(`${(suggestion.confidence * 100).toFixed(0)}%`);
+      
+      console.log(`\n${index + 1}. ${suggestion.sourceFile} → ${suggestion.targetFile}`);
+      console.log(`   Confidence: ${confidenceText} | Relationship: ${suggestion.relationship}`);
+      console.log(`   Reasoning: ${suggestion.reasoning}`);
+      
+      if (suggestion.evidence.sharedTerms.length > 0) {
+        console.log(`   Shared terms: ${suggestion.evidence.sharedTerms.slice(0, 5).join(', ')}`);
+      }
+      
+      if (suggestion.evidence.explicitReferences.length > 0) {
+        console.log(`   References found: ${suggestion.evidence.explicitReferences.length}`);
+      }
+    });
+  }
+
+  /**
    * Manage configuration
    */
   async manageConfig(options: any): Promise<void> {
@@ -354,6 +561,27 @@ export class KnitManager {
       reconciliation: {
         includeUncommitted: true,
         includeStagedOnly: false
+      },
+      delegation: {
+        enabled: true,
+        defaultMode: 'structured',
+        contextLevel: 'full'
+      },
+      linkAnalysis: {
+        autoAnalyzeNewFiles: true,
+        confidenceThreshold: 0.75,
+        autoAddThreshold: 0.85,
+        patterns: 'default',
+        watchForChanges: true
+      },
+      claudeIntegration: {
+        enabled: true,
+        commands: ['/knit-reconcile', '/knit-analyze', '/knit-setup'],
+        autoTrigger: {
+          onFileCreate: true,
+          onSignificantChange: true,
+          significantChangeThreshold: 0.3
+        }
       },
       ignore: [
         '.git/**',

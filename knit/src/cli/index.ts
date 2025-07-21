@@ -72,6 +72,8 @@ program
   .option('--base-branch <name>', 'Compare against specific branch (default: auto-detect)')
   .option('--create-branch', 'Create reconciliation branch (legacy mode)', false)
   .option('--dry-run', 'Show what would change without applying', false)
+  .option('--delegate', 'Delegate reconciliation to Claude Code instead of using internal LLM', false)
+  .option('--delegate-format <format>', 'Delegation output format: structured (default), commands, interactive', 'structured')
   .action(async (options) => {
     try {
       const knit = new KnitManager(process.cwd());
@@ -84,7 +86,9 @@ program
         interactive: options.interactive,
         stagedOnly: options.stagedOnly,
         baseBranch: options.baseBranch,
-        createBranch: options.createBranch
+        createBranch: options.createBranch,
+        delegate: options.delegate,
+        delegateFormat: options.delegateFormat as 'structured' | 'commands' | 'interactive'
       };
       
       await knit.reconcile(reconcileOptions);
@@ -167,6 +171,41 @@ program
       await knit.showHistory(parseInt(options.limit));
     } catch (error) {
       console.error(chalk.red('❌ Failed to show history:'), error instanceof Error ? error.message : 'Unknown error');
+      process.exit(1);
+    }
+  });
+
+// Analyze dependency links
+program
+  .command('analyze-links [file]')
+  .description('Analyze file or project for dependency link suggestions')
+  .option('--threshold <number>', 'Confidence threshold for suggestions (0-1)', parseFloat)
+  .option('--auto-add', 'Automatically add high-confidence suggestions', false)
+  .option('--project-setup', 'Analyze entire project for initial setup', false)
+  .action(async (file: string | undefined, options) => {
+    try {
+      const knit = new KnitManager(process.cwd());
+      await knit.analyzeLinks(file, {
+        threshold: options.threshold,
+        autoAdd: options.autoAdd,
+        projectSetup: options.projectSetup
+      });
+    } catch (error) {
+      console.error(chalk.red('❌ Link analysis failed:'), error instanceof Error ? error.message : 'Unknown error');
+      process.exit(1);
+    }
+  });
+
+// Setup project with intelligent analysis
+program
+  .command('setup')
+  .description('Initialize knit with intelligent project analysis and link suggestions')
+  .action(async () => {
+    try {
+      const knit = new KnitManager(process.cwd());
+      await knit.setupProject();
+    } catch (error) {
+      console.error(chalk.red('❌ Project setup failed:'), error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
     }
   });

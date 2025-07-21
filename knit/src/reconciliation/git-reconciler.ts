@@ -10,7 +10,10 @@ import {
   ChangeEvent, 
   ConflictType,
   KnitConfig,
-  ReconcileOptions 
+  ReconcileOptions,
+  DelegationRequest,
+  DelegationOutput,
+  ProjectContext 
 } from '../types';
 
 export class GitReconciler {
@@ -180,7 +183,11 @@ export class GitReconciler {
   /**
    * Process reconciliation for all changes in session
    */
-  async processReconciliation(session: ReconciliationSession, autoApply = true): Promise<void> {
+  async processReconciliation(session: ReconciliationSession, autoApply = true, delegateMode = false): Promise<DelegationOutput | void> {
+    if (delegateMode) {
+      return this.generateDelegationRequests(session);
+    }
+
     for (const change of session.changes) {
       await this.processFileChange(session, change, autoApply);
     }
@@ -195,6 +202,264 @@ export class GitReconciler {
     console.log(`✅ Reconciliation completed:`);
     console.log(`   Auto-applied: ${session.autoApplied}`);
     console.log(`   Needs review: ${session.reviewed}`);
+  }
+
+  /**
+   * Generate delegation requests for Claude Code processing
+   */
+  private async generateDelegationRequests(session: ReconciliationSession): Promise<DelegationOutput> {
+    const requests: DelegationRequest[] = [];
+    let requestId = 1;
+
+    // Analyze project context once
+    const projectContext = await this.analyzeProjectContext();
+
+    for (const change of session.changes) {
+      const dependentFiles = this.depGraph.getDependentFiles(change.filepath);
+      
+      for (const dependentFile of dependentFiles) {
+        try {
+          const request = await this.createDelegationRequest(
+            `reconcile_${String(requestId).padStart(3, '0')}`,
+            change,
+            dependentFile,
+            projectContext
+          );
+          requests.push(request);
+          requestId++;
+        } catch (error) {
+          console.warn(`Warning: Could not create delegation request for ${dependentFile}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    }
+
+    // Calculate summary stats
+    const highConfidence = requests.filter(r => r.confidence >= 0.8).length;
+    const requiresReview = requests.filter(r => r.confidence < 0.6).length;
+
+    return {
+      reconciliations: requests,
+      summary: {
+        totalRequests: requests.length,
+        highConfidence,
+        requiresReview
+      }
+    };
+  }
+
+  /**
+   * Create a delegation request for a specific file pair
+   */
+  private async createDelegationRequest(
+    id: string,
+    change: ChangeEvent,
+    dependentFile: string,
+    projectContext: ProjectContext
+  ): Promise<DelegationRequest> {
+    // Read dependent file content
+    const dependentPath = path.join(this.projectRoot, dependentFile);
+    let dependentContent: string;
+    
+    try {
+      dependentContent = await fs.readFile(dependentPath, 'utf-8');
+    } catch (error) {
+      throw new Error(`Cannot read dependent file ${dependentFile}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Determine relationship type
+    const relationship = this.inferRelationship(change.filepath, dependentFile);
+    
+    // Generate contextual prompt
+    const prompt = this.generateReconciliationPrompt(change, dependentFile, dependentContent, projectContext, relationship);
+    
+    // Calculate confidence based on various factors
+    const confidence = this.calculateDelegationConfidence(change, dependentFile, relationship);
+
+    return {
+      id,
+      sourceFile: change.filepath,
+      targetFile: dependentFile,
+      changes: change.gitDiff || 'No diff available',
+      relationship,
+      context: {
+        ...projectContext,
+        fileContent: dependentContent,
+        relatedFiles: this.findRelatedFiles(dependentFile)
+      },
+      prompt,
+      confidence
+    };
+  }
+
+  /**
+   * Analyze project context for better delegation requests
+   */
+  private async analyzeProjectContext(): Promise<ProjectContext> {
+    const packageJsonPath = path.join(this.projectRoot, 'package.json');
+    let projectType = 'generic';
+    let frameworks: string[] = [];
+
+    try {
+      const packageContent = await fs.readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(packageContent);
+      
+      // Detect project type and frameworks
+      const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      
+      if (dependencies['react']) frameworks.push('react');
+      if (dependencies['vue']) frameworks.push('vue');
+      if (dependencies['express']) frameworks.push('express');
+      if (dependencies['typescript']) {
+        projectType = 'typescript';
+        frameworks.push('typescript');
+      }
+      if (dependencies['@types/node']) frameworks.push('nodejs');
+      
+    } catch (error) {
+      // Fallback detection based on file extensions
+      console.warn('Could not read package.json, using fallback detection');
+    }
+
+    return {
+      projectType,
+      frameworks,
+      relatedFiles: []
+    };
+  }
+
+  /**
+   * Generate a contextual prompt for reconciliation
+   */
+  private generateReconciliationPrompt(
+    change: ChangeEvent,
+    dependentFile: string,
+    dependentContent: string,
+    context: ProjectContext,
+    relationship: string
+  ): string {
+    const relationshipPrompts = {
+      'design_to_code': `Update the implementation in ${dependentFile} based on design changes in ${change.filepath}.`,
+      'code_to_test': `Update the test file ${dependentFile} to reflect changes in ${change.filepath}.`,
+      'spec_to_impl': `Update the implementation ${dependentFile} to match the specification changes in ${change.filepath}.`,
+      'types_to_usage': `Update the usage in ${dependentFile} based on type definition changes in ${change.filepath}.`,
+      'config_to_code': `Update the code in ${dependentFile} to reflect configuration changes in ${change.filepath}.`,
+      'bidirectional': `Update ${dependentFile} to maintain consistency with changes in ${change.filepath}.`
+    };
+
+    const basePrompt = relationshipPrompts[relationship as keyof typeof relationshipPrompts] || 
+      `Update ${dependentFile} to maintain consistency with changes in ${change.filepath}.`;
+
+    return `${basePrompt}
+
+Changes made to source file:
+${change.gitDiff || 'Changes detected but diff not available'}
+
+Current target file content:
+${dependentContent}
+
+Project context: ${context.projectType} project using ${context.frameworks.join(', ')}
+Related files: ${context.relatedFiles.join(', ')}
+
+Please analyze the changes and update the target file appropriately to maintain consistency and correctness.`;
+  }
+
+  /**
+   * Infer relationship type between two files
+   */
+  private inferRelationship(sourceFile: string, targetFile: string): string {
+    // Design to code
+    if (sourceFile.match(/\.(md|txt)$/) && targetFile.match(/\.(ts|js|py)$/)) {
+      return 'design_to_code';
+    }
+    
+    // Code to test
+    if (sourceFile.match(/src\/.*\.(ts|js)$/) && targetFile.match(/tests?\/.*\.(test|spec)\.(ts|js)$/)) {
+      return 'code_to_test';
+    }
+    
+    // Types to usage
+    if (sourceFile.match(/types\/.*\.(ts|d\.ts)$/) && targetFile.match(/src\/.*\.(ts|js)$/)) {
+      return 'types_to_usage';
+    }
+    
+    // README/spec to implementation
+    if (sourceFile.match(/README\.md$|.*\.spec\.md$/) && targetFile.match(/src\/.*\.(ts|js)$/)) {
+      return 'spec_to_impl';
+    }
+    
+    // Configuration to code
+    if (sourceFile.match(/\.(json|yaml|yml|env)$/) && targetFile.match(/src\/.*\.(ts|js)$/)) {
+      return 'config_to_code';
+    }
+
+    return 'bidirectional';
+  }
+
+  /**
+   * Calculate confidence for delegation request
+   */
+  private calculateDelegationConfidence(change: ChangeEvent, dependentFile: string, relationship: string): number {
+    let confidence = 0.5; // Base confidence
+    
+    // Relationship-based confidence
+    const relationshipConfidence = {
+      'code_to_test': 0.9,
+      'design_to_code': 0.8,
+      'types_to_usage': 0.85,
+      'spec_to_impl': 0.75,
+      'config_to_code': 0.7,
+      'bidirectional': 0.6
+    };
+    
+    confidence += (relationshipConfidence[relationship as keyof typeof relationshipConfidence] || 0.5) * 0.4;
+    
+    // File naming pattern confidence
+    if (this.hasConsistentNaming(change.filepath, dependentFile)) {
+      confidence += 0.2;
+    }
+    
+    // Change size confidence (smaller changes are more reliable)
+    const changeSize = change.gitDiff?.split('\n').length || 0;
+    if (changeSize < 50) confidence += 0.1;
+    else if (changeSize > 200) confidence -= 0.1;
+    
+    return Math.min(Math.max(confidence, 0), 1);
+  }
+
+  /**
+   * Check if two files have consistent naming patterns
+   */
+  private hasConsistentNaming(file1: string, file2: string): boolean {
+    const baseName1 = path.basename(file1, path.extname(file1));
+    const baseName2 = path.basename(file2, path.extname(file2));
+    
+    // Remove common suffixes/prefixes
+    const cleanName1 = baseName1.replace(/\.(test|spec)$/, '');
+    const cleanName2 = baseName2.replace(/\.(test|spec)$/, '');
+    
+    return cleanName1 === cleanName2 || baseName2.includes(cleanName1) || baseName1.includes(cleanName2);
+  }
+
+  /**
+   * Find related files for better context
+   */
+  private findRelatedFiles(targetFile: string): string[] {
+    const relatedFiles: string[] = [];
+    const baseName = path.basename(targetFile, path.extname(targetFile));
+    
+    // This is a simplified implementation - could be enhanced with more sophisticated analysis
+    const allDeps = this.depGraph.getAllDependencies();
+    
+    Object.keys(allDeps).forEach(file => {
+      if (file !== targetFile && (
+        file.includes(baseName) || 
+        path.dirname(file) === path.dirname(targetFile)
+      )) {
+        relatedFiles.push(file);
+      }
+    });
+    
+    return relatedFiles.slice(0, 5); // Limit to 5 related files
   }
 
   /**
