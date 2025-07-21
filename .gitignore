@@ -8,3 +8,4 @@
 */.env.production.local
 */.next
 */.knit
+*/.DS_Store
