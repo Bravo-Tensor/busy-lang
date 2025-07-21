@@ -1,0 +1,20 @@
+{
+  "autoApplyThreshold": 0.8,
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4"
+  },
+  "git": {
+    "autoReconcile": false,
+    "branchPrefix": "knit/reconcile"
+  },
+  "ignore": [
+    ".git/**",
+    "node_modules/**",
+    ".knit/**",
+    "*.log",
+    "dist/**",
+    "build/**"
+  ],
+  "rules": {}
+}

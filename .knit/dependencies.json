@@ -1,0 +1,432 @@
+{
+  "dependencies": {
+    "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md": {
+      "watches": [
+        "compiler/src/core/parser.ts"
+      ],
+      "watchedBy": [
+        "compiler/src/analysis/analyzer.ts",
+        "compiler/docs/BUSY_LANGUAGE_REFERENCE.md"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/core/parser.ts": {
+      "watches": [
+        "compiler/src/ast/builder.ts"
+      ],
+      "watchedBy": [
+        "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md",
+        "compiler/tests/basic.test.ts"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/001-initial-specification/GRAMMAR_SPECIFICATION.md": {
+      "watches": [
+        "compiler/src/core/scanner.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/core/scanner.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/001-initial-specification/GRAMMAR_SPECIFICATION.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md": {
+      "watches": [
+        "compiler/src/generators/runtime-generator.ts"
+      ],
+      "watchedBy": [
+        "compiler/generated-runtime/src/services/process-execution-service.ts"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/generators/runtime-generator.ts": {
+      "watches": [
+        "compiler/generated-runtime/package.json"
+      ],
+      "watchedBy": [
+        "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md",
+        "examples/solo-photography-business/L0/business-operations/team.busy",
+        "compiler/src/cli/commands/generate-runtime.ts"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/003-compiler-implementation/COMPILER_IMPLEMENTATION_PLAN.md": {
+      "watches": [
+        "compiler/src/index.ts"
+      ],
+      "watchedBy": [
+        "compiler/docs/COMPILER_ARCHITECTURE.md"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/index.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/003-compiler-implementation/COMPILER_IMPLEMENTATION_PLAN.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/005-knit-dependency-reconciliation/KNIT_SYSTEM_DESIGN.md": {
+      "watches": [
+        "knit/src/core/knit-manager.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "knit/src/core/knit-manager.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/005-knit-dependency-reconciliation/KNIT_SYSTEM_DESIGN.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "examples/solo-photography-business/README.md": {
+      "watches": [
+        "compiler/generated-runtime/README.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/generated-runtime/README.md": {
+      "watches": [],
+      "watchedBy": [
+        "examples/solo-photography-business/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/schemas/busy-schema.json": {
+      "watches": [
+        "compiler/src/analysis/semantic-analyzer.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/analysis/semantic-analyzer.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/schemas/busy-schema.json"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/types.ts": {
+      "watches": [
+        "compiler/src/analysis/types.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/analysis/types.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/src/types.ts"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/ast/builder.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/src/core/parser.ts",
+        "compiler/src/ast/nodes.ts"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/ast/nodes.ts": {
+      "watches": [
+        "compiler/src/ast/builder.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/generated-runtime/package.json": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/src/generators/runtime-generator.ts"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/tests/basic.test.ts": {
+      "watches": [
+        "compiler/src/core/parser.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/tests/simple-validation.test.ts": {
+      "watches": [
+        "compiler/src/analysis/analyzer.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/analysis/analyzer.ts": {
+      "watches": [
+        "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md"
+      ],
+      "watchedBy": [
+        "compiler/tests/simple-validation.test.ts",
+        "compiler/src/cli/commands/analyze.ts"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "knit/tests/dependency-graph.test.ts": {
+      "watches": [
+        "knit/src/core/dependency-graph.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "knit/src/core/dependency-graph.ts": {
+      "watches": [],
+      "watchedBy": [
+        "knit/tests/dependency-graph.test.ts"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/generated-runtime/src/services/process-execution-service.ts": {
+      "watches": [
+        "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "examples/solo-photography-business/L0/business-operations/team.busy": {
+      "watches": [
+        "compiler/src/generators/runtime-generator.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "examples/solo-photography-business/L0/creative-production/playbooks/photo-production.busy": {
+      "watches": [
+        "compiler/src/generators/services/execution-engine-generator.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/generators/services/execution-engine-generator.ts": {
+      "watches": [],
+      "watchedBy": [
+        "examples/solo-photography-business/L0/creative-production/playbooks/photo-production.busy"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/BUSY_LANGUAGE_REFERENCE.md": {
+      "watches": [
+        "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/COMPILER_ARCHITECTURE.md": {
+      "watches": [
+        "design-docs/003-compiler-implementation/COMPILER_IMPLEMENTATION_PLAN.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "CLAUDE.md": {
+      "watches": [
+        "design-docs/005-knit-dependency-reconciliation/README.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/005-knit-dependency-reconciliation/README.md": {
+      "watches": [],
+      "watchedBy": [
+        "CLAUDE.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/cli/commands/generate-runtime.ts": {
+      "watches": [
+        "compiler/src/generators/runtime-generator.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/src/cli/commands/analyze.ts": {
+      "watches": [
+        "compiler/src/analysis/analyzer.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/ARCHITECTURE_OVERVIEW.md": {
+      "watches": [
+        "compiler/README.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/README.md": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/ARCHITECTURE_OVERVIEW.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    }
+  },
+  "version": "1.0.0",
+  "lastUpdated": "2025-07-21T04:03:56.988Z"
+}
