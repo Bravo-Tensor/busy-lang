@@ -36,6 +36,95 @@ export class BusyGeneratorService {
     return modifications;
   }
 
+  private async generateProcessesFromAnswers(
+    answers: Record<string, any>,
+    template: InterviewTemplate
+  ): Promise<BusyFileModification[]> {
+    const modifications: BusyFileModification[] = [];
+    
+    // Generate processes based on selected main processes
+    if (answers.mainProcesses && Array.isArray(answers.mainProcesses)) {
+      for (const processName of answers.mainProcesses) {
+        const processFile = this.createProcessFromTemplate(processName, answers);
+        if (processFile) {
+          modifications.push(processFile);
+        }
+      }
+    }
+    
+    return modifications;
+  }
+
+  private createProcessFromTemplate(
+    processName: string,
+    answers: Record<string, any>
+  ): BusyFileModification | null {
+    const businessName = this.sanitizeFileName(answers.businessName || 'my-business');
+    const processFileName = this.sanitizeFileName(processName);
+    const filePath = `businesses/${businessName}/L0/processes/${processFileName}.busy`;
+
+    const processData = {
+      metadata: {
+        version: '1.0.0',
+        created: new Date().toISOString(),
+        layer: 'L0',
+        domain: 'process',
+        name: processName
+      },
+      process: {
+        name: processName,
+        description: `${processName} process for ${answers.businessName}`,
+        steps: this.generateDefaultStepsForProcess(processName),
+        timeline: '1 week',
+        quality_gates: []
+      }
+    };
+
+    return {
+      id: this.generateId(),
+      type: 'create',
+      filePath,
+      changes: [{
+        operation: 'add',
+        path: '/',
+        newValue: yaml.stringify(processData),
+        description: `Create ${processName} process`
+      }],
+      reason: `Generated ${processName} from business setup`,
+      impact: {
+        scope: 'module',
+        affectedProcesses: [],
+        riskLevel: 'low',
+        estimatedEffort: 20,
+        breakingChanges: false
+      },
+      timestamp: new Date()
+    };
+  }
+
+  private generateDefaultStepsForProcess(processName: string): any[] {
+    const defaultSteps: Record<string, any[]> = {
+      'Client Onboarding': [
+        { id: 'initial-contact', name: 'Initial Contact', duration: '1 hour' },
+        { id: 'needs-assessment', name: 'Needs Assessment', duration: '2 hours' },
+        { id: 'proposal', name: 'Create Proposal', duration: '3 hours' },
+        { id: 'contract', name: 'Contract Signing', duration: '1 hour' }
+      ],
+      'Project Delivery': [
+        { id: 'kickoff', name: 'Project Kickoff', duration: '1 hour' },
+        { id: 'execution', name: 'Execute Project', duration: '5 days' },
+        { id: 'review', name: 'Quality Review', duration: '4 hours' },
+        { id: 'delivery', name: 'Deliver to Client', duration: '2 hours' }
+      ]
+    };
+
+    return defaultSteps[processName] || [
+      { id: 'start', name: 'Start Process', duration: '30 minutes' },
+      { id: 'execute', name: 'Execute Work', duration: '4 hours' },
+      { id: 'complete', name: 'Complete Process', duration: '30 minutes' }
+    ];
+  }
+
   async generateModifications(
     intent: ConversationIntent,
     targetProcesses: BusyProcess[]
@@ -267,7 +356,7 @@ export class BusyGeneratorService {
       }],
       reason: 'Timeline optimization requested through conversation',
       impact: {
-        scope: 'process',
+        scope: 'module',
         affectedProcesses: [process.id],
         riskLevel: 'medium',
         estimatedEffort: 30,
@@ -304,7 +393,7 @@ export class BusyGeneratorService {
       }],
       reason: 'New process step requested through conversation',
       impact: {
-        scope: 'process',
+        scope: 'module',
         affectedProcesses: [process.id],
         riskLevel: 'low',
         estimatedEffort: 15,
@@ -475,98 +564,6 @@ export class BusyGeneratorService {
     };
   }
 
-  // Utility methods
-  private generateTeamStructure(answers: Record<string, any>): any {
-    const teamSize = parseInt(answers.teamSize) || 1;
-    
-    if (teamSize === 1) {
-      return { type: 'solo', lead: 'business-owner' };
-    } else if (teamSize <= 5) {
-      return { type: 'small-team', lead: 'business-owner', structure: 'flat' };
-    } else {
-      return { type: 'structured-team', lead: 'business-owner', structure: 'hierarchical' };
-    }
-  }
-
-  private generateRoles(answers: Record<string, any>): any[] {
-    const baseRoles = [
-      {
-        id: 'business-owner',
-        name: 'Business Owner',
-        responsibilities: ['Strategic decisions', 'Client relationships', 'Quality oversight']
-      }
-    ];
-
-    const teamSize = parseInt(answers.teamSize) || 1;
-    if (teamSize > 1) {
-      baseRoles.push({
-        id: 'team-member',
-        name: 'Team Member',
-        responsibilities: ['Task execution', 'Quality delivery', 'Collaboration']
-      });
-    }
-
-    return baseRoles;
-  }
-
-  private generateOnboardingSteps(answers: Record<string, any>): any[] {
-    return [
-      {
-        id: 'initial-contact',
-        name: 'Initial Client Contact',
-        duration: '30 minutes',
-        assignee: 'business-owner'
-      },
-      {
-        id: 'needs-assessment',
-        name: 'Needs Assessment',
-        duration: '1 hour',
-        assignee: 'business-owner'
-      },
-      {
-        id: 'proposal-creation',
-        name: 'Create Proposal',
-        duration: '2 hours',
-        assignee: 'business-owner'
-      },
-      {
-        id: 'contract-signing',
-        name: 'Contract Signing',
-        duration: '30 minutes',
-        assignee: 'business-owner'
-      }
-    ];
-  }
-
-  private generateDeliverySteps(answers: Record<string, any>): any[] {
-    return [
-      {
-        id: 'project-kickoff',
-        name: 'Project Kickoff',
-        duration: '1 hour',
-        assignee: 'business-owner'
-      },
-      {
-        id: 'execution',
-        name: 'Project Execution',
-        duration: answers.projectDuration || '1 week',
-        assignee: 'team-member'
-      },
-      {
-        id: 'quality-review',
-        name: 'Quality Review',
-        duration: '2 hours',
-        assignee: 'business-owner'
-      },
-      {
-        id: 'client-delivery',
-        name: 'Client Delivery',
-        duration: '1 hour',
-        assignee: 'business-owner'
-      }
-    ];
-  }
-
   private extractTimelineReduction(intent: ConversationIntent): number {
     // Extract percentage reduction from user intent
     const text = intent.originalText.toLowerCase();
@@ -631,11 +628,29 @@ export class BusyGeneratorService {
     return processes;
   }
 
+  private generateOnboardingSteps(answers: Record<string, any>): any[] {
+    return [
+      { id: 'initial-contact', name: 'Initial Client Contact', duration: '30 minutes' },
+      { id: 'needs-assessment', name: 'Assess Client Needs', duration: '1 hour' },
+      { id: 'proposal-creation', name: 'Create Proposal', duration: '2 hours' },
+      { id: 'contract-signing', name: 'Contract Finalization', duration: '30 minutes' }
+    ];
+  }
+
+  private generateDeliverySteps(answers: Record<string, any>): any[] {
+    return [
+      { id: 'project-kickoff', name: 'Project Kickoff Meeting', duration: '1 hour' },
+      { id: 'work-execution', name: 'Execute Project Work', duration: answers.projectDuration || '1 week' },
+      { id: 'quality-review', name: 'Quality Review Process', duration: '2 hours' },
+      { id: 'client-delivery', name: 'Deliver to Client', duration: '1 hour' }
+    ];
+  }
+
   private loadTemplates(): void {
     // Load interview templates for different industries
     this.templates.set('photography', this.createPhotographyTemplate());
     this.templates.set('consulting', this.createConsultingTemplate());
-    this.templates.set('generic', this.createGenericTemplate());
+    this.templates.set('generic', this.getGenericTemplate());
   }
 
   private createPhotographyTemplate(): InterviewTemplate {
@@ -847,6 +862,54 @@ export class BusyGeneratorService {
 
   private getECommerceOperations(answers: Record<string, any>): any {
     return this.getGenericOperations(answers);
+  }
+
+  private generateTeamStructure(answers: Record<string, any>): any {
+    const teamSize = parseInt(answers.teamSize) || 1;
+    
+    if (teamSize === 1) {
+      return { type: 'solo', lead: 'business-owner' };
+    } else if (teamSize <= 5) {
+      return { type: 'small-team', lead: 'business-owner', structure: 'flat' };
+    } else {
+      return { type: 'structured-team', lead: 'business-owner', structure: 'hierarchical' };
+    }
+  }
+
+  private generateRoles(answers: Record<string, any>): any[] {
+    const baseRoles = [
+      {
+        id: 'business-owner',
+        name: 'Business Owner',
+        responsibilities: ['Strategic decisions', 'Client relationships', 'Quality oversight']
+      }
+    ];
+
+    const teamSize = parseInt(answers.teamSize) || 1;
+    if (teamSize > 1) {
+      baseRoles.push({
+        id: 'team-member',
+        name: 'Team Member',
+        responsibilities: ['Task execution', 'Quality delivery', 'Collaboration']
+      });
+    }
+
+    return baseRoles;
+  }
+
+  private generateCommunicationRules(answers: Record<string, any>): any {
+    return {
+      channels: ['email', 'phone', 'video-call'],
+      frequency: {
+        daily: 'status-updates',
+        weekly: 'team-meetings',
+        monthly: 'performance-reviews'
+      },
+      escalation: {
+        timeoutMinutes: 60,
+        escalateTo: 'business-owner'
+      }
+    };
   }
 
   private sanitizeFileName(name: string): string {

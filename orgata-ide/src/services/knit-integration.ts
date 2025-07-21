@@ -97,7 +97,7 @@ export class KnitIntegrationService {
         branchName: '',
         appliedChanges: [],
         pendingReviews: [],
-        errors: [error.message],
+        errors: [error instanceof Error ? error.message : String(error)],
         warnings: []
       };
     }
@@ -561,7 +561,7 @@ export class KnitIntegrationService {
         success: false,
         appliedChanges: [],
         pendingReviews: [],
-        errors: [error.message],
+        errors: [error instanceof Error ? error.message : String(error)],
         warnings: []
       };
     }
@@ -582,7 +582,7 @@ export class KnitIntegrationService {
         await this.validateBusinessLogic(modification);
         
       } catch (error) {
-        errors.push(`Validation error in ${modification.filePath}: ${error.message}`);
+        errors.push(`Validation error in ${modification.filePath}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     
@@ -601,7 +601,7 @@ export class KnitIntegrationService {
         await execAsync(`cd compiler && npm run validate ${modification.filePath}`);
       }
     } catch (error) {
-      throw new Error(`BUSY syntax validation failed: ${error.message}`);
+      throw new Error(`BUSY syntax validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

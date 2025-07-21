@@ -238,6 +238,43 @@ Let's start with understanding your business. ${discoveryQuestions[0].text}`,
     };
   }
 
+  private async handleProcessAddition(intent: ConversationIntent): Promise<AIResponse> {
+    const processType = intent.entities.find(e => e.type === 'process')?.value;
+    
+    if (!processType) {
+      return {
+        message: "I can help you add a new process to your business! What type of process would you like to create? For example:\n\n" +
+                "• Client onboarding process\n" +
+                "• Project delivery workflow\n" +
+                "• Quality review process\n" +
+                "• Team management process",
+        proposedActions: [],
+        confidenceLevel: 0.8,
+        requiresApproval: false,
+        suggestedQuestions: [
+          "Add a client onboarding process",
+          "Create a project delivery workflow",
+          "Set up a quality review process"
+        ]
+      };
+    }
+
+    // Generate the new process
+    const modifications = await this.busyGenerator.generateModifications(intent, []);
+    
+    return {
+      message: `I'll help you create a ${processType} process. Based on your existing business setup, here's what I recommend:`,
+      proposedActions: modifications,
+      confidenceLevel: 0.85,
+      requiresApproval: true,
+      suggestedQuestions: [
+        "That looks good, proceed",
+        "Can you customize this process?",
+        "Show me other process options"
+      ]
+    };
+  }
+
   private async handleModificationIntent(intent: ConversationIntent): Promise<AIResponse> {
     const targetProcesses = this.identifyTargetProcesses(intent.entities);
     

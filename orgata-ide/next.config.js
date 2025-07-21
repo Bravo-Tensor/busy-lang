@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: false,
-  },
   webpack: (config) => {
     // Add support for importing BUSY files
     config.module.rules.push({

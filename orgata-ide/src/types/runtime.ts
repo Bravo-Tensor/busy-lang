@@ -1,3 +1,11 @@
+import { BusyProcess, ProcessMetrics, Permission } from './conversation';
+
+export interface ValidationRule {
+  type: string;
+  condition: string;
+  message: string;
+}
+
 export interface ProcessInstance {
   id: string;
   busyProcess: BusyProcess;
