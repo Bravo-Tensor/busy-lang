@@ -448,7 +448,9 @@
       "watches": [
         "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md"
       ],
-      "watchedBy": [],
+      "watchedBy": [
+        "orgata-ide/src/types/conversation.ts"
+      ],
       "reconciliationRules": {
         "requireReview": [
           "required"
@@ -459,7 +461,9 @@
       "watches": [
         "design-docs/005-knit-dependency-reconciliation/KNIT_SYSTEM_DESIGN.md"
       ],
-      "watchedBy": [],
+      "watchedBy": [
+        "orgata-ide/src/services/knit-integration.ts"
+      ],
       "reconciliationRules": {
         "requireReview": [
           "required"
@@ -470,7 +474,9 @@
       "watches": [
         "compiler/generated-runtime/src/services/process-execution-service.ts"
       ],
-      "watchedBy": [],
+      "watchedBy": [
+        "orgata-ide/src/types/runtime.ts"
+      ],
       "reconciliationRules": {
         "requireReview": [
           "required"
@@ -487,8 +493,125 @@
           "required"
         ]
       }
+    },
+    "orgata-ide/src/types/conversation.ts": {
+      "watches": [
+        "design-docs/006-orgata-ide/CONVERSATIONAL_INTERFACE_DESIGN.md"
+      ],
+      "watchedBy": [
+        "orgata-ide/src/services/conversation-engine.ts",
+        "orgata-ide/src/services/busy-generator.ts"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/types/runtime.ts": {
+      "watches": [
+        "design-docs/006-orgata-ide/BUSINESS_RUNTIME_DESIGN.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/services/conversation-engine.ts": {
+      "watches": [
+        "orgata-ide/src/types/conversation.ts"
+      ],
+      "watchedBy": [
+        "orgata-ide/src/pages/api/conversation/process.ts"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/services/busy-generator.ts": {
+      "watches": [
+        "orgata-ide/src/types/conversation.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/services/knit-integration.ts": {
+      "watches": [
+        "design-docs/006-orgata-ide/KNIT_INTEGRATION_DESIGN.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/README.md": {
+      "watches": [
+        "design-docs/006-orgata-ide/README.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/006-orgata-ide/README.md": {
+      "watches": [],
+      "watchedBy": [
+        "orgata-ide/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/pages/index.tsx": {
+      "watches": [
+        "orgata-ide/src/components/ConversationInterface.tsx"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/components/ConversationInterface.tsx": {
+      "watches": [],
+      "watchedBy": [
+        "orgata-ide/src/pages/index.tsx"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/src/pages/api/conversation/process.ts": {
+      "watches": [
+        "orgata-ide/src/services/conversation-engine.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
     }
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-07-21T04:21:10.612Z"
+  "lastUpdated": "2025-07-21T05:21:19.584Z"
 }
