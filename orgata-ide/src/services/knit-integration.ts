@@ -63,7 +63,7 @@ export class KnitIntegrationService {
 
   async executeReconciliation(
     modifications: BusyFileModification[],
-    approvals: string[] = []
+    _approvals: string[] = []
   ): Promise<ReconciliationResult> {
     try {
       // Step 1: Create reconciliation branch
@@ -245,7 +245,7 @@ export class KnitIntegrationService {
 
   private async generateReconciliationPlan(
     dependentProcesses: DependentProcess[],
-    semanticChanges: SemanticChange[]
+    _semanticChanges: SemanticChange[]
   ): Promise<ReconciliationAction[]> {
     const actions: ReconciliationAction[] = [];
     
@@ -275,7 +275,7 @@ export class KnitIntegrationService {
   }
 
   private assessRisks(
-    modifications: BusyFileModification[],
+    _modifications: BusyFileModification[],
     dependentProcesses: DependentProcess[],
     semanticChanges: SemanticChange[]
   ): RiskAssessment {
@@ -359,7 +359,7 @@ export class KnitIntegrationService {
     }
   }
 
-  private async identifyRequiredChanges(sourceFile: string, dependentFile: string): Promise<ProcessChange[]> {
+  private async identifyRequiredChanges(_sourceFile: string, _dependentFile: string): Promise<ProcessChange[]> {
     const changes: ProcessChange[] = [];
     
     // Analyze what changes are needed in the dependent file
@@ -554,7 +554,7 @@ export class KnitIntegrationService {
   private async runKnitReconciliation(): Promise<KnitReconciliationResult> {
     try {
       // Use new delegation mode for AI-assisted reconciliation
-      const { stdout, stderr } = await execAsync('knit reconcile --delegate --format structured');
+      const { stdout } = await execAsync('knit reconcile --delegate');
       
       if (stdout.includes('DELEGATION REQUESTS')) {
         // Parse delegation requests and process them
@@ -629,7 +629,7 @@ export class KnitIntegrationService {
     }
   }
 
-  private async validateBusinessLogic(modification: BusyFileModification): Promise<void> {
+  private async validateBusinessLogic(_modification: BusyFileModification): Promise<void> {
     // Validate business process logic
     // - Check for circular dependencies
     // - Validate resource assignments
@@ -654,7 +654,7 @@ export class KnitIntegrationService {
     return violations;
   }
 
-  private async checkCrossProcessCoherence(processFiles: string[]): Promise<CoherenceViolation[]> {
+  private async checkCrossProcessCoherence(_processFiles: string[]): Promise<CoherenceViolation[]> {
     const violations: CoherenceViolation[] = [];
     
     // Check for conflicts between processes
@@ -665,7 +665,7 @@ export class KnitIntegrationService {
     return violations;
   }
 
-  private async checkDependencyCoherence(filePath: string, dependencyPath: string): Promise<CoherenceViolation | null> {
+  private async checkDependencyCoherence(_filePath: string, _dependencyPath: string): Promise<CoherenceViolation | null> {
     // Implementation would check if the file properly respects its dependency
     return null;
   }
@@ -697,12 +697,12 @@ export class KnitIntegrationService {
     return priorityMap[impactLevel] || 'medium';
   }
 
-  private parseAppliedChanges(stdout: string): string[] {
+  private parseAppliedChanges(_stdout: string): string[] {
     // Parse knit output to extract applied changes
     return [];
   }
 
-  private parsePendingReviews(stdout: string): string[] {
+  private parsePendingReviews(_stdout: string): string[] {
     // Parse knit output to extract pending reviews
     return [];
   }
@@ -776,7 +776,7 @@ export class KnitIntegrationService {
   }
 
   private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }
 }
 
