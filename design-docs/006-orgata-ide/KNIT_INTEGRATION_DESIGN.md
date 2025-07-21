@@ -7,16 +7,27 @@ The Orgata IDE integrates knit dependency reconciliation to ensure business proc
 ## Integration Architecture
 
 ```
-Conversation → BUSY Modification → Knit Analysis → Impact Assessment → 
-Change Approval → Execution → Monitoring → Feedback Loop
+Conversation → BUSY Modification → Knit Analysis → Route Decision → Execution
+     ↓              ↓               ↓              ↓            ↓
+ Link Analysis  Impact Assessment  Human Review   Delegation   State Update
+ (Intelligent)  (Business Impact)  OR Auto-Apply  OR Claude    (Monitoring)
+                                  OR Dry-Run     Integration   
 ```
+
+### Enhanced Architecture Components
+
+- **Link Analyzer**: Intelligent dependency discovery for BUSY processes
+- **Delegation System**: AI-assisted reconciliation with Claude Code integration
+- **Multiple Reconciliation Modes**: In-place, branch, dry-run, and delegation modes
+- **Business Process Intelligence**: Semantic analysis of BUSY file relationships
 
 ### Core Integration Points
 
-1. **Pre-Modification Analysis**: Before any BUSY file changes
-2. **Real-Time Reconciliation**: During modification process
-3. **Post-Change Validation**: After changes are applied
-4. **Continuous Monitoring**: Ongoing coherence maintenance
+1. **Pre-Modification Analysis**: Link analyzer suggests dependencies before changes
+2. **Real-Time Reconciliation**: Multiple reconciliation modes during modification
+3. **AI-Assisted Processing**: Delegation to Claude Code for complex reconciliations
+4. **Post-Change Validation**: Enhanced validation with business rule engine
+5. **Continuous Monitoring**: Intelligent monitoring with auto-trigger capabilities
 
 ## Knit-Enhanced Conversation Flow
 
@@ -400,4 +411,98 @@ class ProcessTestRunner {
 }
 ```
 
-This knit integration ensures that every conversational modification to business processes is analyzed for impact, validated for consistency, and reconciled across all dependent processes, creating a robust foundation for the Orgata IDE's business process management capabilities.
+## Integration with Enhanced Knit Features
+
+### Link Analysis for BUSY Processes
+
+The enhanced knit system includes intelligent link analysis that understands BUSY file semantics:
+
+```typescript
+interface BusyLinkAnalyzer extends LinkAnalyzer {
+  analyzeBusyProcessDependencies(
+    process: BusyProcess, 
+    threshold: number
+  ): Promise<BusyLinkSuggestion[]>;
+  
+  detectBusinessProcessRelationships(
+    processes: BusyProcess[]
+  ): Promise<BusinessProcessDependencyMap>;
+}
+
+interface BusyLinkSuggestion extends LinkSuggestion {
+  businessRelationshipType: 'sequential' | 'parallel' | 'conditional' | 'resource-shared';
+  processElements: {
+    roles: string[];
+    resources: string[];
+    timelines: string[];
+    outcomes: string[];
+  };
+  businessImpact: BusinessImpactLevel;
+}
+```
+
+### Delegation System for Business Process Reconciliation
+
+The delegation system enables sophisticated business process reconciliation:
+
+```typescript
+interface BusinessProcessDelegationRequest extends ReconciliationRequest {
+  businessContext: {
+    processType: string;
+    stakeholders: string[];
+    complianceRequirements: string[];
+    businessGoals: string[];
+  };
+  reconciliationComplexity: 'simple' | 'moderate' | 'complex' | 'expert-required';
+  suggestedApproach: ReconciliationApproach;
+}
+
+enum ReconciliationApproach {
+  AUTO_APPLY = 'auto',
+  GUIDED_REVIEW = 'guided', 
+  EXPERT_CONSULTATION = 'expert',
+  BUSINESS_STAKEHOLDER_APPROVAL = 'stakeholder'
+}
+```
+
+### Enhanced Configuration for Business Processes
+
+The extended configuration schema supports business-specific settings:
+
+```json
+{
+  "businessProcess": {
+    "autoAnalyzeProcessChanges": true,
+    "businessImpactThreshold": 0.7,
+    "complianceValidation": true,
+    "stakeholderNotification": {
+      "enabled": true,
+      "impactLevels": ["medium", "high", "critical"]
+    }
+  },
+  "claudeIntegration": {
+    "enabled": true,
+    "businessProcessCommands": [
+      "/busy-analyze",
+      "/process-reconcile", 
+      "/compliance-check"
+    ],
+    "autoTrigger": {
+      "onProcessModification": true,
+      "onRoleChange": true,
+      "onTimelineAdjustment": true,
+      "businessImpactThreshold": 0.5
+    }
+  }
+}
+```
+
+### Enhanced Reconciliation Modes for Business Processes
+
+- **In-Place Mode**: Direct process modification for low-impact changes
+- **Branch Mode**: Create process version branches for review and approval
+- **Dry-Run Mode**: Simulate business process changes without applying
+- **Delegation Mode**: Generate structured requests for AI-assisted reconciliation
+- **Stakeholder Review Mode**: Route changes to appropriate business stakeholders
+
+This enhanced knit integration ensures that every conversational modification to business processes is intelligently analyzed, semantically understood, and appropriately reconciled across all dependent processes, creating a sophisticated foundation for the Orgata IDE's business process management capabilities.
