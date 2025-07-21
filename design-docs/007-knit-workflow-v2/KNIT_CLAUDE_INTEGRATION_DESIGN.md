@@ -144,7 +144,7 @@ interface LinkSuggestion {
   targetFile: string;
   confidence: number;  // 0-1 scale
   reasoning: string;
-  relationship: 'design_to_code' | 'code_to_test' | 'spec_to_impl' | 'bidirectional';
+  relationship: 'design_to_code' | 'code_to_test' | 'spec_to_impl' | 'types_to_usage' | 'config_to_code' | 'bidirectional';
   evidence: {
     sharedTerms: string[];
     structuralSimilarity: number;
@@ -153,18 +153,58 @@ interface LinkSuggestion {
   };
 }
 
+interface PatternMatch {
+  pattern: string;
+  confidence: number;
+  description: string;
+}
+
 class LinkAnalyzer {
-  async analyzeFile(newFile: string): Promise<LinkSuggestion[]> {
-    const content = await this.readFile(newFile);
-    const candidates = await this.findCandidateFiles(newFile);
-    
-    const suggestions = await Promise.all(
-      candidates.map(candidate => this.scoreRelationship(newFile, candidate))
-    );
-    
-    return suggestions
-      .filter(s => s.confidence > this.config.threshold)
-      .sort((a, b) => b.confidence - a.confidence);
+  constructor(projectRoot: string, depGraph: DependencyGraphManager, config: KnitConfig) {
+    this.projectRoot = projectRoot;
+    this.depGraph = depGraph;
+    this.config = config;
+    this.patterns = this.getDefaultPatterns();
+  }
+
+  async analyzeFile(targetFile: string, threshold: number = 0.6): Promise<LinkSuggestion[]> {
+    const targetContent = await this.readFile(targetFile);
+    if (!targetContent) return [];
+
+    const candidateFiles = await this.findCandidateFiles(targetFile);
+    const suggestions: LinkSuggestion[] = [];
+
+    for (const candidateFile of candidateFiles) {
+      const suggestion = await this.scoreRelationship(candidateFile, targetFile, targetContent);
+      if (suggestion && suggestion.confidence >= threshold) {
+        suggestions.push(suggestion);
+      }
+    }
+
+    return suggestions.sort((a, b) => b.confidence - a.confidence);
+  }
+  
+  async analyzeProject(threshold: number = 0.7, autoAddThreshold: number = 0.85): Promise<{
+    suggestions: LinkSuggestion[];
+    autoAdded: LinkSuggestion[];
+  }> {
+    const allFiles = await this.getAllProjectFiles();
+    const suggestions: LinkSuggestion[] = [];
+    const autoAdded: LinkSuggestion[] = [];
+
+    for (const file of allFiles) {
+      const fileSuggestions = await this.analyzeFile(file, threshold);
+      suggestions.push(...fileSuggestions);
+
+      // Auto-add high-confidence suggestions
+      const highConfidence = fileSuggestions.filter(s => s.confidence >= autoAddThreshold);
+      for (const suggestion of highConfidence) {
+        await this.depGraph.addDependency(suggestion.sourceFile, suggestion.targetFile);
+        autoAdded.push(suggestion);
+      }
+    }
+
+    return { suggestions, autoAdded };
   }
 }
 ```
@@ -272,8 +312,8 @@ Found: TypeScript + Express.js project
 knit reconcile --delegate [--format structured|commands|interactive]
 
 # Link analysis  
-knit analyze-links [file] [--threshold 0.7] [--auto-add]
-knit suggest-links [--project-setup] [--confidence-threshold 0.8]
+knit analyze-links [file] [--threshold 0.7] [--auto-add] [--project-setup]
+knit setup  # Initialize knit with intelligent project analysis
 
 # Integration commands
 knit export-claude-commands  # Export Claude Code command definitions

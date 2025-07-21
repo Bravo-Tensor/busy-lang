@@ -22,6 +22,8 @@ interface ReconcileOptions {
   stagedOnly: boolean;
   baseBranch?: string;
   createBranch: boolean;  // false by default now
+  delegate: boolean;  // NEW: Enable delegation mode
+  delegateFormat: 'structured' | 'commands' | 'interactive';  // NEW: Delegation output format
 }
 ```
 
@@ -381,5 +383,122 @@ knit config --set autoApplyThreshold=0.9
 - Atomic operations where possible
 - Clear rollback procedures for failed reconciliations
 - Detailed logging for debugging complex failures
+
+## Enhanced Features
+
+### 6. Intelligent Link Analysis
+
+The KnitManager now includes a LinkAnalyzer for automatic dependency discovery:
+
+```typescript
+class KnitManager {
+  private linkAnalyzer: LinkAnalyzer;
+
+  /**
+   * Analyze file for dependency link suggestions
+   */
+  async analyzeLinks(filePath?: string, options: {
+    threshold?: number;
+    autoAdd?: boolean;
+    projectSetup?: boolean;
+  } = {}): Promise<void> {
+    const threshold = options.threshold || 0.7;
+    const autoAddThreshold = 0.85;
+
+    if (options.projectSetup) {
+      // Full project analysis
+      const result = await this.linkAnalyzer.analyzeProject(threshold, autoAddThreshold);
+      console.log(`📊 Found ${result.suggestions.length} total suggestions`);
+      console.log(`🚀 Auto-added ${result.autoAdded.length} high-confidence links`);
+    } else if (filePath) {
+      // Single file analysis
+      const suggestions = await this.linkAnalyzer.analyzeFile(filePath, threshold);
+      if (options.autoAdd) {
+        const highConfidence = suggestions.filter(s => s.confidence >= autoAddThreshold);
+        for (const suggestion of highConfidence) {
+          await this.addDependency(suggestion.sourceFile, suggestion.targetFile);
+        }
+      }
+    }
+  }
+
+  /**
+   * Set up knit with intelligent initial links for new projects
+   */
+  async setupProject(): Promise<void> {
+    await this.initialize();
+    await this.analyzeLinks(undefined, { projectSetup: true, autoAdd: true });
+  }
+}
+```
+
+### 7. Delegation Mode
+
+The reconciliation system now supports delegating complex reconciliation tasks to external AI systems like Claude Code:
+
+```typescript
+interface DelegationOutput {
+  reconciliations: ReconciliationRequest[];
+  summary: {
+    totalRequests: number;
+    highConfidence: number;
+    requiresReview: number;
+  };
+}
+
+// Usage examples
+async reconcile(options: ReconcileOptions = {}): Promise<void> {
+  if (options.delegate) {
+    const delegationOutput = await this.reconciler.processReconciliation(session, false, true);
+    await this.outputDelegationRequests(delegationOutput, options.delegateFormat || 'structured');
+    return;
+  }
+  
+  // Normal reconciliation continues...
+}
+```
+
+**Delegation Output Formats:**
+- **Structured JSON**: Machine-readable format for AI processing
+- **Commands**: Executable CLI commands  
+- **Interactive**: Human-readable prompts with context
+
+### 8. Enhanced Configuration
+
+Extended configuration schema supports the new features:
+
+```json
+{
+  "workflow": {
+    "mode": "in-place",
+    "createBranch": false,
+    "autoApply": true,
+    "safeOnly": false
+  },
+  "delegation": {
+    "enabled": true,
+    "defaultMode": "structured",
+    "contextLevel": "full"
+  },
+  "linkAnalysis": {
+    "autoAnalyzeNewFiles": true,
+    "confidenceThreshold": 0.75,
+    "autoAddThreshold": 0.85,
+    "patterns": "default",
+    "watchForChanges": true
+  },
+  "claudeIntegration": {
+    "enabled": true,
+    "commands": ["/knit-reconcile", "/knit-analyze", "/knit-setup"],
+    "autoTrigger": {
+      "onFileCreate": true,
+      "onSignificantChange": true,
+      "significantChangeThreshold": 0.3
+    }
+  }
+}
+```
+
+This enhanced workflow provides intelligent automation while maintaining the flexibility and safety that developers need for complex dependency reconciliation scenarios.
 
 This design provides a robust foundation for the improved knit workflow while maintaining safety and clarity in all operations.

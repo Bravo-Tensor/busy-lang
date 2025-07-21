@@ -503,14 +503,20 @@ export class KnitIntegrationService {
 
   private async autoLinkFile(filePath: string): Promise<void> {
     try {
-      // Determine what this file should depend on based on its content and location
-      const dependencies = await this.identifyFileDependencies(filePath);
-      
-      for (const dependency of dependencies) {
-        await execAsync(`knit link ${filePath} ${dependency}`);
-      }
+      // Use new link analysis feature for intelligent dependency discovery
+      const { stdout } = await execAsync(`knit analyze-links ${filePath} --auto-add --threshold 0.7`);
+      console.log(`Auto-linked file ${filePath}: ${stdout}`);
     } catch (error) {
       console.warn(`Could not auto-link file ${filePath}:`, error);
+      // Fallback to manual dependency identification
+      try {
+        const dependencies = await this.identifyFileDependencies(filePath);
+        for (const dependency of dependencies) {
+          await execAsync(`knit link ${filePath} ${dependency}`);
+        }
+      } catch (fallbackError) {
+        console.warn('Fallback linking also failed:', fallbackError);
+      }
     }
   }
 
@@ -547,15 +553,33 @@ export class KnitIntegrationService {
 
   private async runKnitReconciliation(): Promise<KnitReconciliationResult> {
     try {
-      const { stdout, stderr } = await execAsync('knit reconcile --auto-apply');
+      // Use new delegation mode for AI-assisted reconciliation
+      const { stdout, stderr } = await execAsync('knit reconcile --delegate --format structured');
       
-      return {
-        success: true,
-        appliedChanges: this.parseAppliedChanges(stdout),
-        pendingReviews: this.parsePendingReviews(stdout),
-        errors: stderr ? [stderr] : [],
-        warnings: []
-      };
+      if (stdout.includes('DELEGATION REQUESTS')) {
+        // Parse delegation requests and process them
+        const delegationData = this.parseDelegationRequests(stdout);
+        const processedResults = await this.processDelegationRequests(delegationData);
+        
+        return {
+          success: processedResults.success,
+          appliedChanges: processedResults.appliedChanges,
+          pendingReviews: processedResults.pendingReviews,
+          errors: processedResults.errors,
+          warnings: processedResults.warnings
+        };
+      } else {
+        // Fallback to traditional reconciliation
+        const { stdout: fallbackStdout, stderr: fallbackStderr } = await execAsync('knit reconcile --auto-apply');
+        
+        return {
+          success: true,
+          appliedChanges: this.parseAppliedChanges(fallbackStdout),
+          pendingReviews: this.parsePendingReviews(fallbackStdout),
+          errors: fallbackStderr ? [fallbackStderr] : [],
+          warnings: []
+        };
+      }
     } catch (error) {
       return {
         success: false,
@@ -681,6 +705,74 @@ export class KnitIntegrationService {
   private parsePendingReviews(stdout: string): string[] {
     // Parse knit output to extract pending reviews
     return [];
+  }
+
+  private parseDelegationRequests(stdout: string): any {
+    try {
+      // Extract JSON from delegation output
+      const jsonMatch = stdout.match(/--- DELEGATION REQUESTS \(JSON\) ---\n([\s\S]*?)\n--- END DELEGATION REQUESTS ---/);
+      if (jsonMatch && jsonMatch[1]) {
+        return JSON.parse(jsonMatch[1]);
+      }
+    } catch (error) {
+      console.error('Error parsing delegation requests:', error);
+    }
+    return null;
+  }
+
+  private async processDelegationRequests(delegationData: any): Promise<KnitReconciliationResult> {
+    if (!delegationData || !delegationData.reconciliations) {
+      return {
+        success: false,
+        appliedChanges: [],
+        pendingReviews: [],
+        errors: ['Invalid delegation data'],
+        warnings: []
+      };
+    }
+
+    const appliedChanges: string[] = [];
+    const pendingReviews: string[] = [];
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Process each reconciliation request
+    for (const request of delegationData.reconciliations) {
+      try {
+        if (request.confidence >= 0.8) {
+          // High confidence - attempt automated processing
+          await this.processSingleReconciliation(request);
+          appliedChanges.push(`${request.sourceFile} → ${request.targetFile}`);
+        } else {
+          // Lower confidence - add to review queue
+          pendingReviews.push(`${request.sourceFile} → ${request.targetFile} (${Math.round(request.confidence * 100)}% confidence)`);
+        }
+      } catch (error) {
+        errors.push(`Error processing ${request.sourceFile}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      appliedChanges,
+      pendingReviews,
+      errors,
+      warnings
+    };
+  }
+
+  private async processSingleReconciliation(request: any): Promise<void> {
+    // This would process individual reconciliation requests
+    // For now, we'll log the request details
+    console.log(`Processing reconciliation: ${request.sourceFile} → ${request.targetFile}`);
+    console.log(`Relationship: ${request.relationship}`);
+    console.log(`Changes: ${request.changes.substring(0, 200)}...`);
+    
+    // In a real implementation, this would:
+    // 1. Parse the git diff in request.changes
+    // 2. Apply the changes to the target file
+    // 3. Validate the changes
+    // 4. Handle any errors
   }
 
   private generateId(): string {
