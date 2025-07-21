@@ -17,6 +17,14 @@ Knit implements a distributed dependency reconciliation system using git-inspire
 │ Content Hash    │    │ State Manager   │    │ Human Review    │
 │ Tracker         │    │ (.knit/)        │    │ Queue           │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Link Analyzer   │    │ Delegation      │    │ Claude Code     │
+│ (Intelligent    │    │ System          │    │ Integration     │
+│ Dependency      │    │                 │    │                 │
+│ Discovery)      │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## Data Structures
@@ -92,11 +100,18 @@ interface FileWatcher {
 
 ### Reconciliation Phases
 ```
-File Change → Impact Analysis → Conflict Detection → Human Review → State Update
+File Change → Impact Analysis → Conflict Detection → Route Decision → State Update
      ↓              ↓               ↓                ↓              ↓
-   Hash Δ      Dependency     LLM Analysis    Review Queue    Update Hashes
-            Propagation      Classification   (if needed)    Mark Reconciled
+   Hash Δ      Dependency     LLM Analysis     Human Review    Update Hashes
+            Propagation      Classification    OR Delegation   Mark Reconciled
+                                              OR Auto-Apply
 ```
+
+### Reconciliation Modes
+- **In-Place Mode**: Apply changes directly to current branch (default)
+- **Branch Mode**: Create reconciliation branch for review
+- **Dry-Run Mode**: Analyze changes without applying
+- **Delegation Mode**: Generate structured requests for external processing
 
 ## Conflict Classification
 
@@ -162,6 +177,113 @@ enum ConflictType {
 - **API key security**: Secure storage and transmission of credentials
 - **Response validation**: Validate LLM responses before application
 
+## Intelligent Link Analysis
+
+### Link Analyzer Component
+The Link Analyzer provides intelligent dependency discovery through semantic analysis:
+
+```typescript
+interface LinkAnalyzer {
+  analyzeFile(filePath: string, threshold: number): Promise<LinkSuggestion[]>;
+  analyzeProject(threshold: number, autoAddThreshold: number): Promise<AnalysisResult>;
+}
+
+interface LinkSuggestion {
+  sourceFile: string;
+  targetFile: string;
+  confidence: number;
+  relationship: string;
+  reasoning: string;
+  evidence: {
+    sharedTerms: string[];
+    explicitReferences: string[];
+    semanticSimilarity: number;
+  };
+}
+```
+
+### Project Setup Intelligence
+- **Automatic Discovery**: Scan project for potential dependencies
+- **Confidence-Based Auto-Addition**: Add high-confidence links (≥85%) automatically
+- **Manual Review Queue**: Present medium-confidence suggestions for review
+- **Pattern Recognition**: Learn from existing project structure
+
+## Delegation System
+
+### Claude Code Integration
+The delegation system enables seamless integration with AI assistants:
+
+```typescript
+interface DelegationOutput {
+  reconciliations: ReconciliationRequest[];
+  summary: {
+    totalRequests: number;
+    highConfidence: number;
+    requiresReview: number;
+  };
+}
+
+interface ReconciliationRequest {
+  id: string;
+  sourceFile: string;
+  targetFile: string;
+  changes: string;
+  relationship: string;
+  confidence: number;
+  prompt: string;
+  context: {
+    projectType: string;
+    frameworks: string[];
+    relatedFiles: string[];
+    fileContent?: string;
+  };
+}
+```
+
+### Output Formats
+- **Structured JSON**: Machine-readable format for AI processing
+- **Command Format**: Executable CLI commands
+- **Interactive Format**: Human-readable prompts with context
+
+## Enhanced Configuration
+
+### Extended Configuration Schema
+```json
+{
+  "workflow": {
+    "mode": "in-place",
+    "createBranch": false,
+    "autoApply": true,
+    "safeOnly": false
+  },
+  "reconciliation": {
+    "includeUncommitted": true,
+    "includeStagedOnly": false
+  },
+  "delegation": {
+    "enabled": true,
+    "defaultMode": "structured",
+    "contextLevel": "full"
+  },
+  "linkAnalysis": {
+    "autoAnalyzeNewFiles": true,
+    "confidenceThreshold": 0.75,
+    "autoAddThreshold": 0.85,
+    "patterns": "default",
+    "watchForChanges": true
+  },
+  "claudeIntegration": {
+    "enabled": true,
+    "commands": ["/knit-reconcile", "/knit-analyze", "/knit-setup"],
+    "autoTrigger": {
+      "onFileCreate": true,
+      "onSignificantChange": true,
+      "significantChangeThreshold": 0.3
+    }
+  }
+}
+```
+
 ## Error Handling
 
 ### Graceful Degradation
@@ -169,9 +291,11 @@ enum ConflictType {
 - **File system errors**: Continue with available files
 - **Dependency cycles**: Break cycles with human intervention
 - **Corrupted state**: Rebuild from file system scan
+- **Delegation failures**: Fall back to direct reconciliation
 
 ### Recovery Mechanisms
 - **State validation**: Verify .knit/ directory integrity
 - **Automatic repair**: Rebuild corrupted state files
 - **Manual override**: Allow human correction of any state
 - **Rollback capability**: Undo reconciliation if needed
+- **Format fallbacks**: Switch delegation formats on failure

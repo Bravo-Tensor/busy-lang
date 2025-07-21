@@ -7,7 +7,8 @@
       "watchedBy": [
         "compiler/src/analysis/analyzer.ts",
         "compiler/docs/BUSY_LANGUAGE_REFERENCE.md",
-        "design-docs/006-orgata-ide/CONVERSATIONAL_INTERFACE_DESIGN.md"
+        "design-docs/006-orgata-ide/CONVERSATIONAL_INTERFACE_DESIGN.md",
+        "design-docs/ARCHITECTURE_OVERVIEW.md"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -21,7 +22,8 @@
       ],
       "watchedBy": [
         "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md",
-        "compiler/tests/basic.test.ts"
+        "compiler/tests/basic.test.ts",
+        "compiler/src/core/scanner.ts"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -41,12 +43,13 @@
       }
     },
     "compiler/src/core/scanner.ts": {
-      "watches": [],
+      "watches": [
+        "compiler/src/core/parser.ts"
+      ],
       "watchedBy": [
         "design-docs/001-initial-specification/GRAMMAR_SPECIFICATION.md"
       ],
       "reconciliationRules": {
-        "autoApplyThreshold": 0.8,
         "requireReview": [
           "required"
         ]
@@ -58,7 +61,8 @@
       ],
       "watchedBy": [
         "compiler/generated-runtime/src/services/process-execution-service.ts",
-        "design-docs/006-orgata-ide/ORGATA_IDE_ARCHITECTURE.md"
+        "design-docs/006-orgata-ide/ORGATA_IDE_ARCHITECTURE.md",
+        "design-docs/ARCHITECTURE_OVERVIEW.md"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -73,7 +77,8 @@
       "watchedBy": [
         "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md",
         "examples/solo-photography-business/L0/business-operations/team.busy",
-        "compiler/src/cli/commands/generate-runtime.ts"
+        "compiler/src/cli/commands/generate-runtime.ts",
+        "compiler/src/analysis/semantic-analyzer.ts"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -87,7 +92,8 @@
       ],
       "watchedBy": [
         "compiler/docs/COMPILER_ARCHITECTURE.md",
-        "design-docs/006-orgata-ide/IMPLEMENTATION_ROADMAP.md"
+        "design-docs/006-orgata-ide/IMPLEMENTATION_ROADMAP.md",
+        "design-docs/ARCHITECTURE_OVERVIEW.md"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -123,7 +129,9 @@
     "knit/src/core/knit-manager.ts": {
       "watches": [],
       "watchedBy": [
-        "design-docs/005-knit-dependency-reconciliation/KNIT_SYSTEM_DESIGN.md"
+        "design-docs/005-knit-dependency-reconciliation/KNIT_SYSTEM_DESIGN.md",
+        "design-docs/007-knit-workflow-v2/KNIT_WORKFLOW_V2_DESIGN.md",
+        "knit/src/analysis/link-analyzer.ts"
       ],
       "reconciliationRules": {
         "autoApplyThreshold": 0.8,
@@ -144,7 +152,10 @@
       }
     },
     "compiler/generated-runtime/README.md": {
-      "watches": [],
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
       "watchedBy": [
         "examples/solo-photography-business/README.md"
       ],
@@ -167,12 +178,14 @@
       }
     },
     "compiler/src/analysis/semantic-analyzer.ts": {
-      "watches": [],
+      "watches": [
+        "compiler/src/generators/runtime-generator.ts"
+      ],
       "watchedBy": [
-        "compiler/schemas/busy-schema.json"
+        "compiler/schemas/busy-schema.json",
+        "compiler/src/ast/builder.ts"
       ],
       "reconciliationRules": {
-        "autoApplyThreshold": 0.8,
         "requireReview": [
           "required"
         ]
@@ -202,13 +215,14 @@
       }
     },
     "compiler/src/ast/builder.ts": {
-      "watches": [],
+      "watches": [
+        "compiler/src/analysis/semantic-analyzer.ts"
+      ],
       "watchedBy": [
         "compiler/src/core/parser.ts",
         "compiler/src/ast/nodes.ts"
       ],
       "reconciliationRules": {
-        "autoApplyThreshold": 0.8,
         "requireReview": [
           "required"
         ]
@@ -265,7 +279,8 @@
       ],
       "watchedBy": [
         "compiler/tests/simple-validation.test.ts",
-        "compiler/src/cli/commands/analyze.ts"
+        "compiler/src/cli/commands/analyze.ts",
+        "compiler/tests/dead-code-detection.test.ts"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -345,7 +360,9 @@
     },
     "compiler/docs/BUSY_LANGUAGE_REFERENCE.md": {
       "watches": [
-        "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md"
+        "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md",
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
       ],
       "watchedBy": [],
       "reconciliationRules": {
@@ -356,7 +373,9 @@
     },
     "compiler/docs/COMPILER_ARCHITECTURE.md": {
       "watches": [
-        "design-docs/003-compiler-implementation/COMPILER_IMPLEMENTATION_PLAN.md"
+        "design-docs/003-compiler-implementation/COMPILER_IMPLEMENTATION_PLAN.md",
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
       ],
       "watchedBy": [],
       "reconciliationRules": {
@@ -367,7 +386,9 @@
     },
     "CLAUDE.md": {
       "watches": [
-        "design-docs/005-knit-dependency-reconciliation/README.md"
+        "design-docs/005-knit-dependency-reconciliation/README.md",
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
       ],
       "watchedBy": [],
       "reconciliationRules": {
@@ -412,7 +433,10 @@
     },
     "design-docs/ARCHITECTURE_OVERVIEW.md": {
       "watches": [
-        "compiler/README.md"
+        "compiler/README.md",
+        "design-docs/001-initial-specification/BUSY_LANGUAGE_SPECIFICATION.md",
+        "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md",
+        "design-docs/003-compiler-implementation/COMPILER_IMPLEMENTATION_PLAN.md"
       ],
       "watchedBy": [],
       "reconciliationRules": {
@@ -422,7 +446,21 @@
       }
     },
     "compiler/README.md": {
-      "watches": [],
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js",
+        "compiler/dist/analysis/analyzer.d.ts",
+        "compiler/dist/analysis/analyzer.js",
+        "compiler/dist/analysis/dependency-resolver.d.ts",
+        "compiler/dist/analysis/dependency-resolver.js",
+        "compiler/dist/analysis/governance-validator.d.ts",
+        "compiler/dist/analysis/governance-validator.js",
+        "compiler/dist/analysis/index.d.ts",
+        "compiler/dist/analysis/index.js",
+        "compiler/dist/analysis/interface-validator.d.ts",
+        "compiler/dist/analysis/interface-validator.js",
+        "compiler/dist/analysis/performance-analyzer.d.ts"
+      ],
       "watchedBy": [
         "design-docs/ARCHITECTURE_OVERVIEW.md"
       ],
@@ -435,7 +473,8 @@
     },
     "design-docs/006-orgata-ide/ORGATA_IDE_ARCHITECTURE.md": {
       "watches": [
-        "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md"
+        "design-docs/002-runtime-architecture/RUNTIME_ARCHITECTURE_DESIGN.md",
+        "orgata-ide/src/services/conversation-engine.ts"
       ],
       "watchedBy": [],
       "reconciliationRules": {
@@ -524,7 +563,8 @@
         "orgata-ide/src/types/conversation.ts"
       ],
       "watchedBy": [
-        "orgata-ide/src/pages/api/conversation/process.ts"
+        "orgata-ide/src/pages/api/conversation/process.ts",
+        "design-docs/006-orgata-ide/ORGATA_IDE_ARCHITECTURE.md"
       ],
       "reconciliationRules": {
         "requireReview": [
@@ -610,8 +650,967 @@
           "required"
         ]
       }
+    },
+    "compiler/PROJECT_STRUCTURE.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js",
+        "compiler/dist/analysis/analyzer.d.ts",
+        "compiler/dist/analysis/analyzer.js",
+        "compiler/dist/analysis/dependency-resolver.d.ts",
+        "compiler/dist/analysis/dependency-resolver.js",
+        "compiler/dist/analysis/governance-validator.d.ts",
+        "compiler/dist/analysis/governance-validator.js",
+        "compiler/dist/analysis/index.d.ts",
+        "compiler/dist/analysis/index.js",
+        "compiler/dist/analysis/interface-validator.d.ts",
+        "compiler/dist/analysis/interface-validator.js",
+        "compiler/dist/analysis/performance-analyzer.d.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/.eslintrc.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md",
+        "CLAUDE.md",
+        "compiler/docs/BUSY_LANGUAGE_REFERENCE.md",
+        "compiler/docs/COMPILER_ARCHITECTURE.md",
+        "compiler/docs/DESIGN.md",
+        "compiler/docs/DEVELOPER_LLM_GUIDE.md",
+        "compiler/docs/DOCUMENTATION_INDEX.md",
+        "compiler/docs/README.md",
+        "compiler/docs/VALIDATION_ERRORS_REFERENCE.md",
+        "compiler/docs/error-system.md",
+        "compiler/generated-runtime/README.md",
+        "compiler/node_modules/acorn/CHANGELOG.md",
+        "compiler/node_modules/acorn-jsx/README.md",
+        "compiler/node_modules/acorn-walk/CHANGELOG.md",
+        "compiler/node_modules/acorn-walk/README.md",
+        "compiler/node_modules/ajv-formats/README.md",
+        "compiler/node_modules/ansi-escapes/readme.md",
+        "compiler/node_modules/ansi-styles/readme.md",
+        "compiler/node_modules/anymatch/README.md",
+        "compiler/node_modules/arg/README.md",
+        "compiler/node_modules/argparse/CHANGELOG.md",
+        "compiler/node_modules/argparse/README.md",
+        "compiler/node_modules/async/CHANGELOG.md",
+        "compiler/node_modules/async/README.md",
+        "compiler/node_modules/babel-jest/README.md",
+        "compiler/node_modules/babel-plugin-istanbul/CHANGELOG.md",
+        "compiler/node_modules/babel-plugin-istanbul/README.md",
+        "compiler/node_modules/babel-plugin-jest-hoist/README.md",
+        "compiler/node_modules/babel-preset-current-node-syntax/README.md",
+        "compiler/node_modules/babel-preset-jest/README.md",
+        "compiler/node_modules/balanced-match/README.md",
+        "compiler/node_modules/brace-expansion/README.md",
+        "compiler/node_modules/braces/README.md",
+        "compiler/node_modules/ansi-regex/readme.md",
+        "compiler/node_modules/arg/LICENSE.md",
+        "compiler/node_modules/array-union/readme.md",
+        "compiler/node_modules/balanced-match/LICENSE.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/DESIGN.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/DEVELOPER_LLM_GUIDE.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/DOCUMENTATION_INDEX.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/VALIDATION_ERRORS_REFERENCE.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/docs/error-system.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/acorn/CHANGELOG.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/acorn/README.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/acorn-jsx/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/acorn-walk/CHANGELOG.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/acorn-walk/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/ajv/README.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/ajv-formats/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/ansi-escapes/readme.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/ansi-styles/readme.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/anymatch/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/arg/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/argparse/CHANGELOG.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/argparse/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/async/CHANGELOG.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/async/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/babel-jest/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/babel-plugin-istanbul/CHANGELOG.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/babel-plugin-istanbul/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/babel-plugin-jest-hoist/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/babel-preset-current-node-syntax/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/babel-preset-jest/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/balanced-match/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/brace-expansion/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/braces/README.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/ansi-regex/readme.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/arg/LICENSE.md": {
+      "watches": [
+        "compiler/.eslintrc.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/array-union/readme.md": {
+      "watches": [
+        "compiler/.eslintrc.js",
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/balanced-match/LICENSE.md": {
+      "watches": [
+        "compiler/.eslintrc.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/busy-validate.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md",
+        "CLAUDE.md",
+        "compiler/docs/BUSY_LANGUAGE_REFERENCE.md",
+        "compiler/docs/COMPILER_ARCHITECTURE.md",
+        "compiler/docs/DESIGN.md",
+        "compiler/docs/DEVELOPER_LLM_GUIDE.md",
+        "compiler/docs/DOCUMENTATION_INDEX.md",
+        "compiler/docs/README.md",
+        "compiler/docs/VALIDATION_ERRORS_REFERENCE.md",
+        "compiler/docs/error-system.md",
+        "compiler/generated-runtime/README.md",
+        "compiler/node_modules/acorn/CHANGELOG.md",
+        "compiler/node_modules/acorn/README.md",
+        "compiler/node_modules/acorn-walk/CHANGELOG.md",
+        "compiler/node_modules/acorn-walk/README.md",
+        "compiler/node_modules/ajv/README.md",
+        "compiler/node_modules/ajv-formats/README.md",
+        "compiler/node_modules/ansi-escapes/readme.md",
+        "compiler/node_modules/ansi-styles/readme.md",
+        "compiler/node_modules/anymatch/README.md",
+        "compiler/node_modules/arg/README.md",
+        "compiler/node_modules/argparse/CHANGELOG.md",
+        "compiler/node_modules/argparse/README.md",
+        "compiler/node_modules/async/CHANGELOG.md",
+        "compiler/node_modules/async/README.md",
+        "compiler/node_modules/babel-plugin-istanbul/CHANGELOG.md",
+        "compiler/node_modules/babel-plugin-istanbul/README.md",
+        "compiler/node_modules/babel-plugin-jest-hoist/README.md",
+        "compiler/node_modules/babel-preset-jest/README.md",
+        "compiler/node_modules/balanced-match/README.md",
+        "compiler/node_modules/braces/README.md",
+        "compiler/node_modules/bs-logger/README.md",
+        "compiler/node_modules/bser/README.md",
+        "compiler/node_modules/buffer-from/readme.md",
+        "compiler/node_modules/callsites/readme.md",
+        "compiler/node_modules/camelcase/readme.md",
+        "compiler/node_modules/acorn-jsx/README.md",
+        "compiler/node_modules/brace-expansion/README.md",
+        "compiler/node_modules/ansi-regex/readme.md",
+        "compiler/node_modules/babel-jest/README.md",
+        "compiler/node_modules/babel-preset-current-node-syntax/README.md",
+        "compiler/node_modules/array-union/readme.md",
+        "compiler/node_modules/browserslist/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/bs-logger/README.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/bser/README.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/buffer-from/readme.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/callsites/readme.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/camelcase/readme.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/browserslist/README.md": {
+      "watches": [
+        "compiler/busy-validate.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/analyzer.d.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/analyzer.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/dependency-resolver.d.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/dependency-resolver.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/governance-validator.d.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/governance-validator.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "knit/node_modules/wcwidth/docs/index.md": {
+      "watches": [
+        "compiler/dist/analysis/index.d.ts",
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/index.d.ts": {
+      "watches": [],
+      "watchedBy": [
+        "knit/node_modules/wcwidth/docs/index.md",
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/generated-runtime/node_modules/eslint-plugin-jsx-a11y/docs/rules/aria-activedescendant-has-tabindex.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/index.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/generated-runtime/node_modules/eslint-plugin-jsx-a11y/docs/rules/aria-activedescendant-has-tabindex.md",
+        "compiler/generated-runtime/node_modules/eslint-plugin-jsx-a11y/docs/rules/no-noninteractive-tabindex.md",
+        "compiler/generated-runtime/node_modules/eslint-plugin-jsx-a11y/docs/rules/tabindex-no-positive.md",
+        "compiler/node_modules/@typescript-eslint/eslint-plugin/docs/rules/consistent-indexed-object-style.md",
+        "knit/node_modules/@typescript-eslint/eslint-plugin/docs/rules/consistent-indexed-object-style.md",
+        "knit/node_modules/wcwidth/docs/index.md",
+        "orgata-ide/node_modules/@typescript-eslint/eslint-plugin/docs/rules/consistent-indexed-object-style.md",
+        "orgata-ide/node_modules/eslint-plugin-jsx-a11y/docs/rules/aria-activedescendant-has-tabindex.md",
+        "orgata-ide/node_modules/eslint-plugin-jsx-a11y/docs/rules/no-noninteractive-tabindex.md",
+        "orgata-ide/node_modules/eslint-plugin-jsx-a11y/docs/rules/tabindex-no-positive.md",
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/generated-runtime/node_modules/eslint-plugin-jsx-a11y/docs/rules/no-noninteractive-tabindex.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/generated-runtime/node_modules/eslint-plugin-jsx-a11y/docs/rules/tabindex-no-positive.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/node_modules/@typescript-eslint/eslint-plugin/docs/rules/consistent-indexed-object-style.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "knit/node_modules/@typescript-eslint/eslint-plugin/docs/rules/consistent-indexed-object-style.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/node_modules/@typescript-eslint/eslint-plugin/docs/rules/consistent-indexed-object-style.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/node_modules/eslint-plugin-jsx-a11y/docs/rules/aria-activedescendant-has-tabindex.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/node_modules/eslint-plugin-jsx-a11y/docs/rules/no-noninteractive-tabindex.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "orgata-ide/node_modules/eslint-plugin-jsx-a11y/docs/rules/tabindex-no-positive.md": {
+      "watches": [
+        "compiler/dist/analysis/index.js"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/interface-validator.d.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/interface-validator.js": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/dist/analysis/performance-analyzer.d.ts": {
+      "watches": [],
+      "watchedBy": [
+        "compiler/PROJECT_STRUCTURE.md",
+        "compiler/README.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/007-knit-workflow-v2/KNIT_WORKFLOW_V2_DESIGN.md": {
+      "watches": [
+        "knit/src/core/knit-manager.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/007-knit-workflow-v2/KNIT_CLAUDE_INTEGRATION_DESIGN.md": {
+      "watches": [
+        "knit/src/analysis/link-analyzer.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "knit/src/analysis/link-analyzer.ts": {
+      "watches": [
+        "knit/src/core/knit-manager.ts"
+      ],
+      "watchedBy": [
+        "design-docs/007-knit-workflow-v2/KNIT_CLAUDE_INTEGRATION_DESIGN.md"
+      ],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "compiler/tests/dead-code-detection.test.ts": {
+      "watches": [
+        "compiler/src/analysis/analyzer.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
     }
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-07-21T05:21:19.584Z"
+  "lastUpdated": "2025-07-21T19:46:13.306Z"
 }
