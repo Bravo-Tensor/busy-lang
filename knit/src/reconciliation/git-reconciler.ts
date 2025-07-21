@@ -9,7 +9,8 @@ import {
   ReconciliationResult, 
   ChangeEvent, 
   ConflictType,
-  KnitConfig 
+  KnitConfig,
+  ReconcileOptions 
 } from '../types';
 
 export class GitReconciler {
@@ -38,20 +39,82 @@ export class GitReconciler {
   /**
    * Start reconciliation process
    */
-  async startReconciliation(sourceBranch?: string): Promise<ReconciliationSession> {
+  async startReconciliation(options: ReconcileOptions = {}): Promise<ReconciliationSession> {
+    const config = {
+      mode: options.mode || 'in-place' as const,
+      createBranch: options.createBranch || false,
+      autoApply: options.autoApply !== undefined ? options.autoApply : true,
+      safeOnly: options.safeOnly || false,
+      interactive: options.interactive || false,
+      stagedOnly: options.stagedOnly || false,
+      baseBranch: options.baseBranch
+    };
+
     // Verify git repository
     if (!this.gitManager.isGitRepository()) {
       throw new Error('Not a git repository. Knit requires git for reconciliation workflow.');
     }
 
     const gitStatus = this.gitManager.getGitStatus();
+    const currentBranch = gitStatus.currentBranch;
     
-    if (gitStatus.hasUncommittedChanges) {
-      throw new Error('Cannot start reconciliation with uncommitted changes. Please commit or stash your changes first.');
+    // Validate preconditions
+    await this.validatePreconditions(currentBranch, config);
+    
+    // Try to detect parent branch early for better error messages
+    if (!config.createBranch && !config.baseBranch) {
+      try {
+        this.gitManager.getParentBranch(currentBranch);
+      } catch (error) {
+        throw new Error(`Parent branch detection failed: ${error instanceof Error ? error.message : 'Unknown error'}\n` +
+          'Options:\n' +
+          '1. Specify parent explicitly: knit reconcile --base-branch main\n' +
+          '2. Check available branches: git branch -a\n' +
+          '3. Use branch mode instead: knit reconcile --create-branch');
+      }
     }
 
-    const currentBranch = sourceBranch || gitStatus.currentBranch;
+    if (config.createBranch) {
+      return this.reconcileWithNewBranch(currentBranch, config);
+    } else {
+      return this.reconcileInPlace(currentBranch, config);
+    }
+  }
+
+  /**
+   * Validate preconditions before reconciliation
+   */
+  private async validatePreconditions(currentBranch: string, options: ReconcileOptions): Promise<void> {
+    // Validate branch
+    this.validateBranch(currentBranch);
     
+    const gitStatus = this.gitManager.getGitStatus();
+    
+    // Check for uncommitted changes in branch mode
+    if (options.createBranch && gitStatus.hasUncommittedChanges) {
+      throw new Error('Cannot start reconciliation with uncommitted changes. Please commit or stash your changes first.');
+    }
+    
+    // Warn about uncommitted changes in in-place mode
+    if (options.mode === 'in-place' && gitStatus.hasUncommittedChanges && !options.stagedOnly) {
+      console.warn('⚠️  You have uncommitted changes. In-place mode will include them in analysis.');
+      console.log('   Use --staged-only to reconcile only staged changes, or commit/stash changes first.');
+    }
+  }
+
+  /**
+   * Validate branch for reconciliation
+   */
+  private validateBranch(currentBranch: string): void {
+    if (currentBranch === 'main' || currentBranch === 'master') {
+      throw new Error('Cannot reconcile on main branch. Create a feature branch first.\nExample: git checkout -b feature/your-changes');
+    }
+  }
+
+  /**
+   * Legacy branch-based reconciliation
+   */
+  private async reconcileWithNewBranch(currentBranch: string, config: ReconcileOptions): Promise<ReconciliationSession> {
     // Create reconciliation branch
     const reconciliationBranch = this.gitManager.createReconciliationBranch(currentBranch);
     
@@ -68,17 +131,51 @@ export class GitReconciler {
       results: [],
       autoApplied: 0,
       reviewed: 0,
-      rejected: 0
+      rejected: 0,
+      mode: 'branch'
     };
-
-    // Save session state
-    await this.saveSession(session);
 
     console.log(`✅ Created reconciliation branch: ${reconciliationBranch}`);
     console.log(`📊 Analyzing ${changes.length} changed files...`);
 
     return session;
   }
+
+  /**
+   * In-place reconciliation implementation  
+   */
+  private async reconcileInPlace(currentBranch: string, config: ReconcileOptions): Promise<ReconciliationSession> {
+    // Get parent branch
+    const parentBranch = config.baseBranch || this.gitManager.getParentBranch(currentBranch);
+    console.log(`📊 Analyzing changes since branching from: ${parentBranch}`);
+    
+    // Get ALL changes since branching from parent
+    const changes = config.stagedOnly 
+      ? this.gitManager.getStagedChanges()
+      : this.gitManager.getRecursiveChanges(parentBranch);
+      
+    const session: ReconciliationSession = {
+      id: this.generateSessionId(),
+      started: new Date(),
+      status: 'in_progress',
+      sourceBranch: currentBranch,
+      reconciliationBranch: currentBranch, // Same branch
+      changes,
+      results: [],
+      autoApplied: 0,
+      reviewed: 0,
+      rejected: 0,
+      mode: 'in_place'
+    };
+    
+    console.log(`📊 Found ${changes.length} changed files for reconciliation`);
+    
+    // Save session state
+    await this.saveSession(session);
+    
+    return session;
+  }
+
 
   /**
    * Process reconciliation for all changes in session
@@ -127,26 +224,71 @@ export class GitReconciler {
           console.log(`⚠️  Needs review: ${dependentFile} (${result.reasoning})`);
         }
       } catch (error) {
-        console.error(`❌ Failed to reconcile ${dependentFile}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        
-        // Create error result
-        const errorResult: ReconciliationResult = {
-          classification: ConflictType.REVIEW_REQUIRED,
-          confidence: 0.0,
-          reasoning: `Reconciliation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          contradictions: [],
-          requiresReview: true,
-          metadata: {
-            sourceFile: change.filepath,
-            targetFile: dependentFile,
-            timestamp: new Date()
-          }
-        };
-        
-        session.results.push(errorResult);
-        session.reviewed++;
+        await this.handleReconciliationError(error, change, dependentFile, session);
       }
     }
+  }
+
+  /**
+   * Enhanced error handling for reconciliation failures
+   */
+  private async handleReconciliationError(
+    error: unknown, 
+    change: ChangeEvent, 
+    dependentFile: string, 
+    session: ReconciliationSession
+  ): Promise<void> {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    console.error(`❌ Failed to reconcile ${dependentFile}: ${errorMessage}`);
+    
+    // Provide specific guidance based on error type
+    if (errorMessage.includes('merge conflict')) {
+      console.log('\n📋 Conflict Resolution Options:');
+      console.log('1. Resolve conflicts manually and run: knit reconcile --continue');
+      console.log('2. Skip conflicting changes: knit reconcile --skip-conflicts');  
+      console.log('3. Use branch mode instead: knit reconcile --create-branch');
+    } else if (errorMessage.includes('file not found') || errorMessage.includes('ENOENT')) {
+      console.log('\n📋 File Access Issues:');
+      console.log(`1. Check if file exists: ls -la ${dependentFile}`);
+      console.log('2. Update dependency links if file moved: knit unlink && knit link');
+      console.log('3. Remove stale dependencies: knit status --detailed');
+    } else if (errorMessage.includes('permission')) {
+      console.log('\n📋 Permission Issues:');
+      console.log(`1. Check file permissions: ls -la ${dependentFile}`);
+      console.log('2. Ensure file is writable');
+      console.log('3. Check git repository permissions');
+    }
+    
+    // Create error result for tracking
+    const errorResult: ReconciliationResult = {
+      classification: ConflictType.REVIEW_REQUIRED,
+      confidence: 0.0,
+      reasoning: `Reconciliation failed: ${errorMessage}`,
+      contradictions: [errorMessage],
+      requiresReview: true,
+      metadata: {
+        sourceFile: change.filepath,
+        targetFile: dependentFile,
+        timestamp: new Date(),
+        errorType: this.categorizeError(errorMessage)
+      }
+    };
+    
+    session.results.push(errorResult);
+    session.reviewed++;
+  }
+
+  /**
+   * Categorize errors for better handling
+   */
+  private categorizeError(errorMessage: string): string {
+    if (errorMessage.includes('merge conflict')) return 'merge_conflict';
+    if (errorMessage.includes('file not found') || errorMessage.includes('ENOENT')) return 'file_not_found';
+    if (errorMessage.includes('permission')) return 'permission_denied';
+    if (errorMessage.includes('parent branch')) return 'branch_detection_failed';
+    if (errorMessage.includes('LLM') || errorMessage.includes('API')) return 'llm_failure';
+    return 'unknown_error';
   }
 
   /**

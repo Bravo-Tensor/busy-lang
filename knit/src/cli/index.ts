@@ -63,17 +63,31 @@ program
 program
   .command('reconcile')
   .description('Start dependency reconciliation process')
-  .option('--auto-apply', 'Automatically apply safe changes', true)
-  .option('--branch-name <name>', 'Custom reconciliation branch name')
-  .option('--source-branch <branch>', 'Source branch for reconciliation')
+  .option('--mode <type>', 'Reconcile mode: in-place (default), branch, dry-run', 'in-place')
+  .option('--auto-apply', 'Apply safe changes automatically', true)
+  .option('--no-auto-apply', 'Disable automatic application of changes')
+  .option('--safe-only', 'Only auto-apply SAFE_AUTO_APPLY changes', false)
+  .option('--interactive', 'Prompt for each change', false)
+  .option('--staged-only', 'Only reconcile staged changes', false)
+  .option('--base-branch <name>', 'Compare against specific branch (default: auto-detect)')
+  .option('--create-branch', 'Create reconciliation branch (legacy mode)', false)
+  .option('--dry-run', 'Show what would change without applying', false)
   .action(async (options) => {
     try {
       const knit = new KnitManager(process.cwd());
-      await knit.reconcile({
+      
+      // Convert CLI options to ReconcileOptions format
+      const reconcileOptions = {
+        mode: options.dryRun ? 'dry-run' as const : options.mode as 'in-place' | 'branch',
         autoApply: options.autoApply,
-        branchName: options.branchName,
-        sourceBranch: options.sourceBranch
-      });
+        safeOnly: options.safeOnly,
+        interactive: options.interactive,
+        stagedOnly: options.stagedOnly,
+        baseBranch: options.baseBranch,
+        createBranch: options.createBranch
+      };
+      
+      await knit.reconcile(reconcileOptions);
     } catch (error) {
       console.error(chalk.red('❌ Reconciliation failed:'), error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);

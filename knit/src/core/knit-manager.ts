@@ -5,7 +5,7 @@ import { DependencyGraphManager } from './dependency-graph';
 import { GitManager } from './git-integration';
 import { HashTracker } from './hash-tracker';
 import { GitReconciler } from '../reconciliation/git-reconciler';
-import { KnitConfig, ReconciliationRules } from '../types';
+import { KnitConfig, ReconciliationRules, ReconcileOptions } from '../types';
 
 export class KnitManager {
   private projectRoot: string;
@@ -90,35 +90,63 @@ export class KnitManager {
   /**
    * Start reconciliation process
    */
-  async reconcile(options: {
-    autoApply?: boolean;
-    branchName?: string;
-    sourceBranch?: string;
-  } = {}): Promise<void> {
+  async reconcile(options: ReconcileOptions = {}): Promise<void> {
     await this.loadConfig();
     await this.depGraph.load();
 
     console.log(chalk.blue('🔄 Starting dependency reconciliation...'));
 
-    const session = await this.reconciler.startReconciliation(options.sourceBranch);
+    const session = await this.reconciler.startReconciliation(options);
     
     if (session.changes.length === 0) {
       console.log(chalk.yellow('ℹ️  No changes detected since last reconciliation'));
       return;
     }
 
+    // Handle dry-run mode
+    if (options.mode === 'dry-run') {
+      console.log(chalk.cyan('\n🔍 Dry run - changes that would be made:'));
+      // Process for analysis but don't apply
+      await this.reconciler.processReconciliation(session, false);
+      session.results.forEach(result => {
+        const status = result.classification === 'safe' ? '✅' : '⚠️';
+        console.log(`  ${status} ${result.metadata.targetFile}: ${result.reasoning}`);
+      });
+      return;
+    }
+
     await this.reconciler.processReconciliation(session, options.autoApply !== false);
 
     console.log(chalk.green('\n✅ Reconciliation completed!'));
-    console.log(chalk.cyan(`📋 Reconciliation branch: ${session.reconciliationBranch}`));
+    
+    if (session.mode === 'in_place') {
+      console.log(chalk.cyan(`📋 Changes applied to current branch: ${session.sourceBranch}`));
+    } else {
+      console.log(chalk.cyan(`📋 Reconciliation branch: ${session.reconciliationBranch}`));
+    }
     
     if (session.reviewed > 0) {
       console.log(chalk.yellow(`⚠️  ${session.reviewed} changes need manual review`));
-      console.log(chalk.cyan('💡 Create a PR to review and merge reconciliation changes:'));
-      console.log(chalk.gray(`   git push origin ${session.reconciliationBranch}`));
-      console.log(chalk.gray(`   gh pr create --base ${session.sourceBranch} --title "Dependency reconciliation"`));
+      if (session.mode === 'branch') {
+        console.log(chalk.cyan('💡 Create a PR to review and merge reconciliation changes:'));
+        console.log(chalk.gray(`   git push origin ${session.reconciliationBranch}`));
+        console.log(chalk.gray(`   gh pr create --base ${session.sourceBranch} --title "Dependency reconciliation"`));
+      } else {
+        console.log(chalk.cyan('💡 Review and commit the changes when ready:'));
+        console.log(chalk.gray(`   git add .`));
+        console.log(chalk.gray(`   git commit -m "Reconcile dependencies"`));
+      }
     } else {
-      console.log(chalk.green('🎉 All changes were auto-applied successfully'));
+      console.log(chalk.green('✅ All changes were auto-applied'));
+      if (session.mode === 'branch') {
+        console.log(chalk.cyan('💡 You can now merge the reconciliation branch:'));
+        console.log(chalk.gray(`   git checkout ${session.sourceBranch}`));
+        console.log(chalk.gray(`   git merge ${session.reconciliationBranch}`));
+      } else {
+        console.log(chalk.cyan('💡 Commit the changes when ready:'));
+        console.log(chalk.gray(`   git add .`));
+        console.log(chalk.gray(`   git commit -m "Reconcile dependencies"`));
+      }
     }
   }
 
@@ -313,7 +341,19 @@ export class KnitManager {
       },
       git: {
         autoReconcile: false,
-        branchPrefix: 'knit/reconcile'
+        branchPrefix: 'knit/reconcile',
+        parentBranch: 'auto-detect',
+        allowMainBranch: false
+      },
+      workflow: {
+        mode: 'in-place',
+        createBranch: false,
+        autoApply: true,
+        safeOnly: false
+      },
+      reconciliation: {
+        includeUncommitted: true,
+        includeStagedOnly: false
       },
       ignore: [
         '.git/**',

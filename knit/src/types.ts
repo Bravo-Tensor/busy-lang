@@ -47,6 +47,7 @@ export interface ReconciliationResult {
     targetFile: string;
     timestamp: Date;
     llmModel?: string;
+    errorType?: string;
   };
 }
 
@@ -75,6 +76,17 @@ export interface ReconciliationSession {
   autoApplied: number;
   reviewed: number;
   rejected: number;
+  mode: 'in_place' | 'branch';
+}
+
+export interface ReconcileOptions {
+  mode?: 'in-place' | 'branch' | 'dry-run';
+  autoApply?: boolean;
+  safeOnly?: boolean;
+  interactive?: boolean;
+  stagedOnly?: boolean;
+  baseBranch?: string;
+  createBranch?: boolean;
 }
 
 export interface KnitConfig {
@@ -92,6 +104,20 @@ export interface KnitConfig {
     autoReconcile: boolean;
     branchPrefix: string;
     prTemplate?: string;
+    parentBranch: string;
+    allowMainBranch: boolean;
+  };
+  /** Workflow configuration */
+  workflow: {
+    mode: 'in-place' | 'branch';
+    createBranch: boolean;
+    autoApply: boolean;
+    safeOnly: boolean;
+  };
+  /** Reconciliation behavior */
+  reconciliation: {
+    includeUncommitted: boolean;
+    includeStagedOnly: boolean;
   };
   /** File patterns to ignore */
   ignore: string[];

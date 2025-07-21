@@ -335,4 +335,163 @@ export class GitManager {
 
     return deleted;
   }
+
+  /**
+   * Get current branch name
+   */
+  getCurrentBranch(): string {
+    try {
+      return execSync('git branch --show-current', {
+        cwd: this.projectRoot,
+        encoding: 'utf-8'
+      }).trim();
+    } catch (error) {
+      throw new Error(`Failed to get current branch: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get current commit hash
+   */
+  getCurrentCommit(): string {
+    try {
+      return execSync('git rev-parse HEAD', {
+        cwd: this.projectRoot,
+        encoding: 'utf-8'
+      }).trim();
+    } catch (error) {
+      throw new Error(`Failed to get current commit: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Detect parent branch using merge-base
+   */
+  getParentBranch(currentBranch: string): string {
+    if (currentBranch === 'main' || currentBranch === 'master') {
+      throw new Error('Cannot reconcile on main branch. Create a feature branch first.');
+    }
+    
+    // Try common parent branches in order of preference
+    const candidateParents = ['main', 'master', 'develop'];
+    
+    for (const parent of candidateParents) {
+      try {
+        const mergeBase = execSync(`git merge-base HEAD ${parent}`, {
+          cwd: this.projectRoot,
+          encoding: 'utf-8'
+        }).trim();
+        
+        // Verify parent exists and is not the same as current
+        const currentCommit = this.getCurrentCommit();
+        
+        if (mergeBase && mergeBase !== currentCommit) {
+          return parent;
+        }
+      } catch {
+        continue; // Try next candidate
+      }
+    }
+    
+    throw new Error('Could not detect parent branch. Use --base-branch to specify.');
+  }
+
+  /**
+   * Get all changes since branch diverged from parent
+   */
+  getRecursiveChanges(baseBranch: string): ChangeEvent[] {
+    // Include working directory changes
+    const workingDirChanges = this.getWorkingDirectoryChanges();
+    const committedChanges = this.analyzeChanges(baseBranch, 'HEAD');
+    
+    return [...committedChanges, ...workingDirChanges];
+  }
+
+  /**
+   * Get uncommitted changes (staged + unstaged)
+   */
+  private getWorkingDirectoryChanges(): ChangeEvent[] {
+    const changes: ChangeEvent[] = [];
+    
+    // Staged changes
+    const stagedFiles = this.getStagedFiles();
+    for (const file of stagedFiles) {
+      changes.push(this.createChangeEvent(file, 'staged'));
+    }
+    
+    // Unstaged changes
+    const unstagedFiles = this.getUnstagedFiles();
+    for (const file of unstagedFiles) {
+      changes.push(this.createChangeEvent(file, 'unstaged'));
+    }
+    
+    return changes;
+  }
+
+  /**
+   * Get list of staged files
+   */
+  private getStagedFiles(): string[] {
+    try {
+      const output = execSync('git diff --cached --name-only', {
+        cwd: this.projectRoot,
+        encoding: 'utf-8'
+      });
+      return output.trim().split('\n').filter(line => line.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Get list of unstaged files  
+   */
+  private getUnstagedFiles(): string[] {
+    try {
+      const output = execSync('git diff --name-only', {
+        cwd: this.projectRoot,
+        encoding: 'utf-8'
+      });
+      return output.trim().split('\n').filter(line => line.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Create ChangeEvent for file with type
+   */
+  private createChangeEvent(file: string, type: 'staged' | 'unstaged'): ChangeEvent {
+    return {
+      filepath: file,
+      oldHash: '', // Will be computed based on git state
+      newHash: '',
+      timestamp: new Date(),
+      changeType: 'content',
+      gitDiff: this.getDiffForFile(file, type)
+    };
+  }
+
+  /**
+   * Get git diff for specific file and type
+   */
+  private getDiffForFile(file: string, type: 'staged' | 'unstaged'): string {
+    const flag = type === 'staged' ? '--cached' : '';
+    try {
+      return execSync(`git diff ${flag} -- ${file}`, {
+        cwd: this.projectRoot,
+        encoding: 'utf-8'
+      });
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Get only staged changes for pre-commit integration
+   */
+  getStagedChanges(): ChangeEvent[] {
+    const stagedFiles = this.getStagedFiles();
+    return stagedFiles.map(file => this.createChangeEvent(file, 'staged'));
+  }
 }
