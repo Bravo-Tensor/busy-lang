@@ -1609,8 +1609,119 @@
           "required"
         ]
       }
+    },
+    "design-docs/008-orgata-framework/FRAMEWORK_API_SPECIFICATION.md": {
+      "watches": [
+        "packages/orgata-framework/package.json",
+        "packages/orgata-framework/src/types/index.ts",
+        "packages/orgata-framework/src/core/Step.ts",
+        "packages/orgata-framework/src/index.ts"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/package.json": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/FRAMEWORK_API_SPECIFICATION.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/src/types/index.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/FRAMEWORK_API_SPECIFICATION.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "design-docs/008-orgata-framework/ORGATA_FRAMEWORK_ARCHITECTURE.md": {
+      "watches": [
+        "packages/orgata-framework/src/core/Process.ts",
+        "packages/orgata-framework/src/state/ProcessState.ts",
+        "packages/orgata-framework/README.md"
+      ],
+      "watchedBy": [],
+      "reconciliationRules": {
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/src/core/Process.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/ORGATA_FRAMEWORK_ARCHITECTURE.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/src/core/Step.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/FRAMEWORK_API_SPECIFICATION.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/src/state/ProcessState.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/ORGATA_FRAMEWORK_ARCHITECTURE.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/src/index.ts": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/FRAMEWORK_API_SPECIFICATION.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
+    },
+    "packages/orgata-framework/README.md": {
+      "watches": [],
+      "watchedBy": [
+        "design-docs/008-orgata-framework/ORGATA_FRAMEWORK_ARCHITECTURE.md"
+      ],
+      "reconciliationRules": {
+        "autoApplyThreshold": 0.8,
+        "requireReview": [
+          "required"
+        ]
+      }
     }
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-07-21T19:46:13.306Z"
+  "lastUpdated": "2025-07-21T23:49:47.272Z"
 }
