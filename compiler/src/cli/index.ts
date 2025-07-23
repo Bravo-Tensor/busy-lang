@@ -27,6 +27,7 @@ import { ValidateCommand } from './commands/validate';
 import { AnalyzeCommand } from './commands/analyze';
 import { WatchCommand } from './commands/watch';
 import createGenerateRuntimeCommand from './commands/generate-runtime';
+import createGenerateFrameworkCommand from './commands/generate-framework';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -199,6 +200,9 @@ program
 
 // Generate Runtime command
 program.addCommand(createGenerateRuntimeCommand());
+
+// Generate Framework command
+program.addCommand(createGenerateFrameworkCommand());
 
 // Global error handling
 process.on('uncaughtException', (error) => {
