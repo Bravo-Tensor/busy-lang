@@ -8,122 +8,30 @@
 
 ---
 
-## 🌟 **Vision: Business Processes as Code**
+## 📚 New to BUSY?
 
-BUSY enables organizations to define, execute, and evolve their business processes through code—bringing software engineering principles to business operations with complete human flexibility.
+**Start with our comprehensive documentation in the `/docs` folder:**
+
+- **[Introduction](./docs/INTRODUCTION.md)** - The business process problem and our solution
+- **[Why BUSY Exists](./docs/WHY_BUSY_EXISTS.md)** - Philosophy and core principles
+- **[The Entrepreneurial Journey](./docs/THE_ENTREPRENEURIAL_JOURNEY.md)** - Breaking down knowledge barriers
+- **[The Marketplace Vision](./docs/THE_MARKETPLACE_VISION.md)** - App store for business expertise
+
+---
+
+## 🌟 **What is BUSY?**
+
+BUSY is a complete ecosystem for describing business processes as code, then executing them with full human control and AI assistance. It consists of:
+
+1. **BUSY Language** - Human-readable YAML for describing business processes
+2. **BUSY Compiler** - Transforms BUSY files into TypeScript framework code
+3. **Orgata Framework** - React-like framework for business process execution
+4. **Orgata Runtime** - Process execution engine with UI and AI orchestration
 
 ### **Core Philosophy: "Facilitate, Never Constrain"**
 
-- **Complete User Control**: Skip any step, provide manual data, or override any automation
-- **AI-Powered Assistance**: Intelligent support with human oversight and escape hatches  
-- **Immutable Audit Trail**: Every action tracked with event sourcing—never rewrite history
-- **Type-Safe Business Logic**: Full TypeScript support with IDE integration and compile-time validation
+Every feature follows this principle - humans maintain complete control while AI assists intelligently.
 
----
-
-## 🏗️ **System Architecture**
-
-The BUSY ecosystem consists of four integrated components that work together to transform business descriptions into executable organizational systems:
-
-### **1. BUSY Language** - Domain-Specific Language
-```yaml
-# Example: inquiry-to-booking.busy
-playbook:
-  name: "inquiry-to-booking"
-  description: "Convert inquiries into confirmed bookings"
-  steps:
-    - name: "qualify_lead"
-      description: "Assess fit and qualification criteria"
-      execution_type: "human"
-      ui_type: "form"
-```
-
-**Key Features:**
-- **Human-Readable YAML**: Business processes described in intuitive format
-- **Layer-First Architecture**: L0 (Operational), L1 (Management), L2 (Strategic) separation
-- **Type Safety**: Schema validation with comprehensive error reporting
-- **Git Integration**: Version control for business process evolution
-
-### **2. BUSY Compiler** - Translation Engine
-```bash
-# Transform BUSY files into TypeScript framework code
-busy-check generate-framework ./business-processes/ -o ./generated-processes/
-```
-
-**Compilation Pipeline:**
-```
-BUSY Files → Lexer/Parser → AST → Semantic Analysis → 
-Content Analysis → Code Generation → TypeScript Framework Code
-```
-
-**Output Capabilities:**
-- **TypeScript Framework Code**: Production-ready business process implementations
-- **React Applications**: Full web UIs for process execution  
-- **Database Schemas**: State management and audit trail persistence
-- **AI Agent Configurations**: Intelligent automation with human oversight
-
-### **3. Orgata Framework** - React-Like Business Process Framework
-```typescript
-// Generated TypeScript code using Orgata Framework
-export class InquiryToBookingProcess extends Process {
-  constructor() {
-    super({
-      name: "inquiry-to-booking",
-      description: "Convert inquiries into confirmed bookings"
-    });
-    
-    this.addStep(new QualifyLeadStep());
-    this.addStep(new ScheduleConsultationStep());
-    // ... additional steps
-  }
-}
-```
-
-**Framework Features:**
-- **Process Classes**: Complete business process implementations with type safety
-- **Step Types**: HumanStep (UI forms), AgentStep (AI processing), AlgorithmStep (automation)
-- **Immutable State**: Event sourcing with ProcessState—complete audit trail
-- **Universal Flexibility**: Skip any step, go back, provide manual data at any point
-
-### **4. Orgata Runtime** - Process Execution Engine
-```typescript
-const process = new InquiryToBookingProcess();
-const result = await process.execute(context);
-
-// Framework Philosophy: Users maintain complete control
-await process.skipStep('qualify_lead', 'Already qualified', { qualified: true });
-await process.goBack(2); // Go back 2 steps and proceed forward
-```
-
-**Runtime Capabilities:**
-- **Web-Based UI**: Interactive forms for human steps with customization
-- **AI Agent Orchestration**: Context assembly and intelligent processing
-- **Exception Handling**: Process state freezing with governance-based resolution
-- **Client Folder System**: Human-readable artifacts and communication
-
----
-
-## 💼 **Business Value Proposition**
-
-### **For Business Leaders**
-- **Process Transparency**: Every business process defined as readable code
-- **Audit Compliance**: Complete, immutable trail of all business decisions
-- **Rapid Evolution**: Change business processes through code deployment
-- **Risk Management**: AI-powered analysis of process deviations and impacts
-
-### **For Operations Teams**  
-- **Flexible Execution**: Never blocked—can skip steps, provide manual data, or override automation
-- **Intelligent Assistance**: AI helps with complex decisions while maintaining human control
-- **Exception Management**: Clear escalation paths with automated governance
-- **Performance Analytics**: Data-driven insights into process efficiency
-
-### **For Developers**
-- **Type-Safe Business Logic**: Full TypeScript support with IDE integration
-- **Framework Architecture**: React-like patterns for business process development  
-- **Extensible Platform**: Plugin architecture for custom step types and integrations
-- **Professional Tooling**: Comprehensive compiler, linting, testing, and debugging
-
----
 
 ## 🚀 **Quick Start**
 
@@ -181,53 +89,16 @@ const result = await process.execute(context);
 
 ---
 
-## 🧠 **Key Technical Concepts**
+## 🧠 **Key Concepts**
 
-### **Layer-First Architecture**
-- **L0 (Operational)**: Day-to-day business processes and task execution
-- **L1 (Management)**: Process coordination, resource allocation, and performance monitoring  
-- **L2 (Strategic)**: Long-term planning, governance, and organizational alignment
+BUSY transforms business process descriptions into executable TypeScript code using the Orgata Framework:
 
-### **Immutable State Management**
-```typescript
-// All process changes tracked through events—never rewrite history
-class ProcessState {
-  readonly history: ProcessEvent[];           // Complete event log
-  readonly currentStep: string;               // Current execution state
-  readonly stepData: Map<string, StepData>;   // All step outputs
-  readonly exceptions: ProcessException[];    // Tracked deviations
-}
-```
+- **Layer-First Architecture**: L0 (Operational), L1 (Management), L2 (Strategic)
+- **Three Step Types**: HumanStep (UI forms), AgentStep (AI processing), AlgorithmStep (automation)
+- **Immutable State**: Complete audit trail with event sourcing
+- **Universal Flexibility**: Skip any step, go back, provide manual data at any point
 
-### **Three Step Types**
-```typescript
-// Human interaction with flexible UI
-class HumanStep extends Step {
-  model: FormModel;      // Generated form fields
-  view: ComponentDef;    // UI component configuration
-  // Users can always skip or provide manual data
-}
-
-// AI-powered analysis and decision making
-class AgentStep extends Step {  
-  prompt: AgentPrompt;   // AI system and user prompts
-  context: AgentContext; // Business context for AI
-  // Always includes human review capability
-}
-
-// Automated processing with override capability  
-class AlgorithmStep extends Step {
-  implementation: AlgorithmConfig; // Code or service integration
-  parameters: AlgorithmParams;     // Configuration parameters
-  // Users can always provide manual results
-}
-```
-
-### **AI-Powered Flexibility**
-- **Content Analysis**: Automatic field generation from business process descriptions
-- **Exception Analysis**: AI evaluates impact of process deviations and suggests mitigations
-- **Context Assembly**: Intelligent data flow between steps with relevance scoring
-- **Escape Hatches**: AI helps users work around constraints while maintaining audit trail
+For detailed technical documentation, see [Orgata Framework Architecture](./design-docs/008-orgata-framework/ORGATA_FRAMEWORK_ARCHITECTURE.md).
 
 ---
 
@@ -295,30 +166,6 @@ npm run test
 npm run lint
 ```
 
----
-
-## 🎯 **Use Cases**
-
-### **Enterprise Operations**
-- **Customer Onboarding**: Multi-step workflows with compliance checks
-- **Procurement Processes**: Vendor selection with approval workflows
-- **Quality Assurance**: Systematic testing and validation procedures
-- **Incident Response**: Structured escalation with automated notifications
-
-### **Professional Services**
-- **Client Engagement**: From inquiry to project delivery
-- **Project Management**: Milestone tracking with stakeholder communication
-- **Compliance Reporting**: Audit trail generation and regulatory submission
-- **Knowledge Management**: Process documentation with version control
-
-### **Creative Industries**  
-- **Production Workflows**: From concept to final delivery
-- **Client Communication**: Structured touchpoints and feedback collection
-- **Resource Coordination**: Equipment, location, and team scheduling
-- **Portfolio Management**: Project tracking and outcome analysis
-
----
-
 ## 🔧 **Advanced Features**
 
 ### **Knit System** - Dependency Reconciliation
@@ -346,43 +193,27 @@ knit reconcile --all-dependencies
 
 ## 📚 **Documentation**
 
-- **[Language Reference](./compiler/docs/BUSY_LANGUAGE_REFERENCE.md)** - Complete BUSY syntax and semantics
-- **[Framework API](./packages/orgata-framework/README.md)** - TypeScript framework documentation  
+### Marketing & Vision
+- **[Introduction](./docs/INTRODUCTION.md)** - The business process problem and our solution
+- **[Why BUSY Exists](./docs/WHY_BUSY_EXISTS.md)** - Philosophy and core principles
+- **[The Entrepreneurial Journey](./docs/THE_ENTREPRENEURIAL_JOURNEY.md)** - Breaking down knowledge barriers
+- **[The Marketplace Vision](./docs/THE_MARKETPLACE_VISION.md)** - App store for business expertise
+
+### Technical Documentation  
+- **[Framework API](./packages/orgata-framework/README.md)** - TypeScript framework documentation
 - **[Architecture Overview](./design-docs/ARCHITECTURE_OVERVIEW.md)** - System design and component interaction
-- **[Getting Started Guide](./examples/README.md)** - Tutorial with real-world examples
-- **[Compiler Documentation](./compiler/docs/README.md)** - Development tools and advanced usage
-
----
-
-## 🤝 **Contributing**
-
-We welcome contributions to the BUSY ecosystem! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details on:
-
-- **Code Standards**: TypeScript, testing, and documentation requirements
-- **Design Process**: RFC process for major features and architectural changes  
-- **Development Workflow**: Git flow, testing, and review procedures
-- **Community Guidelines**: Code of conduct and communication expectations
+- **[Orgata Framework Architecture](./design-docs/008-orgata-framework/ORGATA_FRAMEWORK_ARCHITECTURE.md)** - Latest framework design
 
 ---
 
 ## 📄 **License**
 
-BUSY Language is open source software licensed under the [MIT License](./LICENSE).
+BUSY Language is open source software licensed under the [GNU GPL v3 Liscense](./LICENSE).
 
 ---
 
 ## 🎉 **Latest Achievement**
 
-**🚀 Framework Transformation Complete!** We've successfully transformed from YAML string generation to a complete React-like TypeScript framework. BUSY files now compile to professional TypeScript code that provides:
+**🚀 Framework Transformation Complete!** BUSY files now compile to TypeScript code using the Orgata Framework, providing complete user flexibility, type safety, and AI assistance.
 
-- ✅ **Complete User Flexibility** - Skip steps, provide manual data, go back to any point
-- ✅ **Type-Safe Business Logic** - Full TypeScript support with IDE integration  
-- ✅ **Immutable State Management** - Event sourcing with complete audit trail
-- ✅ **AI-Powered Intelligence** - Smart assistance with human oversight
-- ✅ **Production Ready** - Generated code compiles and runs successfully
-
-**Try it now:** `busy-check generate-framework ./examples/solo-photography-business/L0/client-operations/playbooks/`
-
----
-
-*Built with ❤️ for organizations that want to bring software engineering excellence to their business processes.*
+See the [generated framework example](./generated-framework-test/) for working code.
