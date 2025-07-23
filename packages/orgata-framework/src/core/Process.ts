@@ -335,6 +335,7 @@ export abstract class Process extends EventEmitter {
 
   /**
    * Handle override requests (delegated to FlexibilityAgent)
+   * TODO: Implement FlexibilityAgent as specified in design docs
    */
   async requestOverride(request: OverrideRequest): Promise<OverrideResult> {
     // This will be implemented when we add the FlexibilityAgent
