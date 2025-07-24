@@ -1,0 +1,240 @@
+# Kitchen Game Configuration
+# This file configures the game-like features of the kitchen UI
+
+game_settings:
+  difficulty_levels:
+    training:
+      order_frequency: 5  # minutes between orders
+      complexity_multiplier: 0.5
+      quality_threshold: 70
+      timer_speed: 0.8  # slower timers for learning
+      
+    normal:
+      order_frequency: 2
+      complexity_multiplier: 1.0
+      quality_threshold: 85
+      timer_speed: 1.0
+      
+    rush_hour:
+      order_frequency: 0.5
+      complexity_multiplier: 1.5
+      quality_threshold: 80
+      timer_speed: 1.2
+      
+    hell_kitchen:
+      order_frequency: 0.25
+      complexity_multiplier: 2.0
+      quality_threshold: 90
+      timer_speed: 1.5
+
+scoring_system:
+  base_points:
+    order_completed: 100
+    perfect_timing: 50  # all items ready within 30 seconds
+    quality_bonus: 25   # per point above threshold
+    speed_bonus: 10     # per minute under target time
+    
+  multipliers:
+    rush_hour: 1.5
+    perfect_streak: 2.0  # 5 perfect orders in a row
+    team_coordination: 1.25  # helping other stations
+    
+  penalties:
+    remake: -50
+    late_order: -25  # per minute over target
+    waste: -10       # per wasted ingredient
+    cold_food: -30   # temperature below threshold
+
+visual_effects:
+  particle_effects:
+    order_complete:
+      type: "confetti"
+      colors: ["#10B981", "#F59E0B", "#6366F1"]
+      duration: 1000
+      
+    perfect_timing:
+      type: "sparkle"
+      color: "#FFD700"
+      duration: 500
+      
+    achievement_unlock:
+      type: "starburst"
+      colors: ["#FFD700", "#FFA500"]
+      duration: 2000
+      
+  screen_effects:
+    rush_mode:
+      filter: "slight_blur_edges"
+      vignette: 0.2
+      speed_lines: true
+      
+    warning_state:
+      screen_shake: 
+        intensity: 5
+        duration: 300
+      flash_color: "#EF4444"
+      
+    success_state:
+      glow_effect: true
+      color: "#10B981"
+
+sound_profiles:
+  ambient:
+    kitchen_busy:
+      file: "kitchen_ambient.mp3"
+      volume: 0.3
+      loop: true
+      
+    dining_room:
+      file: "restaurant_ambient.mp3"
+      volume: 0.2
+      loop: true
+      
+  effects:
+    order_received:
+      file: "bell_chime.wav"
+      volume: 0.6
+      
+    timer_warning:
+      file: "beep_escalating.wav"
+      volume: 0.8
+      stages: [60, 30, 10]  # seconds remaining
+      
+    task_complete:
+      file: "ding.wav"
+      volume: 0.7
+      
+    perfect_timing:
+      file: "success_chord.wav"
+      volume: 0.8
+      
+    achievement:
+      file: "fanfare.wav"
+      volume: 0.9
+
+achievements:
+  speed_achievements:
+    - id: "speed_demon"
+      name: "Speed Demon"
+      description: "Complete 10 orders under 8 minutes"
+      icon: "🏃"
+      points: 500
+      
+    - id: "flash_chef"
+      name: "Flash Chef"
+      description: "Complete an order in under 5 minutes"
+      icon: "⚡"
+      points: 300
+      
+  quality_achievements:
+    - id: "perfectionist"
+      name: "Perfectionist"
+      description: "10 orders with 100% quality score"
+      icon: "💎"
+      points: 750
+      
+    - id: "consistency_king"
+      name: "Consistency King"
+      description: "Maintain 90%+ quality for entire shift"
+      icon: "👑"
+      points: 1000
+      
+  teamwork_achievements:
+    - id: "helping_hand"
+      name: "Helping Hand"
+      description: "Assist other stations 20 times"
+      icon: "🤝"
+      points: 400
+      
+    - id: "orchestrator"
+      name: "The Orchestrator"
+      description: "Perfect coordination on 5 complex orders"
+      icon: "🎭"
+      points: 600
+      
+  special_achievements:
+    - id: "no_remake_night"
+      name: "Flawless Service"
+      description: "Complete a dinner service with no remakes"
+      icon: "🌟"
+      points: 2000
+      
+    - id: "rush_survivor"
+      name: "Rush Hour Survivor"
+      description: "Handle 50+ orders during rush hour"
+      icon: "🔥"
+      points: 1500
+
+daily_challenges:
+  monday:
+    - name: "Meatless Master"
+      description: "Complete 20 vegetarian orders perfectly"
+      reward_points: 300
+      
+  tuesday:
+    - name: "Speed Run"
+      description: "Average ticket time under 10 minutes"
+      reward_points: 400
+      
+  friday:
+    - name: "Rush Hour Hero"
+      description: "No orders over 15 minutes during rush"
+      reward_points: 500
+      
+  saturday:
+    - name: "Quality Quest"
+      description: "Maintain 95% quality score all night"
+      reward_points: 600
+
+power_ups:
+  time_freeze:
+    duration: 30  # seconds
+    cooldown: 300
+    description: "Pause all timers for 30 seconds"
+    activation: "double_tap_clock"
+    
+  instant_prep:
+    effect: "complete_all_prep"
+    cooldown: 600
+    description: "Instantly complete all prep work"
+    activation: "shake_device"
+    
+  coordination_boost:
+    duration: 60
+    effect: "all_stations_sync"
+    cooldown: 900
+    description: "Perfect timing sync for 1 minute"
+    activation: "pinch_out_gesture"
+
+tutorial_stages:
+  - stage: 1
+    name: "Basic Order Flow"
+    description: "Learn to receive and assign orders"
+    tasks:
+      - "Receive an order"
+      - "Drag to correct station"
+      - "Monitor cooking progress"
+      
+  - stage: 2
+    name: "Timing Coordination"
+    description: "Master multi-dish timing"
+    tasks:
+      - "Handle 3-item order"
+      - "Achieve simultaneous completion"
+      - "Use timing adjustments"
+      
+  - stage: 3
+    name: "Quality Control"
+    description: "Perfect your plating"
+    tasks:
+      - "Check temperatures"
+      - "Verify presentation"
+      - "Handle remake request"
+      
+  - stage: 4
+    name: "Rush Hour Training"
+    description: "Handle the pressure"
+    tasks:
+      - "Manage 5 simultaneous orders"
+      - "Maintain quality standards"
+      - "Use power-ups effectively"

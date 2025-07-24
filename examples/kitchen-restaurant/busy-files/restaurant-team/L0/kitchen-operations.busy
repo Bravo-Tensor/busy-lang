@@ -1,0 +1,368 @@
+version: "1.0.0"
+metadata:
+  name: "Kitchen Operations Management"
+  description: "Complete kitchen workflow management - from order to plate"
+  layer: "L0"
+  industry: "restaurant"
+  tags: ["food-service", "operations", "real-time", "game-ui"]
+
+roles:
+  - name: "expeditor"
+    description: "Kitchen traffic controller - manages order flow and quality"
+    functions:
+      - name: "order_coordination"
+        description: "Coordinate incoming orders and prioritize preparation"
+      - name: "quality_check"
+        description: "Final inspection before dishes leave the kitchen"
+      - name: "timing_management"
+        description: "Ensure all items for a table are ready simultaneously"
+    
+  - name: "line-cook"
+    description: "Station chef responsible for specific menu items"
+    functions:
+      - name: "prep_ingredients"
+        description: "Prepare mise en place for service"
+      - name: "cook_dishes"
+        description: "Execute recipes according to standards"
+      - name: "maintain_station"
+        description: "Keep station clean and organized during service"
+    
+  - name: "prep-cook"
+    description: "Prepares ingredients and basic components"
+    functions:
+      - name: "ingredient_prep"
+        description: "Cut, portion, and prepare raw ingredients"
+      - name: "sauce_preparation"
+        description: "Prepare base sauces and stocks"
+      - name: "inventory_management"
+        description: "Track ingredient usage and waste"
+
+resources:
+  - name: "kitchen_stations"
+    description: "Physical cooking stations in the kitchen"
+    type: "equipment"
+    properties:
+      grill_station:
+        capacity: 8
+        current_items: []
+      saute_station:
+        capacity: 6
+        current_items: []
+      salad_station:
+        capacity: 10
+        current_items: []
+      dessert_station:
+        capacity: 4
+        current_items: []
+  
+  - name: "ingredients_inventory"
+    description: "Real-time ingredient tracking"
+    type: "inventory"
+    properties:
+      proteins: {}
+      vegetables: {}
+      dairy: {}
+      dry_goods: {}
+      garnishes: {}
+  
+  - name: "order_queue"
+    description: "Active orders in the system"
+    type: "queue"
+    properties:
+      pending: []
+      in_progress: []
+      ready_for_pickup: []
+      completed: []
+
+playbook:
+  name: "dinner-service-flow"
+  description: "Complete dinner service workflow from order to delivery"
+  
+  steps:
+    - name: "receive_order"
+      description: "New order enters the kitchen system"
+      execution_type: "algorithmic"
+      triggers:
+        - type: "api"
+          source: "pos_system"
+      outputs:
+        - name: "order_ticket"
+          type: "order"
+          properties:
+            table_number: "string"
+            items: "array"
+            special_requests: "array"
+            priority: "number"
+            order_time: "timestamp"
+    
+    - name: "analyze_order"
+      description: "Expeditor reviews order and assigns to stations"
+      execution_type: "human"
+      ui_type: "game_board"
+      assigned_role: "expeditor"
+      inputs:
+        - name: "order_ticket"
+          from_step: "receive_order"
+      actions:
+        - name: "assign_to_stations"
+          description: "Drag and drop items to appropriate cooking stations"
+        - name: "set_timing"
+          description: "Adjust cooking start times for simultaneous completion"
+        - name: "flag_allergies"
+          description: "Highlight special dietary requirements"
+      outputs:
+        - name: "station_assignments"
+          type: "assignments"
+          properties:
+            grill_items: "array"
+            saute_items: "array"
+            salad_items: "array"
+            dessert_items: "array"
+            target_completion_time: "timestamp"
+    
+    - name: "prep_ingredients"
+      description: "Ensure all ingredients are ready for cooking"
+      execution_type: "agent"
+      parallel: true
+      per_station: true
+      inputs:
+        - name: "station_assignments"
+          from_step: "analyze_order"
+      validations:
+        - type: "inventory_check"
+          description: "Verify all ingredients are in stock"
+        - type: "freshness_check"
+          description: "Ensure ingredients meet quality standards"
+      outputs:
+        - name: "prep_status"
+          type: "status"
+          properties:
+            station: "string"
+            items_ready: "array"
+            missing_items: "array"
+            estimated_prep_time: "number"
+    
+    - name: "cook_dishes"
+      description: "Execute cooking at each station"
+      execution_type: "human"
+      ui_type: "cooking_simulator"
+      assigned_role: "line-cook"
+      parallel: true
+      per_station: true
+      inputs:
+        - name: "prep_status"
+          from_step: "prep_ingredients"
+      features:
+        - name: "timer_display"
+          description: "Visual countdown timers for each dish"
+        - name: "temperature_gauges"
+          description: "Real-time temperature monitoring"
+        - name: "recipe_overlay"
+          description: "Quick reference for cooking instructions"
+        - name: "coordination_view"
+          description: "See other stations' progress"
+      outputs:
+        - name: "cooked_items"
+          type: "dishes"
+          properties:
+            dish_id: "string"
+            station: "string"
+            quality_score: "number"
+            completion_time: "timestamp"
+            temperature: "number"
+    
+    - name: "quality_check"
+      description: "Expeditor inspects dishes before service"
+      execution_type: "human"
+      ui_type: "inspection_interface"
+      assigned_role: "expeditor"
+      inputs:
+        - name: "cooked_items"
+          from_step: "cook_dishes"
+      actions:
+        - name: "visual_inspection"
+          description: "Check presentation and plating"
+        - name: "temperature_check"
+          description: "Verify proper serving temperature"
+        - name: "portion_verification"
+          description: "Ensure correct portions and components"
+        - name: "remake_decision"
+          description: "Send back for remake if needed"
+      outputs:
+        - name: "approved_dishes"
+          type: "dishes"
+          properties:
+            dishes: "array"
+            remake_requests: "array"
+            quality_notes: "string"
+    
+    - name: "assemble_order"
+      description: "Combine all dishes for the complete order"
+      execution_type: "human"
+      ui_type: "plating_station"
+      assigned_role: "expeditor"
+      inputs:
+        - name: "approved_dishes"
+          from_step: "quality_check"
+        - name: "order_ticket"
+          from_step: "receive_order"
+      features:
+        - name: "order_checklist"
+          description: "Visual checklist of all items"
+        - name: "garnish_station"
+          description: "Add final garnishes and sauces"
+        - name: "heat_lamps"
+          description: "Keep dishes at serving temperature"
+      outputs:
+        - name: "complete_order"
+          type: "order"
+          properties:
+            table_number: "string"
+            dishes: "array"
+            ready_time: "timestamp"
+            hold_time: "number"
+    
+    - name: "mark_ready"
+      description: "Signal servers that order is ready for pickup"
+      execution_type: "algorithmic"
+      inputs:
+        - name: "complete_order"
+          from_step: "assemble_order"
+      notifications:
+        - type: "pos_system"
+          message: "Order ready for table {table_number}"
+        - type: "server_app"
+          message: "Pickup needed at expeditor station"
+        - type: "kitchen_display"
+          action: "move_to_completed"
+      outputs:
+        - name: "service_metrics"
+          type: "metrics"
+          properties:
+            order_id: "string"
+            total_time: "number"
+            station_times: "object"
+            quality_score: "number"
+            remakes: "number"
+
+documents:
+  - name: "recipe_card"
+    description: "Standardized recipe format"
+    type: "template"
+    fields:
+      - name: "dish_name"
+        type: "string"
+        required: true
+      - name: "station"
+        type: "enum"
+        values: ["grill", "saute", "salad", "dessert"]
+        required: true
+      - name: "ingredients"
+        type: "array"
+        item_schema:
+          ingredient: "string"
+          quantity: "number"
+          unit: "string"
+      - name: "cooking_steps"
+        type: "array"
+        item_schema:
+          step_number: "number"
+          instruction: "string"
+          duration: "number"
+          temperature: "number"
+      - name: "plating_instructions"
+        type: "string"
+      - name: "allergen_info"
+        type: "array"
+      - name: "prep_time"
+        type: "number"
+      - name: "cook_time"
+        type: "number"
+  
+  - name: "station_checklist"
+    description: "Pre-service station setup checklist"
+    type: "form"
+    fields:
+      - name: "station_name"
+        type: "string"
+        required: true
+      - name: "equipment_check"
+        type: "checklist"
+        items:
+          - "Equipment cleaned and sanitized"
+          - "All burners/ovens working"
+          - "Thermometers calibrated"
+          - "Tools and utensils ready"
+      - name: "mise_en_place"
+        type: "checklist"
+        items:
+          - "Proteins portioned"
+          - "Vegetables prepped"
+          - "Sauces ready"
+          - "Garnishes prepared"
+      - name: "inventory_levels"
+        type: "object"
+        properties:
+          proteins: "object"
+          vegetables: "object"
+          sauces: "object"
+      - name: "ready_for_service"
+        type: "boolean"
+        required: true
+
+exceptions:
+  - name: "ingredient_shortage"
+    description: "Required ingredient is out of stock"
+    handler: "ingredient_substitution_flow"
+    severity: "high"
+    
+  - name: "equipment_failure"
+    description: "Cooking equipment malfunction"
+    handler: "equipment_workaround_flow"
+    severity: "critical"
+    
+  - name: "order_modification"
+    description: "Customer changes order after cooking started"
+    handler: "order_modification_flow"
+    severity: "medium"
+    
+  - name: "quality_failure"
+    description: "Dish doesn't meet quality standards"
+    handler: "remake_flow"
+    severity: "medium"
+
+business_rules:
+  - name: "food_safety_temperatures"
+    description: "Minimum safe cooking temperatures"
+    conditions:
+      - field: "dish.protein_type"
+        operator: "equals"
+        value: "poultry"
+    actions:
+      - type: "require_minimum_temp"
+        value: 165
+        unit: "fahrenheit"
+  
+  - name: "order_priority"
+    description: "Prioritize orders based on wait time"
+    conditions:
+      - field: "order.wait_time"
+        operator: "greater_than"
+        value: 20
+        unit: "minutes"
+    actions:
+      - type: "set_priority"
+        value: "high"
+      - type: "notify_expeditor"
+        message: "Long wait time alert"
+  
+  - name: "simultaneous_completion"
+    description: "All items for a table must be ready within 2 minutes"
+    conditions:
+      - field: "order.type"
+        operator: "equals"
+        value: "dine_in"
+    actions:
+      - type: "coordinate_timing"
+        window: 2
+        unit: "minutes"
