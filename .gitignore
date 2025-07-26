@@ -8,3 +8,20 @@
 */.env.production.local
 */.next
 **/.DS_Store
+**/out
+
+# BUSY Language Extension
+*.vsix
+compiler/src/ide/out/
+
+# Generated files
+*.js.map
+compiler/src/core/scanner.js
+compiler/src/runtime/*.js
+compiler/src/runtime/*.js.map
+
+# Test files
+compiler/test-*.js
+
+# Documentation build artifacts
+compiler/REINSTALL_EXTENSION.md
