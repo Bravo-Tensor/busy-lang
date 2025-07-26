@@ -1,0 +1,224 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "BUSY",
+  "patterns": [
+    {
+      "include": "#yaml-base"
+    },
+    {
+      "include": "#busy-keywords"
+    },
+    {
+      "include": "#busy-capabilities"
+    },
+    {
+      "include": "#busy-resources"
+    },
+    {
+      "include": "#busy-methods"
+    }
+  ],
+  "repository": {
+    "yaml-base": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "include": "#booleans"
+        },
+        {
+          "include": "#null"
+        }
+      ]
+    },
+    "comments": {
+      "name": "comment.line.number-sign.yaml",
+      "match": "(?:^|[ \\t]+)(#.*)$"
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.yaml",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.yaml",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.yaml",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.yaml",
+              "match": "''"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.yaml",
+      "match": "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"
+    },
+    "booleans": {
+      "name": "constant.language.boolean.yaml",
+      "match": "\\b(true|false|yes|no|on|off)\\b"
+    },
+    "null": {
+      "name": "constant.language.null.yaml",
+      "match": "\\b(null|~)\\b"
+    },
+    "busy-keywords": {
+      "patterns": [
+        {
+          "name": "keyword.other.busy-version",
+          "match": "^(version):",
+          "captures": {
+            "1": {
+              "name": "keyword.other.busy"
+            }
+          }
+        },
+        {
+          "name": "keyword.other.busy-metadata",
+          "match": "^(metadata|name|description|version|layer):",
+          "captures": {
+            "1": {
+              "name": "keyword.other.busy"
+            }
+          }
+        },
+        {
+          "name": "keyword.other.busy-structure",
+          "match": "^(imports|role|playbook|capabilities|responsibilities|resources):",
+          "captures": {
+            "1": {
+              "name": "keyword.control.busy"
+            }
+          }
+        },
+        {
+          "name": "keyword.other.busy-capability",
+          "match": "^\\s*(capability|responsibility):",
+          "captures": {
+            "1": {
+              "name": "entity.name.type.busy"
+            }
+          }
+        },
+        {
+          "name": "keyword.other.busy-resource",
+          "match": "^\\s*(resource|requirements?|priority):",
+          "captures": {
+            "1": {
+              "name": "entity.name.tag.busy"
+            }
+          }
+        },
+        {
+          "name": "keyword.other.busy-step",
+          "match": "^\\s*(steps?|inputs?|outputs?|method):",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.busy"
+            }
+          }
+        },
+        {
+          "name": "keyword.other.busy-characteristics",
+          "match": "^\\s*(characteristics|extends|specific):",
+          "captures": {
+            "1": {
+              "name": "variable.parameter.busy"
+            }
+          }
+        }
+      ]
+    },
+    "busy-capabilities": {
+      "patterns": [
+        {
+          "name": "entity.name.type.capability.busy",
+          "match": "(?<=capabilities:\\s*-\\s*)[\"']?([a-zA-Z0-9_-]+)[\"']?",
+          "captures": {
+            "1": {
+              "name": "entity.name.type.capability.busy"
+            }
+          }
+        },
+        {
+          "name": "entity.name.type.responsibility.busy",
+          "match": "(?<=responsibilities:\\s*-\\s*)[\"']?([a-zA-Z0-9_-]+)[\"']?",
+          "captures": {
+            "1": {
+              "name": "entity.name.type.responsibility.busy"
+            }
+          }
+        }
+      ]
+    },
+    "busy-resources": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.resource.busy",
+          "match": "(?<=name:\\s*)[\"']?([a-zA-Z0-9_-]+)[\"']?",
+          "captures": {
+            "1": {
+              "name": "entity.name.tag.resource.busy"
+            }
+          }
+        },
+        {
+          "name": "entity.name.tag.resource-reference.busy",
+          "match": "(?<=specific:\\s*)[\"']?([a-zA-Z0-9_-]+)[\"']?",
+          "captures": {
+            "1": {
+              "name": "entity.name.tag.resource-reference.busy"
+            }
+          }
+        },
+        {
+          "name": "variable.parameter.characteristic.busy",
+          "match": "([a-zA-Z0-9_]+)(?=:\\s*[\"'><!])",
+          "captures": {
+            "1": {
+              "name": "variable.parameter.characteristic.busy"
+            }
+          }
+        }
+      ]
+    },
+    "busy-methods": {
+      "patterns": [
+        {
+          "name": "string.unquoted.method.busy",
+          "begin": "^\\s*method:\\s*[|>]",
+          "end": "^(?!\\s)",
+          "patterns": [
+            {
+              "name": "comment.line.method-instruction.busy",
+              "match": "^\\s+.*$"
+            }
+          ]
+        },
+        {
+          "name": "keyword.operator.method-indicator.busy",
+          "match": "(?<=method:\\s*)[|>]"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.busy"
+}

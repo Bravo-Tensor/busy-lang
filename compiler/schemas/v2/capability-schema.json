@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://busy-lang.org/schemas/v2/capability-schema.json",
+  "title": "Capability Definition Schema",
+  "description": "Schema for BUSY capability definitions",
+  "type": "object",
+  "required": ["name", "description", "method"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Capability identifier (kebab-case)"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Brief description of what the capability does"
+    },
+    "method": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Detailed instructions for how to perform this capability"
+    },
+    "inputs": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/input_output_spec"
+          }
+        }
+      ],
+      "description": "Input specifications or 'none'"
+    },
+    "outputs": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/input_output_spec"
+          }
+        }
+      ],
+      "description": "Output specifications or 'none'"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "input_output_spec": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Input/output name (snake_case)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["data", "document", "decision", "physical", "notification", "alert", "report"],
+          "description": "Input/output type"
+        },
+        "format": {
+          "type": "string",
+          "description": "Format specification (e.g., json, pdf, email)"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/field_spec"
+          },
+          "description": "Field definitions for data types"
+        }
+      },
+      "additionalProperties": false
+    },
+    "field_spec": {
+      "type": "object",
+      "required": ["name", "type", "required"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Field name (snake_case)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "array", "object", "datetime"],
+          "description": "Field data type"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether this field is required"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

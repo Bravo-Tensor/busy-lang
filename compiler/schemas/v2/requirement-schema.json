@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://busy-lang.org/schemas/v2/requirement-schema.json",
+  "title": "Resource Requirement Schema",
+  "description": "Schema for resource requirements in steps and processes",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Local name for the required resource"
+    },
+    "characteristics": {
+      "type": "object",
+      "description": "Characteristics to match on",
+      "additionalProperties": true
+    },
+    "priority": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["specific"],
+            "properties": {
+              "specific": {
+                "type": "string",
+                "description": "Exact resource name"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["characteristics"],
+            "properties": {
+              "characteristics": {
+                "type": "object",
+                "description": "Characteristics to match",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["emergency"],
+            "properties": {
+              "emergency": {
+                "type": "object",
+                "required": ["characteristics", "warning"],
+                "properties": {
+                  "characteristics": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "warning": {
+                    "type": "string",
+                    "description": "Warning message about quality compromise"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "Priority chain for resource fallback"
+    }
+  },
+  "additionalProperties": false
+}

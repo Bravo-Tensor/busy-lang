@@ -1,0 +1,266 @@
+version: "2.0"
+metadata:
+  name: "Kitchen Operations Team"
+  description: "Kitchen team responsible for food preparation and service"
+  layer: "L0"
+
+capabilities:
+  - name: "coordinate-orders"
+    description: "Manage multiple orders and coordinate kitchen workflow"
+    method: |
+      Review incoming order tickets and assess complexity.
+      Prioritize orders based on prep time and table arrival sequence.
+      Assign cooking tasks to appropriate stations.
+      Monitor progress of all active orders.
+      Ensure timing coordination so all items for a table finish together.
+      Communicate updates to kitchen staff and servers.
+    inputs:
+      - name: "order_tickets"
+        type: "data"
+        format: "order_queue"
+    outputs:
+      - name: "coordinated_workflow"
+        type: "data"
+        format: "workflow_plan"
+
+  - name: "quality-control"
+    description: "Inspect food quality before service"
+    method: |
+      Visually inspect each dish for proper presentation.
+      Check temperature is appropriate for the dish type.
+      Verify all components are present per the order.
+      Taste test if necessary for seasoning and doneness.
+      Reject items that don not meet standards and request remake.
+      Approve items that pass all quality checks.
+    inputs:
+      - name: "prepared_dishes"
+        type: "physical"
+        format: "plated_food"
+    outputs:
+      - name: "quality_approval"
+        type: "data"
+        format: "approval_status"
+
+  - name: "communicate-with-servers"
+    description: "Coordinate with service staff for smooth order flow"
+    method: |
+      Notify servers when orders are ready for pickup.
+      Communicate special instructions or modifications.
+      Coordinate timing for multiple course meals.
+      Alert service staff to any delays or issues.
+      Provide updates on order status and estimated completion times.
+    inputs:
+      - name: "order_status"
+        type: "data"
+        format: "order_update"
+    outputs:
+      - name: "service_notification"
+        type: "notification"
+        format: "pickup_ready"
+
+  - name: "manage-kitchen-tempo"
+    description: "Control the pace and flow of kitchen operations"
+    method: |
+      Monitor overall kitchen capacity and workload.
+      Adjust cooking pace based on order volume.
+      Balance multiple orders to prevent bottlenecks.
+      Coordinate with different stations for optimal flow.
+      Manage rush periods and peak service times.
+    inputs: []
+    outputs:
+      - name: "tempo_adjustments"
+        type: "data"
+        format: "workflow_control"
+
+responsibilities:
+  - name: "maintain-order-accuracy"
+    description: "Ensure order accuracy remains above 98%"
+    method: |
+      Track order accuracy for each completed order.
+      Calculate rolling accuracy percentage over 24-hour windows.
+      If accuracy drops below 98%, investigate root causes.
+      Implement immediate process improvements.
+      Alert kitchen manager if accuracy falls below 95%.
+      Generate daily accuracy reports.
+    inputs: []
+    outputs:
+      - name: "accuracy_report"
+        type: "data"
+        format: "metrics"
+    monitoringType: "continuous"
+
+  - name: "maintain-service-timing"
+    description: "Ensure consistent service timing standards"
+    method: |
+      Monitor order completion times for each table.
+      Track average service time by meal type.
+      Identify timing bottlenecks and address them.
+      Coordinate with servers on timing expectations.
+      Alert management when timing falls outside standards.
+    inputs: []
+    outputs:
+      - name: "timing_report"
+        type: "data"
+        format: "service_metrics"
+    monitoringType: "continuous"
+
+team:
+  name: "kitchen-operations"
+  type: "stream-aligned"
+  description: "Core kitchen team handling food preparation and service"
+  
+  roles:
+    - name: "head-chef"
+      description: "Senior chef responsible for kitchen leadership"
+      capabilities:
+        - "bake-pizza"
+        - "manage-kitchen-staff"
+        - "menu-planning"
+      responsibilities:
+        - "maintain-food-quality"
+        - "ensure-food-safety"
+    
+    - name: "expeditor"
+      description: "Order coordination and quality control"
+      capabilities:
+        - "coordinate-orders"
+        - "quality-control"
+      responsibilities:
+        - "maintain-order-accuracy"
+    
+    - name: "pizza-chef"
+      description: "Specialized pizza preparation"
+      capabilities:
+        - "bake-pizza"
+        - "prepare-dough"
+        - "manage-wood-fired-oven"
+      responsibilities:
+        - "maintain-oven-temperature"
+      
+    - name: "expeditor"
+      description: "Kitchen traffic controller - manages order flow and quality control"
+      
+      capabilities:
+        - "coordinate-orders"
+        - "quality-control"
+        - "communicate-with-servers"
+        - "manage-kitchen-tempo"
+      
+      responsibilities:
+        - "maintain-order-accuracy"
+        - "maintain-service-timing"
+  
+  playbooks:
+    - name: "dinner-service"
+      description: "Evening service coordination"
+      cadence:
+        frequency: "daily"
+        schedule: "0 17 * * *"
+      
+      inputs:
+        - name: "reservations"
+          type: "data"
+          format: "reservation_list"
+          fields:
+            - name: "expected_covers"
+              type: "number"
+              required: true
+            - name: "special_events"
+              type: "array"
+              required: false
+      
+      outputs:
+        - name: "service_summary"
+          type: "data"
+          format: "service_report"
+          fields:
+            - name: "orders_completed"
+              type: "number"
+              required: true
+            - name: "average_ticket_time"
+              type: "number"
+              required: true
+      
+      steps:
+        - name: "prep_stations"
+          description: "Prepare all cooking stations for service"
+          method: |
+            Check equipment functionality and heating.
+            Stock ingredients at each station.
+            Verify mise en place is complete.
+            Test communication systems.
+            Brief staff on menu changes or specials.
+          
+          requirements:
+            - name: "cooking_equipment"
+              characteristics:
+                capabilities: ["bake_pizza", "grill_food"]
+              priority:
+                - specific: "corner_pizza_oven_001"
+                - characteristics: {type: "cooking_equipment"}
+  
+  resources:
+    - name: "pizza_ovens"
+      characteristics:
+        type: "cooking_equipment"
+        fuel_type: "wood|gas|electric"
+        temp_range: [500, 1000]
+        capabilities: ["bake_pizza", "roast_vegetables"]
+
+    - name: "corner_pizza_oven_001"
+      extends: "pizza_ovens"
+      characteristics:
+        location: "northeast_corner"
+        max_temp: 900
+        fuel_type: "wood"
+        age_years: 3
+        owner: "restaurant"
+
+    - name: "expeditor_station"
+      characteristics:
+        type: "workstation"
+        location: "center_pass"
+        equipment: ["order_tickets", "plating_area", "heat_lamps"]
+        capabilities: ["coordinate_orders", "quality_check", "assemble_orders"]
+
+    - name: "chef_jane"
+      characteristics:
+        type: "person"
+        role: "head_chef"
+        certification: "pizza_specialist"
+        experience_years: 12
+        shift: "evening"
+        capabilities: ["make_neapolitan_pizza", "manage_wood_fired_oven", "train_staff"]
+
+    - name: "expeditor_mike"
+      characteristics:
+        type: "person"
+        role: "expeditor"
+        experience_years: 5
+        shift: "evening"
+        capabilities: ["coordinate_orders", "quality_control", "communicate_with_servers"]
+
+    - name: "kitchen_stations"
+      extends: "pizza_ovens"
+      characteristics:
+        count: 4
+        types: ["pizza", "grill", "salad", "expedite"]
+        capabilities: ["bake_pizza", "grill_food", "prepare_salads", "coordinate_orders"]
+  
+  governance:
+    escalation_path: "line-cook -> expeditor -> head-chef -> kitchen-manager"
+    decision_authority: ["head-chef", "kitchen-manager"]
+  
+  interfaces:
+    external:
+      - "POS system for order receipt"
+      - "Server staff for order pickup"
+    internal:
+      - "Inventory management system"
+      - "Kitchen display system"
+  
+  success_metrics:
+    - "Average order completion time < 20 minutes"
+    - "Quality score > 4.5/5"
+    - "Order accuracy > 98%"
+    - "Food waste < 5%"

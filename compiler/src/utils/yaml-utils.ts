@@ -5,6 +5,7 @@
 
 import * as YAML from 'yaml';
 import { readFile } from 'fs/promises';
+import * as path from 'path';
 
 /**
  * Source position information
@@ -219,6 +220,28 @@ export class YamlParser {
       const schema = JSON.parse(await readFile(schemaPath, 'utf8'));
       
       const ajv = new Ajv({ allErrors: true, verbose: true });
+      
+      // If using v2 schema, load the referenced schemas
+      if (schemaPath.includes('/v2/')) {
+        const schemaDir = path.dirname(schemaPath);
+        const referencedSchemas = [
+          'capability-schema.json',
+          'resource-schema.json', 
+          'responsibility-schema.json',
+          'requirement-schema.json'
+        ];
+        
+        for (const refSchema of referencedSchemas) {
+          const refPath = path.join(schemaDir, refSchema);
+          try {
+            const refSchemaContent = JSON.parse(await readFile(refPath, 'utf8'));
+            ajv.addSchema(refSchemaContent);
+          } catch (error) {
+            // Schema file doesn't exist, skip
+          }
+        }
+      }
+      
       const validate = ajv.compile(schema);
       
       const isValid = validate(parsed.data);

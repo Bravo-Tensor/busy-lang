@@ -1,0 +1,432 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://busy-lang.org/schemas/v2/busy-schema.json",
+  "title": "BUSY Language Schema v2.0",
+  "description": "Complete JSON Schema for BUSY language files v2.0",
+  "type": "object",
+  "required": ["version", "metadata"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "2.0",
+      "description": "BUSY language version"
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata"
+    },
+    "imports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/import"
+      },
+      "description": "External capability, tool, and advisor imports"
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "$ref": "resource-schema.json"
+      },
+      "description": "Resource definitions"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "capability-schema.json"
+      },
+      "description": "Capability definitions"
+    },
+    "responsibilities": {
+      "type": "array",
+      "items": {
+        "$ref": "responsibility-schema.json"
+      },
+      "description": "Responsibility definitions"
+    },
+    "teams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/team"
+      },
+      "description": "Team definitions (team.busy files only)"
+    },
+    "team": {
+      "$ref": "#/definitions/team",
+      "description": "Single team definition (team.busy files only)"
+    },
+    "role": {
+      "$ref": "#/definitions/role",
+      "description": "Role definition (role files only)"
+    },
+    "playbook": {
+      "$ref": "#/definitions/playbook",
+      "description": "Playbook definition (playbook files only)"
+    },
+    "capability": {
+      "$ref": "capability-schema.json",
+      "description": "Capability definition (capability files only)"
+    },
+    "responsibility": {
+      "$ref": "responsibility-schema.json",
+      "description": "Responsibility definition (responsibility files only)"
+    },
+    "resource": {
+      "$ref": "resource-schema.json",
+      "description": "Resource definition (resource files only)"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "metadata": {
+      "type": "object",
+      "required": ["name", "description", "layer"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable name"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Detailed description"
+        },
+        "layer": {
+          "type": "string",
+          "enum": ["L0", "L1", "L2"],
+          "description": "Organizational layer (L0=Operational, L1=Management, L2=Strategic)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "import": {
+      "type": "object",
+      "oneOf": [
+        {
+          "required": ["capability"],
+          "properties": {
+            "capability": {
+              "type": "string",
+              "description": "Capability name to import"
+            },
+            "version": {
+              "type": "string",
+              "description": "Version specification"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": ["tool"],
+          "properties": {
+            "tool": {
+              "type": "string",
+              "description": "Tool name (e.g., salesforce, stripe)"
+            },
+            "version": {
+              "type": "string",
+              "description": "Version specification"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": ["advisor"],
+          "properties": {
+            "advisor": {
+              "type": "string",
+              "description": "Advisor name"
+            },
+            "interface": {
+              "type": "string",
+              "description": "Interface specification"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "team": {
+      "type": "object",
+      "required": ["name", "type", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "Team identifier (kebab-case)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["stream-aligned", "enabling", "complicated-subsystem", "platform"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/role"
+          }
+        },
+        "playbooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/playbook"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "resource-schema.json"
+          }
+        },
+        "governance": {
+          "$ref": "#/definitions/governance"
+        },
+        "interfaces": {
+          "$ref": "#/definitions/team_interfaces"
+        },
+        "success_metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "role": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "Role identifier (kebab-case)"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of capability names this role provides"
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of responsibility names this role maintains"
+        },
+        "brings_resources": {
+          "type": "array",
+          "items": {
+            "$ref": "resource-schema.json"
+          },
+          "description": "Resources the role holder brings"
+        }
+      },
+      "additionalProperties": false
+    },
+    "playbook": {
+      "type": "object",
+      "required": ["name", "description", "cadence"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "Playbook identifier (kebab-case)"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cadence": {
+          "$ref": "#/definitions/cadence"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "capability-schema.json#/definitions/input_output_spec"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "capability-schema.json#/definitions/input_output_spec"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/step"
+          }
+        },
+        "issue_resolution": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resolution"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["name", "description", "method"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Step identifier (snake_case)"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Detailed instructions for execution"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "capability-schema.json#/definitions/input_output_spec"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "capability-schema.json#/definitions/input_output_spec"
+          }
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "requirement-schema.json"
+          },
+          "description": "Resource requirements"
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Temporary responsibilities for this step"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/issue"
+          }
+        },
+        "estimated_duration": {
+          "type": "string",
+          "pattern": "^\\d+[mhd]$",
+          "description": "Duration in minutes (m), hours (h), or days (d)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cadence": {
+      "type": "object",
+      "required": ["frequency"],
+      "properties": {
+        "frequency": {
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly", "quarterly", "on_demand", "triggered"]
+        },
+        "schedule": {
+          "type": "string",
+          "description": "Cron expression for scheduled cadences"
+        },
+        "trigger_events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Event names that trigger execution"
+        }
+      },
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "escalation_path": {
+          "type": "string"
+        },
+        "decision_authority": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "team_interfaces": {
+      "type": "object",
+      "properties": {
+        "external": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internal": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "required": ["issue_type", "resolution"],
+      "properties": {
+        "issue_type": {
+          "type": "string"
+        },
+        "resolution": {
+          "$ref": "#/definitions/resolution"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["escalate", "override", "delegate", "pause"]
+        },
+        "target": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^\\d+[mhd]$"
+        },
+        "fallback": {
+          "$ref": "#/definitions/resolution"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

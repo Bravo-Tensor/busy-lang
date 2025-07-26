@@ -1,0 +1,149 @@
+{
+  "name": "busy-language-support",
+  "displayName": "BUSY Language Support",
+  "description": "Language support for BUSY business process files",
+  "version": "2.0.1",
+  "publisher": "busy-lang",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "busy",
+    "business-process",
+    "yaml",
+    "dsl"
+  ],
+  "main": "./out/ide/extension.js",
+  "activationEvents": [
+    "onLanguage:busy"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "busy",
+        "aliases": ["BUSY", "busy"],
+        "extensions": [".busy"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "busy",
+        "scopeName": "source.busy",
+        "path": "./syntaxes/busy.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "busy.showExecutionPreview",
+        "title": "Show Execution Strategy Preview",
+        "category": "BUSY"
+      },
+      {
+        "command": "busy.validateFile",
+        "title": "Validate BUSY File",
+        "category": "BUSY"
+      },
+      {
+        "command": "busy.showResourceGraph",
+        "title": "Show Resource Graph",
+        "category": "BUSY"
+      },
+      {
+        "command": "busy.migrateFromV1",
+        "title": "Migrate from v1.0 to v2.0",
+        "category": "BUSY"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "BUSY Language Server",
+      "properties": {
+        "busyLanguageServer.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 1000,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "busyLanguageServer.enableCapabilityCompletion": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Enable auto-completion for capability and responsibility names."
+        },
+        "busyLanguageServer.enableResourceHints": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Show resource allocation hints and warnings."
+        },
+        "busyLanguageServer.enableExecutionPreview": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Show execution strategy preview on hover."
+        },
+        "busyLanguageServer.showResponsibilityVisualization": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Show responsibility monitoring visualization."
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceLangId == busy",
+          "command": "busy.showExecutionPreview",
+          "group": "busy"
+        },
+        {
+          "when": "resourceLangId == busy",
+          "command": "busy.showResourceGraph",
+          "group": "busy"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "busy.showExecutionPreview",
+          "when": "resourceLangId == busy"
+        },
+        {
+          "command": "busy.validateFile",
+          "when": "resourceLangId == busy"
+        },
+        {
+          "command": "busy.showResourceGraph",
+          "when": "resourceLangId == busy"
+        },
+        {
+          "command": "busy.migrateFromV1",
+          "when": "resourceLangId == busy"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "ajv": "^8.12.0",
+    "yaml": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  }
+}

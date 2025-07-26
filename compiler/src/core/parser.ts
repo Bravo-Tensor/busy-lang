@@ -300,6 +300,16 @@ export class Parser {
   }
   
   /**
+   * Get schema path based on file version
+   */
+  private getSchemaPath(version?: string): string {
+    if (version === '2.0') {
+      return path.join(__dirname, '../../schemas/v2/busy-schema.json');
+    }
+    return path.join(__dirname, '../../schemas/busy-schema.json');
+  }
+  
+  /**
    * Parse all files from scan result
    */
   async parse(scanResult: ScanResult): Promise<ParseResult> {
@@ -471,7 +481,9 @@ export class Parser {
    */
   private async validateFileSchema(parsedFile: ParsedFile): Promise<FileValidationResult> {
     try {
-      const validationResult = await this.yamlParser.validateSchema(parsedFile.yaml, this.schemaPath);
+      const version = parsedFile.yaml.data.version;
+      const schemaPath = this.getSchemaPath(version);
+      const validationResult = await this.yamlParser.validateSchema(parsedFile.yaml, schemaPath);
       
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -641,6 +653,9 @@ export class Parser {
     }
   }
 }
+
+// Export alias for Language Server compatibility
+export const BusyParser = Parser;
 
 /**
  * Internal parse result for single file
