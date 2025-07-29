@@ -3,6 +3,10 @@
  * Main entry point for the visualization system
  */
 
+// Import types as values for utility functions  
+import type { VisualizationConfig } from './core/types';
+import { VisualizationSystem } from './system';
+
 // Core system
 export { VisualizationSystem } from './system';
 

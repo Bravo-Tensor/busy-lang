@@ -3,7 +3,7 @@
  * CLI test for BUSY visualization with real files
  */
 
-import { VisualizationSystem, VisualizationUtils } from './index';
+import { VisualizationUtils } from './index';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -65,8 +65,8 @@ async function testWithRealFiles() {
     console.log('\n📊 Analysis Results:');
     console.log(`   Nodes: ${graph.nodes.size}`);
     console.log(`   Edges: ${graph.edges.size}`);
-    console.log('   Node Types:', [...new Set(nodes.map(n => n.type))].join(', '));
-    console.log('   Edge Types:', [...new Set(edges.map(e => e.type))].join(', '));
+    console.log('   Node Types:', [...new Set(nodes.map((n: any) => n.type))].join(', '));
+    console.log('   Edge Types:', [...new Set(edges.map((e: any) => e.type))].join(', '));
     
     console.log('\n⚡ Performance Metrics:');
     console.log(`   Parse Time: ${metrics.parseTime}ms`);
@@ -105,7 +105,7 @@ async function testWithRealFiles() {
         nodeTypes: ['organization', 'team']
       }
     });
-    const filteredNodes = viz.getNodes().filter(n => n.visible !== false);
+    const filteredNodes = viz.getNodes().filter((n: any) => n.visible !== false);
     console.log(`   After filtering: ${filteredNodes.length} visible nodes`);
     
     // Cleanup

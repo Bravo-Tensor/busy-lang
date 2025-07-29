@@ -7,7 +7,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { glob } from 'glob';
 import { Parser } from '@/core/parser';
+import { Scanner } from '@/core/scanner';
 import { ASTBuilder } from '@/ast/builder';
+import type { CompilerConfig } from '@/config/types';
 import type { BusyAST, BusyFileNode, TeamNode, RoleNode, PlaybookNode } from '@/ast/nodes';
 import type { 
   IBusyAnalyzer,
@@ -32,6 +34,26 @@ export class BusyAnalyzer implements IBusyAnalyzer {
   private watchCallbacks: ((changes: FileChangeEvent[]) => void)[] = [];
   
   /**
+   * Get common directory path from a list of file paths
+   */
+  private getCommonDirectory(filePaths: string[]): string {
+    if (filePaths.length === 0) return process.cwd();
+    if (filePaths.length === 1) return path.dirname(filePaths[0]);
+    
+    const dirs = filePaths.map(p => path.dirname(p));
+    let common = dirs[0];
+    
+    for (let i = 1; i < dirs.length; i++) {
+      while (!dirs[i].startsWith(common + path.sep) && dirs[i] !== common) {
+        common = path.dirname(common);
+        if (common === path.dirname(common)) break; // reached root
+      }
+    }
+    
+    return common;
+  }
+  
+  /**
    * Analyze BUSY files from file paths
    */
   async analyzeFiles(filePaths: string[]): Promise<BusyAnalysisResult> {
@@ -44,19 +66,36 @@ export class BusyAnalyzer implements IBusyAnalyzer {
         throw new Error('No BUSY files found');
       }
       
+      // Create compiler config
+      const config: CompilerConfig = {
+        rootDir: process.cwd(),
+        outputDir: path.join(process.cwd(), 'dist'),
+        target: 'node',
+        strict: true,
+        parallelProcessing: true,
+        cacheEnabled: false,
+        ignore: ['node_modules/**', '.git/**'],
+        watch: false,
+        verbose: false
+      };
+      
+      // Scan files using existing compiler
+      const scanner = new Scanner(config);
+      const scanResult = await scanner.scan(this.getCommonDirectory(busyFiles));
+      
       // Parse files using existing compiler
-      const parser = new Parser();
-      const parseResult = await parser.parseFiles(busyFiles);
+      const parser = new Parser(config);
+      const parseResult = await parser.parse(scanResult);
       
       if (parseResult.parseErrors.length > 0) {
-        throw new Error(`Parse error: ${parseResult.parseErrors.map(e => e.message).join(', ')}`);
+        throw new Error(`Parse error: ${parseResult.parseErrors.map((e: any) => e.error.message).join(', ')}`);
       }
       
       // Build AST
       const astBuilder = new ASTBuilder();
-      const astResult = astBuilder.buildAST(parseResult.parsedFiles);
+      const astResult = await astBuilder.build(parseResult);
       
-      if (!astResult.success) {
+      if (astResult.errors.length > 0) {
         throw new Error(`AST build error: ${astResult.errors.map((e: any) => e.message).join(', ')}`);
       }
       
