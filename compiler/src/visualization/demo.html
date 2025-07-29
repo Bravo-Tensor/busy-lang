@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSY File Visualization Demo</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #e5e5e5;
+            background: #f9f9f9;
+        }
+        
+        .visualization {
+            width: 100%;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-panel {
+            padding: 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #e5e5e5;
+        }
+        
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #1d4ed8;
+        }
+        
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .node:hover {
+            stroke-width: 3px;
+        }
+        
+        .node.selected {
+            stroke: #dc2626;
+            stroke-width: 3px;
+        }
+        
+        .node text {
+            font-size: 12px;
+            text-anchor: middle;
+            pointer-events: none;
+            fill: #374151;
+        }
+        
+        .edge {
+            fill: none;
+            stroke: #6b7280;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+        
+        .edge.highlighted {
+            stroke: #2563eb;
+            stroke-width: 3;
+        }
+        
+        #info {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .legend {
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        
+        .legend-color {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 BUSY File Visualization System</h1>
+            <p>Interactive visualization of business organizations, teams, and workflows</p>
+        </div>
+        
+        <div class="controls">
+            <button onclick="showOrganizational()">Organizational Overview</button>
+            <button onclick="showDependencies()">Dependencies</button>
+            <button onclick="showTeamDetails()">Team Details</button>
+            <button onclick="zoomToFit()">Zoom to Fit</button>
+            <button onclick="resetView()">Reset View</button>
+        </div>
+        
+        <div class="visualization" id="viz-container">
+            <!-- Visualization will be rendered here -->
+        </div>
+        
+        <div class="info-panel">
+            <h3>Graph Information</h3>
+            <div id="info">
+                <div>Nodes: <span id="node-count">0</span> | Edges: <span id="edge-count">0</span></div>
+                <div>Selected: <span id="selected-info">None</span></div>
+            </div>
+            
+            <div class="legend">
+                <h4>Legend:</h4>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #2563eb;"></span>Organization
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #7c3aed;"></span>Team
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #059669;"></span>Role
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #dc2626;"></span>Playbook
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for the BUSY visualization
+        const mockData = {
+            nodes: [
+                { id: 'org-photo', type: 'organization', label: 'Solo Photography Business', x: 400, y: 100 },
+                { id: 'team-client', type: 'team', label: 'Client Operations', x: 200, y: 250 },
+                { id: 'team-creative', type: 'team', label: 'Creative Production', x: 400, y: 250 },
+                { id: 'team-business', type: 'team', label: 'Business Operations', x: 600, y: 250 },
+                { id: 'role-inquiry', type: 'role', label: 'Inquiry Manager', x: 150, y: 350 },
+                { id: 'role-coordinator', type: 'role', label: 'Project Coordinator', x: 250, y: 350 },
+                { id: 'role-photographer', type: 'role', label: 'Photographer', x: 350, y: 350 },
+                { id: 'role-editor', type: 'role', label: 'Photo Editor', x: 450, y: 350 },
+                { id: 'role-financial', type: 'role', label: 'Financial Manager', x: 550, y: 350 },
+                { id: 'role-contract', type: 'role', label: 'Contract Admin', x: 650, y: 350 },
+                { id: 'pb-onboarding', type: 'playbook', label: 'Client Onboarding', x: 200, y: 450 },
+                { id: 'pb-photoshoot', type: 'playbook', label: 'Photo Production', x: 400, y: 450 },
+                { id: 'pb-financial', type: 'playbook', label: 'Monthly Financials', x: 600, y: 450 }
+            ],
+            edges: [
+                { id: 'org-team1', source: 'org-photo', target: 'team-client', type: 'hierarchy' },
+                { id: 'org-team2', source: 'org-photo', target: 'team-creative', type: 'hierarchy' },
+                { id: 'org-team3', source: 'org-photo', target: 'team-business', type: 'hierarchy' },
+                { id: 'team1-role1', source: 'team-client', target: 'role-inquiry', type: 'hierarchy' },
+                { id: 'team1-role2', source: 'team-client', target: 'role-coordinator', type: 'hierarchy' },
+                { id: 'team2-role1', source: 'team-creative', target: 'role-photographer', type: 'hierarchy' },
+                { id: 'team2-role2', source: 'team-creative', target: 'role-editor', type: 'hierarchy' },
+                { id: 'team3-role1', source: 'team-business', target: 'role-financial', type: 'hierarchy' },
+                { id: 'team3-role2', source: 'team-business', target: 'role-contract', type: 'hierarchy' },
+                { id: 'team1-pb1', source: 'team-client', target: 'pb-onboarding', type: 'owns' },
+                { id: 'team2-pb1', source: 'team-creative', target: 'pb-photoshoot', type: 'owns' },
+                { id: 'team3-pb1', source: 'team-business', target: 'pb-financial', type: 'owns' },
+                { id: 'dep1', source: 'pb-onboarding', target: 'pb-photoshoot', type: 'dependency' },
+                { id: 'dep2', source: 'pb-photoshoot', target: 'pb-financial', type: 'dependency' }
+            ]
+        };
+        
+        // Color scheme for different node types
+        const colors = {
+            organization: '#2563eb',
+            team: '#7c3aed',
+            role: '#059669',
+            playbook: '#dc2626'
+        };
+        
+        // SVG setup
+        const container = d3.select('#viz-container');
+        const svg = container.append('svg')
+            .attr('width', '100%')
+            .attr('height', '100%');
+            
+        // Add zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+            
+        svg.call(zoom);
+        
+        // Main group for graph elements
+        const g = svg.append('g');
+        
+        // Add arrow marker
+        svg.append('defs').append('marker')
+            .attr('id', 'arrowhead')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 20)
+            .attr('refY', 0)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#6b7280');
+        
+        let currentData = mockData;
+        let selectedNode = null;
+        
+        function render() {
+            // Clear previous elements
+            g.selectAll('*').remove();
+            
+            // Render edges first (so they appear behind nodes)
+            const edges = g.selectAll('.edge')
+                .data(currentData.edges)
+                .enter()
+                .append('line')
+                .attr('class', 'edge')
+                .attr('x1', d => {
+                    const source = currentData.nodes.find(n => n.id === d.source);
+                    return source ? source.x : 0;
+                })
+                .attr('y1', d => {
+                    const source = currentData.nodes.find(n => n.id === d.source);
+                    return source ? source.y : 0;
+                })
+                .attr('x2', d => {
+                    const target = currentData.nodes.find(n => n.id === d.target);
+                    return target ? target.x : 0;
+                })
+                .attr('y2', d => {
+                    const target = currentData.nodes.find(n => n.id === d.target);
+                    return target ? target.y : 0;
+                })
+                .attr('stroke-dasharray', d => d.type === 'dependency' ? '5,5' : 'none');
+            
+            // Render nodes
+            const nodeGroups = g.selectAll('.node')
+                .data(currentData.nodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`)
+                .on('click', function(event, d) {
+                    selectNode(d);
+                })
+                .on('mouseover', function(event, d) {
+                    d3.select(this).select('circle').attr('r', d.type === 'organization' ? 35 : 25);
+                    updateInfo(`Hover: ${d.label} (${d.type})`);
+                })
+                .on('mouseout', function(event, d) {
+                    d3.select(this).select('circle').attr('r', d.type === 'organization' ? 30 : 20);
+                    updateSelectedInfo();
+                });
+            
+            // Add circles
+            nodeGroups.append('circle')
+                .attr('r', d => d.type === 'organization' ? 30 : 20)
+                .attr('fill', d => colors[d.type] || '#gray')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2);
+            
+            // Add labels
+            nodeGroups.append('text')
+                .attr('dy', '0.35em')
+                .style('font-size', d => d.type === 'organization' ? '10px' : '9px')
+                .style('font-weight', d => d.type === 'organization' ? 'bold' : 'normal')
+                .each(function(d) {
+                    const words = d.label.split(' ');
+                    const text = d3.select(this);
+                    
+                    if (words.length > 1 && d.type !== 'organization') {
+                        // Multi-line text for smaller nodes
+                        text.selectAll('tspan')
+                            .data(words)
+                            .enter()
+                            .append('tspan')
+                            .attr('x', 0)
+                            .attr('dy', (d, i) => i === 0 ? '-0.2em' : '1em')
+                            .text(d => d);
+                    } else {
+                        text.text(d.label);
+                    }
+                });
+            
+            updateStats();
+        }
+        
+        function selectNode(node) {
+            // Clear previous selection
+            g.selectAll('.node').classed('selected', false);
+            g.selectAll('.edge').classed('highlighted', false);
+            
+            // Select new node
+            selectedNode = node;
+            g.selectAll('.node')
+                .filter(d => d.id === node.id)
+                .classed('selected', true);
+            
+            // Highlight connected edges
+            const connectedEdges = currentData.edges.filter(e => 
+                e.source === node.id || e.target === node.id
+            );
+            
+            g.selectAll('.edge')
+                .filter(d => connectedEdges.some(e => e.id === d.id))
+                .classed('highlighted', true);
+            
+            updateSelectedInfo();
+        }
+        
+        function updateStats() {
+            document.getElementById('node-count').textContent = currentData.nodes.length;
+            document.getElementById('edge-count').textContent = currentData.edges.length;
+        }
+        
+        function updateInfo(text) {
+            document.getElementById('selected-info').textContent = text;
+        }
+        
+        function updateSelectedInfo() {
+            if (selectedNode) {
+                updateInfo(`${selectedNode.label} (${selectedNode.type})`);
+            } else {
+                updateInfo('None');
+            }
+        }
+        
+        function showOrganizational() {
+            // Filter to show only organization, teams, and hierarchy
+            currentData = {
+                nodes: mockData.nodes.filter(n => ['organization', 'team'].includes(n.type)),
+                edges: mockData.edges.filter(e => e.type === 'hierarchy' && 
+                    ['organization', 'team'].includes(mockData.nodes.find(n => n.id === e.source)?.type) &&
+                    ['organization', 'team'].includes(mockData.nodes.find(n => n.id === e.target)?.type))
+            };
+            render();
+        }
+        
+        function showDependencies() {
+            // Show dependency relationships
+            currentData = {
+                nodes: mockData.nodes.filter(n => n.type === 'playbook'),
+                edges: mockData.edges.filter(e => e.type === 'dependency')
+            };
+            render();
+        }
+        
+        function showTeamDetails() {
+            // Show all data
+            currentData = mockData;
+            render();
+        }
+        
+        function zoomToFit() {
+            const bounds = g.node().getBBox();
+            const fullWidth = container.node().clientWidth;
+            const fullHeight = container.node().clientHeight;
+            const width = bounds.width;
+            const height = bounds.height;
+            const midX = bounds.x + width / 2;
+            const midY = bounds.y + height / 2;
+            
+            const scale = Math.min(fullWidth / width, fullHeight / height) * 0.8;
+            const translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
+            
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+        }
+        
+        function resetView() {
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity);
+        }
+        
+        // Initial render
+        render();
+        
+        // Auto zoom to fit on load
+        setTimeout(zoomToFit, 100);
+        
+        console.log('🎯 BUSY Visualization Demo Loaded Successfully!');
+        console.log('📊 Mock data structure:', mockData);
+    </script>
+</body>
+</html>
