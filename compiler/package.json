@@ -35,7 +35,10 @@
     "ide:package": "ts-node src/cli/index.ts ide package",
     "ide:install": "ts-node src/cli/index.ts ide install-vscode",
     "viz:demo": "ts-node src/visualization/serve-demo.ts",
-    "viz:test": "ts-node src/visualization/cli-test.ts"
+    "viz:test": "ts-node src/visualization/cli-test.ts",
+    "viz:test-simple": "ts-node src/visualization/simple-test.ts",
+    "viz:test-standalone": "ts-node src/visualization/standalone-test.ts",
+    "viz": "ts-node src/visualization/viz-cli.ts"
   },
   "keywords": [
     "busy",
