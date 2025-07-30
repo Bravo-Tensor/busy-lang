@@ -1,0 +1,24 @@
+{
+  "name": "simple-kitchen-example",
+  "version": "1.0.0",
+  "description": "Simple kitchen example for testing Orgata framework",
+  "main": "src/main.ts",
+  "scripts": {
+    "compile": "ts-node src/compile-busy.ts",
+    "start": "ts-node src/main.ts",
+    "dev": "ts-node --watch src/main.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4",
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/inquirer": "^9.0.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8"
+  }
+}

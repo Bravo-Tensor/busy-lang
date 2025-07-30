@@ -1,0 +1,42 @@
+name: "cook"
+description: "The person who prepares food in the kitchen"
+layer: "L0"
+capabilities:
+  - "food-preparation"
+  - "ingredient-gathering" 
+  - "kitchen-tool-usage"
+deliverables:
+  produces:
+    - name: "prepared-food"
+      type: "physical-item"
+      schema:
+        type: "object"
+        properties:
+          name:
+            type: "string"
+          ingredients:
+            type: "array"
+            items:
+              type: "string"
+          preparation_time:
+            type: "string"
+          status:
+            type: "string"
+            enum: ["ready", "in-progress", "failed"]
+  consumes:
+    - name: "recipe-request"
+      type: "instruction"
+      schema:
+        type: "object"
+        properties:
+          recipe_name:
+            type: "string"
+          servings:
+            type: "number"
+            default: 1
+resources:
+  time_allocation: "30m per recipe"
+  tools:
+    - import: "kitchen-tools"
+    - import: "pantry-access"
+    - import: "fridge-access"

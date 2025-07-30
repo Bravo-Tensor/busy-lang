@@ -1,0 +1,117 @@
+name: "pbj-sandwich"
+description: "Make a peanut butter and jelly sandwich"
+role: "cook"
+cadence:
+  trigger: "manual"
+  frequency: "on-demand"
+
+steps:
+  - name: "gather-ingredients"
+    method:
+      - "Get 2 slices of bread from pantry"
+      - "Get peanut butter jar from pantry" 
+      - "Get jelly jar from fridge"
+      - "Check that all ingredients are available and fresh"
+    execution_type: "algorithm"
+    inputs:
+      - name: "recipe-request"
+        type: "instruction"
+    outputs:
+      - name: "ingredients-gathered"
+        type: "resource-collection"
+        schema:
+          type: "object"
+          properties:
+            bread_slices:
+              type: "number"
+            peanut_butter:
+              type: "boolean"
+            jelly:
+              type: "boolean"
+            all_available:
+              type: "boolean"
+    estimated_time: "2m"
+    
+  - name: "prepare-workspace"
+    method:
+      - "Get a clean plate from cabinet"
+      - "Get a butter knife from drawer"
+      - "Place plate on counter"
+      - "Ensure workspace is clean and ready"
+    execution_type: "algorithm"
+    inputs:
+      - name: "ingredients-gathered"
+        source: "gather-ingredients"
+    outputs:
+      - name: "workspace-ready"
+        type: "workspace-state"
+        schema:
+          type: "object"
+          properties:
+            plate_ready:
+              type: "boolean"
+            knife_ready:
+              type: "boolean"
+            workspace_clean:
+              type: "boolean"
+    estimated_time: "1m"
+    
+  - name: "assemble-sandwich"
+    method:
+      - "Place bread slices on plate"
+      - "Open peanut butter jar"
+      - "Spread peanut butter on one slice using knife"
+      - "Open jelly jar"
+      - "Spread jelly on other slice using knife"
+      - "Press slices together to form sandwich"
+    execution_strategy:
+      modes: ["algorithm", "human"]
+      fallback_rules:
+        - from: "algorithm"
+          to: "human"
+          when: "assembly_failed"
+    inputs:
+      - name: "workspace-ready"
+        source: "prepare-workspace"
+    outputs:
+      - name: "assembled-sandwich"
+        type: "prepared-food"
+        schema:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            ingredients:
+              type: "array"
+              items:
+                type: "string"
+            assembly_quality:
+              type: "string"
+              enum: ["excellent", "good", "acceptable", "poor"]
+            ready_to_serve:
+              type: "boolean"
+    estimated_time: "3m"
+    
+  - name: "cleanup"
+    method:
+      - "Clean the knife"
+      - "Put away peanut butter jar"
+      - "Put away jelly jar"
+      - "Wipe down workspace"
+    execution_type: "algorithm"
+    inputs:
+      - name: "assembled-sandwich"
+        source: "assemble-sandwich"
+    outputs:
+      - name: "kitchen-clean"
+        type: "workspace-state"
+        schema:
+          type: "object"
+          properties:
+            tools_cleaned:
+              type: "boolean"
+            ingredients_stored:
+              type: "boolean"
+            workspace_clean:
+              type: "boolean"
+    estimated_time: "2m"
