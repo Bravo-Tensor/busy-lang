@@ -84,10 +84,10 @@ export abstract class BaseContext implements Context {
       // Error handling and recovery
       traceEntry.endTime = new Date();
       traceEntry.status = 'error';
-      traceEntry.error = error.message;
+      traceEntry.error = (error as Error).message;
       this._executionTrace.push(traceEntry);
 
-      const handledError = await this.handleExecutionError(operation, input, error);
+      const handledError = await this.handleExecutionError(operation, input, error as Error);
       if (handledError) {
         throw handledError;
       }
@@ -265,7 +265,7 @@ export abstract class BaseContext implements Context {
     
     // Get all children of parent except this one
     return Array.from((this.parent as any).childContexts || [])
-      .filter((ctx: Context) => ctx !== this);
+      .filter((ctx: unknown) => ctx !== this) as Context[];
   }
 
   // Debugging and introspection

@@ -1,9 +1,10 @@
 // Implementation for cleanup step
 
-import { AlgorithmImplementation } from '../orgata-framework/index.js';
-import { InjectedResources } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, BasicOperation } from '../orgata-framework/index.js';
+import { InjectedResources, Context } from '../orgata-framework/types.js';
 import { KitchenStorageCapability } from '../kitchen-capabilities/storage-service.js';
 import { AssembledSandwich } from './assemble-sandwich.js';
+import { SchemaBuilder } from '../orgata-framework/input-output.js';
 
 export interface KitchenClean {
   tools_cleaned: boolean;
@@ -36,14 +37,9 @@ export class CleanupImplementation extends AlgorithmImplementation<AssembledSand
         await this.delay(2000);
         
         // Put knife back in drawer
-        const knifeStoreResult = await storage.execute({
-          data: { location: 'drawer', item: 'butter_knives', action: 'store' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const knifeStoreResult = await storage.storeItem('drawer', 'butter_knives');
 
-        if (knifeStoreResult.data.success) {
+        if (knifeStoreResult.success) {
           toolsCleaned = true;
           logger.log({ level: 'info', message: '✅ Knife cleaned and stored' });
         } else {
@@ -52,25 +48,15 @@ export class CleanupImplementation extends AlgorithmImplementation<AssembledSand
 
         // Put away peanut butter jar
         logger.log({ level: 'info', message: '📦 Putting away peanut butter jar...' });
-        const pbStoreResult = await storage.execute({
-          data: { location: 'pantry', item: 'peanut_butter', action: 'store' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const pbStoreResult = await storage.storeItem('pantry', 'peanut_butter');
 
-        let pbStored = pbStoreResult.data.success;
+        let pbStored = pbStoreResult.success;
         
         // Put away jelly jar
         logger.log({ level: 'info', message: '❄️ Putting away jelly jar...' });
-        const jellyStoreResult = await storage.execute({
-          data: { location: 'fridge', item: 'jelly', action: 'store' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const jellyStoreResult = await storage.storeItem('fridge', 'jelly');
 
-        let jellyStored = jellyStoreResult.data.success;
+        let jellyStored = jellyStoreResult.success;
 
         if (pbStored && jellyStored) {
           ingredientsStored = true;
@@ -101,13 +87,30 @@ export class CleanupImplementation extends AlgorithmImplementation<AssembledSand
         };
 
       } catch (error) {
-        logger.log({ level: 'error', message: `Cleanup failed: ${error.message}` });
+        logger.log({ level: 'error', message: `Cleanup failed: ${(error as Error).message}` });
         throw error;
       }
     });
   }
+}
 
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+// Factory function to create the operation
+export function createCleanupOperation(context: Context): BasicOperation<AssembledSandwich, KitchenClean> {
+  return new BasicOperation(
+    'cleanup',
+    'Clean up after making sandwich',
+    SchemaBuilder.object({
+      name: SchemaBuilder.string(),
+      ingredients: SchemaBuilder.array(SchemaBuilder.string()),
+      assembly_quality: SchemaBuilder.string({ enum: ['excellent', 'good', 'acceptable', 'poor'] }),
+      ready_to_serve: SchemaBuilder.boolean()
+    }),
+    SchemaBuilder.object({
+      tools_cleaned: SchemaBuilder.boolean(),
+      ingredients_stored: SchemaBuilder.boolean(),
+      workspace_clean: SchemaBuilder.boolean()
+    }, ['tools_cleaned', 'ingredients_stored', 'workspace_clean']),
+    new CleanupImplementation(),
+    context
+  );
 }

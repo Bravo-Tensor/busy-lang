@@ -1,6 +1,6 @@
 // Simple console-based UI for human interactions
 
-import * as inquirer from 'inquirer';
+import inquirer from 'inquirer';
 
 export interface HumanTaskViewModel {
   fields: FormField[];

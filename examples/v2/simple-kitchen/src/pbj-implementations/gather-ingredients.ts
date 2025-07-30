@@ -1,8 +1,9 @@
 // Implementation for gathering ingredients step
 
-import { AlgorithmImplementation } from '../orgata-framework/index.js';
-import { InjectedResources } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, BasicOperation } from '../orgata-framework/index.js';
+import { InjectedResources, Context } from '../orgata-framework/types.js';
 import { KitchenStorageCapability } from '../kitchen-capabilities/storage-service.js';
+import { SchemaBuilder } from '../orgata-framework/input-output.js';
 
 export interface RecipeRequest {
   recipe_name: string;
@@ -35,15 +36,10 @@ export class GatherIngredientsImplementation extends AlgorithmImplementation<Rec
       try {
         // Get 2 slices of bread from pantry
         logger.log({ level: 'info', message: 'Getting bread from pantry...' });
-        const breadResult = await storage.execute({
-          data: { location: 'pantry', item: 'bread', quantity: 2, action: 'retrieve' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const breadResult = await storage.retrieveItem('pantry', 'bread', 2);
 
-        if (breadResult.data.success && breadResult.data.item) {
-          breadSlices = typeof breadResult.data.item.quantity === 'number' ? breadResult.data.item.quantity : 2;
+        if (breadResult.success && breadResult.item) {
+          breadSlices = typeof breadResult.item.quantity === 'number' ? breadResult.item.quantity : 2;
           logger.log({ level: 'info', message: `✅ Got ${breadSlices} slices of bread` });
         } else {
           logger.log({ level: 'warn', message: '❌ Could not get bread' });
@@ -51,14 +47,9 @@ export class GatherIngredientsImplementation extends AlgorithmImplementation<Rec
 
         // Get peanut butter jar from pantry
         logger.log({ level: 'info', message: 'Getting peanut butter from pantry...' });
-        const pbResult = await storage.execute({
-          data: { location: 'pantry', item: 'peanut_butter', quantity: 1, action: 'retrieve' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const pbResult = await storage.retrieveItem('pantry', 'peanut_butter', 1);
 
-        if (pbResult.data.success) {
+        if (pbResult.success) {
           peanutButter = true;
           logger.log({ level: 'info', message: '✅ Got peanut butter jar' });
         } else {
@@ -67,14 +58,9 @@ export class GatherIngredientsImplementation extends AlgorithmImplementation<Rec
 
         // Get jelly jar from fridge
         logger.log({ level: 'info', message: 'Getting jelly from fridge...' });
-        const jellyResult = await storage.execute({
-          data: { location: 'fridge', item: 'jelly', quantity: 1, action: 'retrieve' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const jellyResult = await storage.retrieveItem('fridge', 'jelly', 1);
 
-        if (jellyResult.data.success) {
+        if (jellyResult.success) {
           jelly = true;
           logger.log({ level: 'info', message: '✅ Got jelly jar' });
         } else {
@@ -98,9 +84,29 @@ export class GatherIngredientsImplementation extends AlgorithmImplementation<Rec
         };
 
       } catch (error) {
-        logger.log({ level: 'error', message: `Failed to gather ingredients: ${error.message}` });
+        logger.log({ level: 'error', message: `Failed to gather ingredients: ${(error as Error).message}` });
         throw error;
       }
     });
   }
+}
+
+// Factory function to create the operation
+export function createGatherIngredientsOperation(context: Context): BasicOperation<RecipeRequest, IngredientsGathered> {
+  return new BasicOperation(
+    'gather-ingredients',
+    'Gather all ingredients for PB&J sandwich',
+    SchemaBuilder.object({
+      recipe_name: SchemaBuilder.string(),
+      servings: SchemaBuilder.number({ minimum: 1 })
+    }, ['recipe_name', 'servings']),
+    SchemaBuilder.object({
+      bread_slices: SchemaBuilder.number(),
+      peanut_butter: SchemaBuilder.boolean(),
+      jelly: SchemaBuilder.boolean(),
+      all_available: SchemaBuilder.boolean()
+    }, ['bread_slices', 'peanut_butter', 'jelly', 'all_available']),
+    new GatherIngredientsImplementation(),
+    context
+  );
 }

@@ -1,9 +1,10 @@
 // Implementation for preparing workspace step
 
-import { AlgorithmImplementation } from '../orgata-framework/index.js';
-import { InjectedResources } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, BasicOperation } from '../orgata-framework/index.js';
+import { InjectedResources, Context } from '../orgata-framework/types.js';
 import { KitchenStorageCapability } from '../kitchen-capabilities/storage-service.js';
 import { IngredientsGathered } from './gather-ingredients.js';
+import { SchemaBuilder } from '../orgata-framework/input-output.js';
 
 export interface WorkspaceReady {
   plate_ready: boolean;
@@ -36,14 +37,9 @@ export class PrepareWorkspaceImplementation extends AlgorithmImplementation<Ingr
       try {
         // Get a clean plate from cabinet
         logger.log({ level: 'info', message: 'Getting a plate from cabinet...' });
-        const plateResult = await storage.execute({
-          data: { location: 'cabinet', item: 'plates', quantity: 1, action: 'retrieve' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const plateResult = await storage.retrieveItem('cabinet', 'plates', 1);
 
-        if (plateResult.data.success) {
+        if (plateResult.success) {
           plateReady = true;
           logger.log({ level: 'info', message: '✅ Got a clean plate' });
         } else {
@@ -52,14 +48,9 @@ export class PrepareWorkspaceImplementation extends AlgorithmImplementation<Ingr
 
         // Get a butter knife from drawer
         logger.log({ level: 'info', message: 'Getting a butter knife from drawer...' });
-        const knifeResult = await storage.execute({
-          data: { location: 'drawer', item: 'butter_knives', quantity: 1, action: 'retrieve' },
-          schema: storage.inputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        });
+        const knifeResult = await storage.retrieveItem('drawer', 'butter_knives', 1);
 
-        if (knifeResult.data.success) {
+        if (knifeResult.success) {
           knifeReady = true;
           logger.log({ level: 'info', message: '✅ Got a butter knife' });
         } else {
@@ -89,9 +80,30 @@ export class PrepareWorkspaceImplementation extends AlgorithmImplementation<Ingr
         };
 
       } catch (error) {
-        logger.log({ level: 'error', message: `Failed to prepare workspace: ${error.message}` });
+        logger.log({ level: 'error', message: `Failed to prepare workspace: ${(error as Error).message}` });
         throw error;
       }
     });
   }
+}
+
+// Factory function to create the operation
+export function createPrepareWorkspaceOperation(context: Context): BasicOperation<IngredientsGathered, WorkspaceReady> {
+  return new BasicOperation(
+    'prepare-workspace',
+    'Prepare workspace for sandwich making',
+    SchemaBuilder.object({
+      bread_slices: SchemaBuilder.number(),
+      peanut_butter: SchemaBuilder.boolean(),
+      jelly: SchemaBuilder.boolean(),
+      all_available: SchemaBuilder.boolean()
+    }),
+    SchemaBuilder.object({
+      plate_ready: SchemaBuilder.boolean(),
+      knife_ready: SchemaBuilder.boolean(),
+      workspace_clean: SchemaBuilder.boolean()
+    }, ['plate_ready', 'knife_ready', 'workspace_clean']),
+    new PrepareWorkspaceImplementation(),
+    context
+  );
 }

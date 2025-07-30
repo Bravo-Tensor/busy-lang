@@ -20,7 +20,7 @@ export class BasicOperation<TInput = any, TOutput = any> implements Operation<TI
 
   async execute(input: Input<TInput>): Promise<Output<TOutput>> {
     // Delegate to context for orchestrated execution
-    return this.context.sendInput(this, input);
+    return this.context.sendInput<TOutput>(this, input as Input<any>);
   }
 
   getImplementation(): Implementation<TInput, TOutput> {
@@ -85,8 +85,8 @@ export abstract class BaseImplementation<TInput, TOutput> implements Implementat
       try {
         return await operation();
       } catch (error) {
-        lastError = error;
-        this.log(`Attempt ${attempt} failed`, { error: error.message }, resources);
+        lastError = error as Error;
+        this.log(`Attempt ${attempt} failed`, { error: (error as Error).message }, resources);
         
         if (attempt < retries) {
           await this.delay(Math.pow(2, attempt) * 1000); // Exponential backoff
@@ -97,7 +97,7 @@ export abstract class BaseImplementation<TInput, TOutput> implements Implementat
     throw lastError!;
   }
 
-  private delay(ms: number): Promise<void> {
+  protected delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

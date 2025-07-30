@@ -40,46 +40,7 @@ export class KitchenUICapability implements Capability<UIRequest, UIResult> {
 
   private uiService = new ConsoleUIService();
 
-  async execute(input: Input<UIRequest>): Promise<Output<UIResult>> {
-    const request = input.data;
-    
-    try {
-      console.log('\n🎯 Human task requested...');
-      
-      const result = await this.uiService.presentTaskAndWait({
-        id: request.taskId,
-        title: request.title,
-        viewModel: request.viewModel,
-        input: request.input,
-        timeout: request.timeout
-      });
-
-      return {
-        data: {
-          taskId: request.taskId,
-          completed: true,
-          result
-        },
-        schema: this.outputSchema,
-        validate: () => ({ isValid: true, errors: [] }),
-        serialize: function() { return JSON.stringify(this.data); }
-      };
-
-    } catch (error) {
-      return {
-        data: {
-          taskId: request.taskId,
-          completed: false,
-          error: error.message
-        },
-        schema: this.outputSchema,
-        validate: () => ({ isValid: true, errors: [] }),
-        serialize: function() { return JSON.stringify(this.data); }
-      };
-    }
-  }
-
-  // Convenience method for the implementation to use
+  // Main method for implementations to use
   async presentTaskAndWait<T>(task: {
     id: string;
     title: string;

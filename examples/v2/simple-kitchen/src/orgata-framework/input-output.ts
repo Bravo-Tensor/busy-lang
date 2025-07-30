@@ -17,7 +17,7 @@ export class DataInput<T = any> implements Input<T> {
       if (error instanceof ValidationError) {
         errors.push(error);
       } else {
-        errors.push(new ValidationError(`Validation failed: ${error.message}`));
+        errors.push(new ValidationError(`Validation failed: ${(error as Error).message}`));
       }
     }
 

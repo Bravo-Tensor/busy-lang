@@ -1,8 +1,9 @@
 // Implementation for assembling sandwich step - with human fallback
 
-import { AlgorithmImplementation, HumanImplementation } from '../orgata-framework/index.js';
-import { InjectedResources } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, HumanImplementation, BasicOperation } from '../orgata-framework/index.js';
+import { InjectedResources, Context } from '../orgata-framework/types.js';
 import { WorkspaceReady } from './prepare-workspace.js';
+import { SchemaBuilder } from '../orgata-framework/input-output.js';
 
 export interface AssembledSandwich {
   name: string;
@@ -63,15 +64,12 @@ export class AssembleSandwichAlgorithmImplementation extends AlgorithmImplementa
         };
 
       } catch (error) {
-        logger.log({ level: 'error', message: `Algorithm assembly failed: ${error.message}` });
+        logger.log({ level: 'error', message: `Algorithm assembly failed: ${(error as Error).message}` });
         throw error;
       }
     });
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }
 
 export class AssembleSandwichHumanImplementation extends HumanImplementation<WorkspaceReady, AssembledSandwich> {
@@ -130,8 +128,64 @@ export class AssembleSandwichHumanImplementation extends HumanImplementation<Wor
       };
 
     } catch (error) {
-      logger.log({ level: 'error', message: `Human assembly failed: ${error.message}` });
+      logger.log({ level: 'error', message: `Human assembly failed: ${(error as Error).message}` });
       throw error;
     }
   }
+}
+
+// OrgataOperation-like class for assembly step with fallback
+class AssembleSandwichOperation extends BasicOperation {
+  constructor(context: Context) {
+    const assemblySchema = SchemaBuilder.object({
+      name: SchemaBuilder.string(),
+      ingredients: SchemaBuilder.array(SchemaBuilder.string()),
+      assembly_quality: SchemaBuilder.string({ enum: ['excellent', 'good', 'acceptable', 'poor'] }),
+      ready_to_serve: SchemaBuilder.boolean()
+    }, ['name', 'ingredients', 'assembly_quality', 'ready_to_serve']);
+
+    // Create the wrapper implementation that handles fallback
+    const fallbackImpl = {
+      async execute(input: any, resources: any) {
+        const logger = resources.logger;
+        
+        try {
+          // Try algorithm first
+          logger.log({ level: 'info', message: 'Attempting automatic assembly...' });
+          const algorithmImpl = new AssembleSandwichAlgorithmImplementation();
+          return await algorithmImpl.execute(input, resources);
+          
+        } catch (error) {
+          // Check if this is an assembly failure that should trigger human fallback
+          if ((error as any).code === 'ASSEMBLY_FAILED' || (error as Error).message.includes('assembly failed')) {
+            logger.log({ level: 'warn', message: 'Algorithm failed, falling back to human assembly...' });
+            
+            const humanImpl = new AssembleSandwichHumanImplementation();
+            return await humanImpl.execute(input, resources);
+          } else {
+            // Other errors should be re-thrown
+            throw error;
+          }
+        }
+      }
+    };
+
+    super(
+      'assemble-sandwich',
+      'Assemble PB&J sandwich with human fallback',
+      SchemaBuilder.object({
+        plate_ready: SchemaBuilder.boolean(),
+        knife_ready: SchemaBuilder.boolean(),
+        workspace_clean: SchemaBuilder.boolean()
+      }, ['plate_ready', 'knife_ready', 'workspace_clean']),
+      assemblySchema,
+      fallbackImpl,
+      context
+    );
+  }
+}
+
+// Factory function to create the operation
+export function createAssembleSandwichOperation(context: Context): BasicOperation<WorkspaceReady, AssembledSandwich> {
+  return new AssembleSandwichOperation(context);
 }

@@ -52,66 +52,38 @@ export class KitchenStorageCapability implements Capability<StorageRequest, Stor
 
   private storage = new MockKitchenStorage();
 
-  async execute(input: Input<StorageRequest>): Promise<Output<StorageResult>> {
-    // This would normally be called by Context, but for capability we implement directly
-    const request = input.data;
-    
+  // Direct access methods for implementations to use
+  async retrieveItem(location: string, item: string, quantity: number = 1) {
     try {
-      if (request.action === 'retrieve') {
-        const item = await this.storage.retrieveItem(
-          request.location, 
-          request.item, 
-          request.quantity || 1
-        );
-        
-        if (item) {
-          return {
-            data: {
-              success: true,
-              item,
-              message: `Successfully retrieved ${request.quantity || 1} ${request.item} from ${request.location}`
-            },
-            schema: this.outputSchema,
-            validate: () => ({ isValid: true, errors: [] }),
-            serialize: function() { return JSON.stringify(this.data); }
-          };
-        } else {
-          return {
-            data: {
-              success: false,
-              message: `Could not retrieve ${request.item} from ${request.location}`
-            },
-            schema: this.outputSchema,
-            validate: () => ({ isValid: true, errors: [] }),
-            serialize: function() { return JSON.stringify(this.data); }
-          };
-        }
-      } else if (request.action === 'store') {
-        const success = await this.storage.storeItem(request.location, request.item);
-        
-        return {
-          data: {
-            success,
-            message: success 
-              ? `Successfully stored ${request.item} in ${request.location}`
-              : `Could not store ${request.item} in ${request.location}`
-          },
-          schema: this.outputSchema,
-          validate: () => ({ isValid: true, errors: [] }),
-          serialize: function() { return JSON.stringify(this.data); }
-        };
-      } else {
-        throw new Error(`Unknown action: ${request.action}`);
-      }
+      const result = await this.storage.retrieveItem(location, item, quantity);
+      return {
+        success: !!result,
+        item: result,
+        message: result 
+          ? `Successfully retrieved ${quantity} ${item} from ${location}`
+          : `Could not retrieve ${item} from ${location}`
+      };
     } catch (error) {
       return {
-        data: {
-          success: false,
-          message: `Storage operation failed: ${error.message}`
-        },
-        schema: this.outputSchema,
-        validate: () => ({ isValid: true, errors: [] }),
-        serialize: function() { return JSON.stringify(this.data); }
+        success: false,
+        message: `Storage operation failed: ${(error as Error).message}`
+      };
+    }
+  }
+
+  async storeItem(location: string, item: string) {
+    try {
+      const success = await this.storage.storeItem(location, item);
+      return {
+        success,
+        message: success 
+          ? `Successfully stored ${item} in ${location}`
+          : `Could not store ${item} in ${location}`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Storage operation failed: ${(error as Error).message}`
       };
     }
   }

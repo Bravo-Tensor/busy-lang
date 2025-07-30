@@ -1,12 +1,14 @@
 {
   "name": "simple-kitchen-example",
   "version": "1.0.0",
+  "type": "module",
   "description": "Simple kitchen example for testing Orgata framework",
   "main": "src/main.ts",
   "scripts": {
+    "build": "tsc",
     "compile": "ts-node src/compile-busy.ts",
-    "start": "ts-node src/main.ts",
-    "dev": "ts-node --watch src/main.ts",
+    "start": "node dist/main.js",
+    "dev": "ts-node --esm src/main.ts",
     "test": "jest"
   },
   "dependencies": {

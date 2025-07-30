@@ -3,7 +3,6 @@
 import {
   BasicInfrastructureServices,
   ProductionContext,
-  BasicOperation,
   SimpleProcess,
   DataInput,
   SchemaBuilder
@@ -12,67 +11,11 @@ import {
 import { KitchenStorageCapability } from './kitchen-capabilities/storage-service.js';
 import { KitchenUICapability } from './kitchen-capabilities/ui-service.js';
 
-import { GatherIngredientsImplementation, RecipeRequest } from './pbj-implementations/gather-ingredients.js';
-import { PrepareWorkspaceImplementation } from './pbj-implementations/prepare-workspace.js';
-import { 
-  AssembleSandwichAlgorithmImplementation, 
-  AssembleSandwichHumanImplementation 
-} from './pbj-implementations/assemble-sandwich.js';
-import { CleanupImplementation } from './pbj-implementations/cleanup.js';
+import { createGatherIngredientsOperation, RecipeRequest } from './pbj-implementations/gather-ingredients.js';
+import { createPrepareWorkspaceOperation } from './pbj-implementations/prepare-workspace.js';
+import { createAssembleSandwichOperation } from './pbj-implementations/assemble-sandwich.js';
+import { createCleanupOperation } from './pbj-implementations/cleanup.js';
 
-// OrgataOperation-like class for assembly step with fallback
-class AssembleSandwichOperation extends BasicOperation {
-  private algorithmOp: BasicOperation;
-  private humanOp: BasicOperation;
-
-  constructor(context: any) {
-    const assemblySchema = SchemaBuilder.object({
-      name: SchemaBuilder.string(),
-      ingredients: SchemaBuilder.array(SchemaBuilder.string()),
-      assembly_quality: SchemaBuilder.string({ enum: ['excellent', 'good', 'acceptable', 'poor'] }),
-      ready_to_serve: SchemaBuilder.boolean()
-    }, ['name', 'ingredients', 'assembly_quality', 'ready_to_serve']);
-
-    // Create the wrapper implementation that handles fallback
-    const fallbackImpl = {
-      async execute(input: any, resources: any) {
-        const logger = resources.logger;
-        
-        try {
-          // Try algorithm first
-          logger.log({ level: 'info', message: 'Attempting automatic assembly...' });
-          const algorithmImpl = new AssembleSandwichAlgorithmImplementation();
-          return await algorithmImpl.execute(input, resources);
-          
-        } catch (error) {
-          // Check if this is an assembly failure that should trigger human fallback
-          if ((error as any).code === 'ASSEMBLY_FAILED' || error.message.includes('assembly failed')) {
-            logger.log({ level: 'warn', message: 'Algorithm failed, falling back to human assembly...' });
-            
-            const humanImpl = new AssembleSandwichHumanImplementation();
-            return await humanImpl.execute(input, resources);
-          } else {
-            // Other errors should be re-thrown
-            throw error;
-          }
-        }
-      }
-    };
-
-    super(
-      'assemble-sandwich',
-      'Assemble PB&J sandwich with human fallback',
-      SchemaBuilder.object({
-        plate_ready: SchemaBuilder.boolean(),
-        knife_ready: SchemaBuilder.boolean(),
-        workspace_clean: SchemaBuilder.boolean()
-      }, ['plate_ready', 'knife_ready', 'workspace_clean']),
-      assemblySchema,
-      fallbackImpl,
-      context
-    );
-  }
-}
 
 async function main() {
   console.log('🏠 Welcome to the Simple Kitchen!');
@@ -92,61 +35,11 @@ async function main() {
     rootContext.capabilities.set('kitchen-storage', storageCapability);
     rootContext.capabilities.set('ui-service', uiCapability);
 
-    // Create operation implementations and operations
-    const gatherIngredientsOp = new BasicOperation(
-      'gather-ingredients',
-      'Gather all ingredients for PB&J sandwich',
-      SchemaBuilder.object({
-        recipe_name: SchemaBuilder.string(),
-        servings: SchemaBuilder.number({ minimum: 1 })
-      }, ['recipe_name', 'servings']),
-      SchemaBuilder.object({
-        bread_slices: SchemaBuilder.number(),
-        peanut_butter: SchemaBuilder.boolean(),
-        jelly: SchemaBuilder.boolean(),
-        all_available: SchemaBuilder.boolean()
-      }, ['bread_slices', 'peanut_butter', 'jelly', 'all_available']),
-      new GatherIngredientsImplementation(),
-      rootContext
-    );
-
-    const prepareWorkspaceOp = new BasicOperation(
-      'prepare-workspace',
-      'Prepare workspace for sandwich making',
-      SchemaBuilder.object({
-        bread_slices: SchemaBuilder.number(),
-        peanut_butter: SchemaBuilder.boolean(),
-        jelly: SchemaBuilder.boolean(),
-        all_available: SchemaBuilder.boolean()
-      }),
-      SchemaBuilder.object({
-        plate_ready: SchemaBuilder.boolean(),
-        knife_ready: SchemaBuilder.boolean(),
-        workspace_clean: SchemaBuilder.boolean()
-      }, ['plate_ready', 'knife_ready', 'workspace_clean']),
-      new PrepareWorkspaceImplementation(),
-      rootContext
-    );
-
-    const assembleSandwichOp = new AssembleSandwichOperation(rootContext);
-
-    const cleanupOp = new BasicOperation(
-      'cleanup',
-      'Clean up after making sandwich',
-      SchemaBuilder.object({
-        name: SchemaBuilder.string(),
-        ingredients: SchemaBuilder.array(SchemaBuilder.string()),
-        assembly_quality: SchemaBuilder.string({ enum: ['excellent', 'good', 'acceptable', 'poor'] }),
-        ready_to_serve: SchemaBuilder.boolean()
-      }),
-      SchemaBuilder.object({
-        tools_cleaned: SchemaBuilder.boolean(),
-        ingredients_stored: SchemaBuilder.boolean(),
-        workspace_clean: SchemaBuilder.boolean()
-      }, ['tools_cleaned', 'ingredients_stored', 'workspace_clean']),
-      new CleanupImplementation(),
-      rootContext
-    );
+    // Create operations using factory functions (co-located with implementations)
+    const gatherIngredientsOp = createGatherIngredientsOperation(rootContext);
+    const prepareWorkspaceOp = createPrepareWorkspaceOperation(rootContext);
+    const assembleSandwichOp = createAssembleSandwichOperation(rootContext);
+    const cleanupOp = createCleanupOperation(rootContext);
 
     // Create the PB&J sandwich process
     const pbjProcess = new SimpleProcess(
@@ -194,8 +87,8 @@ async function main() {
     }
 
   } catch (error) {
-    console.error('\n❌ Process failed:', error.message);
-    console.error('\nStack trace:', error.stack);
+    console.error('\n❌ Process failed:', (error as Error).message);
+    console.error('\nStack trace:', (error as Error).stack);
   }
 }
 
