@@ -1,4 +1,5 @@
 name: "cook"
+version: "2.0"
 description: "The person who prepares food in the kitchen"
 layer: "L0"
 capabilities:

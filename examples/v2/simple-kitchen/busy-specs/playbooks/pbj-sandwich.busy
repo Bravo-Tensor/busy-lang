@@ -1,4 +1,5 @@
 name: "pbj-sandwich"
+version: "2.0"
 description: "Make a peanut butter and jelly sandwich"
 role: "cook"
 cadence:

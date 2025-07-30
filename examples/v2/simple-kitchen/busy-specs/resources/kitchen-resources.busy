@@ -1,4 +1,5 @@
 name: "kitchen-resources"
+version: "2.0"
 description: "Available resources in the kitchen"
 
 storage_locations:
