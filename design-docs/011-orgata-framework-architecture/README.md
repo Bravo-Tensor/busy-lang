@@ -19,7 +19,9 @@ This design iteration defines the comprehensive framework architecture for Orgat
 
 ## Files in this Design Iteration
 
-*Files to be created as design progresses*
+- **DESIGN_CONSTRAINTS.md** - Core design requirements and definitions
+- **CORE_CLASS_DIAGRAM.md** - Complete framework class architecture and relationships
+- **SEQUENCE_DIAGRAMS.md** - Runtime execution flows and component interactions
 
 ## Next Steps
 
