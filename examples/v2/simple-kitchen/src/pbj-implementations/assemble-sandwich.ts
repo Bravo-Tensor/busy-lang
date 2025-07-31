@@ -1,9 +1,9 @@
 // Implementation for assembling sandwich step - with human fallback
 
-import { AlgorithmImplementation, HumanImplementation, BasicOperation } from '../orgata-framework/index.js';
-import { InjectedResources, Context } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, HumanImplementation, BasicOperation } from '@busy-lang/orgata-framework';
+import { InjectedResources, Context } from '@busy-lang/orgata-framework';
 import { WorkspaceReady } from './prepare-workspace.js';
-import { SchemaBuilder } from '../orgata-framework/input-output.js';
+import { SchemaBuilder } from '@busy-lang/orgata-framework';
 
 export interface AssembledSandwich {
   name: string;

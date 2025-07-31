@@ -1,7 +1,7 @@
 // UI service capability for human interactions
 
-import { Capability, Input, Output } from '../orgata-framework/index.js';
-import { SchemaBuilder } from '../orgata-framework/input-output.js';
+import { Capability, Input, Output } from '@busy-lang/orgata-framework';
+import { SchemaBuilder } from '@busy-lang/orgata-framework';
 import { ConsoleUIService, HumanTaskViewModel } from '../terminal-ui/console-ui.js';
 
 export interface UIRequest {

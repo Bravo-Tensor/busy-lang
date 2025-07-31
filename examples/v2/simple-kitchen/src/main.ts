@@ -1,7 +1,7 @@
 // Main runtime for the simple kitchen example - now uses packaged wiring with intervention support
 
 import { createProductionRuntime } from './packages/index.js';
-import { CLIInterventionInterface } from './orgata-framework/index.js';
+import { CLIInterventionInterface } from '@busy-lang/orgata-framework/intervention';
 
 async function main() {
   console.log('🏠 Welcome to the Simple Kitchen!');

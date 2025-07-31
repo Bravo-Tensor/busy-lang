@@ -1,6 +1,6 @@
 // Kitchen-specific runtime package implementations
 
-import { BaseRuntimePackage, ResourcePackage, ContextPackage, BusinessPackage } from '../orgata-framework/packages/index.js';
+import { BaseRuntimePackage, ResourcePackage, ContextPackage, BusinessPackage } from '@busy-lang/orgata-framework/packages';
 import { createKitchenResourcePackage } from './resource-package.js';
 import { createProductionContextPackage, createTestContextPackage } from './context-package.js';
 import { createKitchenBusinessPackage } from './business-package.js';

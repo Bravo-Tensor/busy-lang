@@ -1,8 +1,8 @@
 // Kitchen storage capability implementation
 
-import { Capability, Input, Output } from '../orgata-framework/index.js';
+import { Capability, Input, Output } from '@busy-lang/orgata-framework';
 import { MockKitchenStorage } from '../mock-services/kitchen-storage.js';
-import { SchemaBuilder } from '../orgata-framework/input-output.js';
+import { SchemaBuilder } from '@busy-lang/orgata-framework';
 
 export interface StorageRequest {
   location: string;

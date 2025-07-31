@@ -250,7 +250,7 @@ export class SimpleProcess<TInput = any, TOutput = any> extends OperationSet<TIn
     this.orchestrator = new OperationOrchestrator(this.interventionManager);
   }
 
-  async execute(input: Input<TInput>): Promise<Output<TOutput>> {
+  override async execute(input: Input<TInput>): Promise<Output<TOutput>> {
     let currentInput: Input<any> = input;
     let currentIndex = 0;
 

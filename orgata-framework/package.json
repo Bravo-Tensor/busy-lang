@@ -1,0 +1,64 @@
+{
+  "name": "@busy-lang/orgata-framework",
+  "version": "0.1.0",
+  "description": "Business process execution framework for the BUSY Language ecosystem",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./intervention": {
+      "types": "./dist/intervention/index.d.ts",
+      "import": "./dist/intervention/index.js"
+    },
+    "./packages": {
+      "types": "./dist/packages/index.d.ts",
+      "import": "./dist/packages/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"Tests will be added in future versions\" && exit 0"
+  },
+  "keywords": [
+    "business-process",
+    "workflow",
+    "automation",
+    "busy-lang",
+    "orgata",
+    "framework",
+    "human-in-the-loop"
+  ],
+  "author": "BUSY Language Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/busy-lang/busy-lang.git",
+    "directory": "orgata-framework"
+  },
+  "bugs": {
+    "url": "https://github.com/busy-lang/busy-lang/issues"
+  },
+  "homepage": "https://github.com/busy-lang/busy-lang/tree/main/orgata-framework#readme",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

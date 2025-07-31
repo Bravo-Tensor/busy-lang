@@ -1,6 +1,6 @@
 // Kitchen-specific context package implementations
 
-import { BaseContextPackage, ResourcePackage } from '../orgata-framework/packages/index.js';
+import { BaseContextPackage, ResourcePackage } from '@busy-lang/orgata-framework/packages';
 
 export class ProductionContextPackage extends BaseContextPackage {
   public readonly metadata = {

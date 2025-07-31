@@ -180,6 +180,7 @@ export class CLIInterventionInterface implements InterventionInterface {
         
         if (editChoice.trim() === '1') break;
         // Fall through for choice 3
+        // eslint-disable-next-line no-fallthrough
         
       case '2':
         console.log('\n⚠️  Context editing is limited in this version');

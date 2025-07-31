@@ -1,7 +1,7 @@
 // Kitchen-specific package exports - clean entry points for different runtime configurations
 
 // Re-export framework types for convenience
-export type { ResourcePackage, ContextPackage, BusinessPackage, RuntimePackage } from '../orgata-framework/packages/index.js';
+export type { ResourcePackage, ContextPackage, BusinessPackage, RuntimePackage } from '@busy-lang/orgata-framework/packages';
 
 export {
   KitchenResourcePackage,

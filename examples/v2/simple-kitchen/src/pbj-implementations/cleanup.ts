@@ -1,10 +1,10 @@
 // Implementation for cleanup step
 
-import { AlgorithmImplementation, BasicOperation } from '../orgata-framework/index.js';
-import { InjectedResources, Context } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, BasicOperation } from '@busy-lang/orgata-framework';
+import { InjectedResources, Context } from '@busy-lang/orgata-framework';
 import { KitchenStorageCapability } from '../kitchen-capabilities/storage-service.js';
 import { AssembledSandwich } from './assemble-sandwich.js';
-import { SchemaBuilder } from '../orgata-framework/input-output.js';
+import { SchemaBuilder } from '@busy-lang/orgata-framework';
 
 export interface KitchenClean {
   tools_cleaned: boolean;

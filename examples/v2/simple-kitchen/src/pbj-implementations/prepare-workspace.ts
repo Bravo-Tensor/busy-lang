@@ -1,10 +1,10 @@
 // Implementation for preparing workspace step
 
-import { AlgorithmImplementation, BasicOperation } from '../orgata-framework/index.js';
-import { InjectedResources, Context } from '../orgata-framework/types.js';
+import { AlgorithmImplementation, BasicOperation } from '@busy-lang/orgata-framework';
+import { InjectedResources, Context } from '@busy-lang/orgata-framework';
 import { KitchenStorageCapability } from '../kitchen-capabilities/storage-service.js';
 import { IngredientsGathered } from './gather-ingredients.js';
-import { SchemaBuilder } from '../orgata-framework/input-output.js';
+import { SchemaBuilder } from '@busy-lang/orgata-framework';
 
 export interface WorkspaceReady {
   plate_ready: boolean;

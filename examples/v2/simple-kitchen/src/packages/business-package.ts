@@ -1,7 +1,7 @@
 // Kitchen-specific business package implementation
 
-import { BaseBusinessPackage, ContextPackage } from '../orgata-framework/packages/index.js';
-import { SimpleProcess, DataInput, SchemaBuilder } from '../orgata-framework/index.js';
+import { BaseBusinessPackage, ContextPackage } from '@busy-lang/orgata-framework/packages';
+import { SimpleProcess, DataInput, SchemaBuilder } from '@busy-lang/orgata-framework';
 import { createGatherIngredientsOperation, RecipeRequest } from '../pbj-implementations/gather-ingredients.js';
 import { createPrepareWorkspaceOperation } from '../pbj-implementations/prepare-workspace.js';
 import { createAssembleSandwichOperation } from '../pbj-implementations/assemble-sandwich.js';

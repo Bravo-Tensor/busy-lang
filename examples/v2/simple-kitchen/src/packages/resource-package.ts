@@ -1,6 +1,6 @@
 // Kitchen-specific resource package implementation
 
-import { BaseResourcePackage } from '../orgata-framework/packages/index.js';
+import { BaseResourcePackage } from '@busy-lang/orgata-framework/packages';
 import { KitchenStorageCapability } from '../kitchen-capabilities/storage-service.js';
 import { KitchenUICapability } from '../kitchen-capabilities/ui-service.js';
 
