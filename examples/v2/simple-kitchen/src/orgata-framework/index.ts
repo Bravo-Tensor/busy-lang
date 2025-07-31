@@ -17,3 +17,6 @@ export * from './operation.js';
 
 // Packaging constructs for dependency injection
 export * from './packages/index.js';
+
+// Intervention system for human-in-the-loop automation
+export * from './intervention/index.js';

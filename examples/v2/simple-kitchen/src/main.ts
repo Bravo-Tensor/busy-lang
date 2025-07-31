@@ -1,14 +1,22 @@
-// Main runtime for the simple kitchen example - now uses packaged wiring
+// Main runtime for the simple kitchen example - now uses packaged wiring with intervention support
 
 import { createProductionRuntime } from './packages/index.js';
+import { CLIInterventionInterface } from './orgata-framework/index.js';
 
 async function main() {
   console.log('🏠 Welcome to the Simple Kitchen!');
   console.log('🥪 Today we\'re making a Peanut Butter and Jelly Sandwich\n');
 
+  let runtime: any;
+  
   try {
     // Create the fully wired runtime package
-    const runtime = createProductionRuntime();
+    runtime = createProductionRuntime();
+    
+    // Set up CLI intervention interface
+    runtime.context.infrastructure.interventionManager.setInterface(
+      new CLIInterventionInterface()
+    );
     
     console.log(`📦 Using: ${runtime.metadata.name} v${runtime.metadata.version}`);
     console.log(`🌍 Environment: ${runtime.metadata.environment}`);
@@ -33,6 +41,14 @@ async function main() {
   } catch (error) {
     console.error('\n❌ Process failed:', (error as Error).message);
     console.error('\nStack trace:', (error as Error).stack);
+  } finally {
+    // Clean up intervention interface
+    if (runtime?.context?.infrastructure?.interventionManager) {
+      const currentInterface = runtime.context.infrastructure.interventionManager['interventionInterface'];
+      if (currentInterface?.cleanup) {
+        currentInterface.cleanup();
+      }
+    }
   }
 }
 

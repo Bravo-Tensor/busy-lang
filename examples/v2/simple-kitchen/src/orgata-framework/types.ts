@@ -112,6 +112,7 @@ export interface InfrastructureServices {
   readonly persistence: PersistenceService;
   readonly messaging: MessagingService;
   readonly resourceInjector: ResourceInjector;
+  readonly interventionManager: import('./intervention/intervention-manager.js').InterventionManager;
 }
 
 export interface AuthorizationService {

@@ -6,6 +6,7 @@ import {
   InfrastructureServices, InjectedResources, OperationConfig,
   Message, Context, Operation, generateId
 } from './types.js';
+import { InterventionManager } from './intervention/intervention-manager.js';
 
 export class ConsoleLogger implements Logger {
   constructor(private readonly prefix?: string) {}
@@ -122,6 +123,7 @@ export class BasicInfrastructureServices implements InfrastructureServices {
   public readonly persistence: PersistenceService;
   public readonly messaging: MessagingService;
   public readonly resourceInjector: ResourceInjector;
+  public readonly interventionManager: InterventionManager;
 
   constructor() {
     this.logger = new ConsoleLogger();
@@ -129,6 +131,7 @@ export class BasicInfrastructureServices implements InfrastructureServices {
     this.persistence = new InMemoryPersistenceService();
     this.messaging = new SimpleMessagingService();
     this.resourceInjector = new BasicResourceInjector();
+    this.interventionManager = InterventionManager.getInstance();
   }
 }
 

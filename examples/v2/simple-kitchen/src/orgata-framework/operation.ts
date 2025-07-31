@@ -4,6 +4,7 @@ import {
   Operation, Implementation, Capability, Input, Output, Context,
   InjectedResources, JsonSchema, generateId
 } from './types.js';
+import { OperationOrchestrator } from './intervention/operation-orchestrator.js';
 
 export class BasicOperation<TInput = any, TOutput = any> implements Operation<TInput, TOutput> {
   constructor(
@@ -226,8 +227,11 @@ export interface OperationSetMetadata {
   sharedContextId: string;
 }
 
-// Simple process that extends OperationSet with sequential execution
+// Simple process that extends OperationSet with sequential execution and intervention support
 export class SimpleProcess<TInput = any, TOutput = any> extends OperationSet<TInput, TOutput> {
+  private interventionManager = this.sharedContext.infrastructure.interventionManager;
+  private orchestrator: OperationOrchestrator;
+
   constructor(
     name: string,
     description: string,
@@ -238,10 +242,60 @@ export class SimpleProcess<TInput = any, TOutput = any> extends OperationSet<TIn
     parentContext: Context
   ) {
     super(name, description, inputSchema, outputSchema, operations, parentContext);
+    
+    // Reset intervention manager for this process execution
+    this.interventionManager.reset();
+    
+    // Create orchestrator for intervention-aware execution
+    this.orchestrator = new OperationOrchestrator(this.interventionManager);
   }
 
   async execute(input: Input<TInput>): Promise<Output<TOutput>> {
-    // Execute operations in the specified sequence
-    return this.executeInSequence(this.stepNames, input) as Promise<Output<TOutput>>;
+    let currentInput: Input<any> = input;
+    let currentIndex = 0;
+
+    // Create execution context for orchestrator
+    const executionContext = {
+      operationSet: new Map(Array.from(this.operations.entries())),
+      operationNames: this.stepNames,
+      sharedContext: this.sharedContext,
+      processName: this.name
+    };
+
+    while (currentIndex < this.stepNames.length) {
+      const stepName = this.stepNames[currentIndex];
+      const operation = this.getOperation(stepName);
+      
+      if (!operation) {
+        throw new Error(`Operation '${stepName}' not found in process '${this.name}'`);
+      }
+
+      // Execute operation with intervention support through orchestrator
+      const result = await this.orchestrator.executeOperationWithIntervention(
+        operation,
+        currentInput,
+        currentIndex,
+        stepName,
+        this.sharedContext,
+        executionContext
+      );
+
+      // Update current input with operation output
+      currentInput = result.output;
+
+      // Handle orchestrator result
+      if (!result.shouldContinue) {
+        return currentInput as Output<TOutput>;
+      }
+
+      // Handle operation jumping
+      if (result.nextOperation && result.nextOperationIndex !== undefined) {
+        currentIndex = result.nextOperationIndex;
+      } else {
+        currentIndex++;
+      }
+    }
+
+    return currentInput as Output<TOutput>;
   }
 }
