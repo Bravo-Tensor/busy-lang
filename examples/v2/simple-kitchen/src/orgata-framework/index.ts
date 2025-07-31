@@ -14,3 +14,6 @@ export * from './context.js';
 
 // Operation and Implementation classes
 export * from './operation.js';
+
+// Packaging constructs for dependency injection
+export * from './packages/index.js';
