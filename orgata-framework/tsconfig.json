@@ -21,7 +21,8 @@
     "exactOptionalPropertyTypes": false,
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
-    "allowUnreachableCode": false
+    "allowUnreachableCode": false,
+    "types": ["jest", "node"]
   },
   "include": [
     "**/*.ts"

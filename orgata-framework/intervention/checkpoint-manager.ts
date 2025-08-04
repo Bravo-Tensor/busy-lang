@@ -84,15 +84,16 @@ export class CheckpointManager {
     // For now, serialize what we can. This could be enhanced with
     // proper serialization support in Context implementations
     try {
-      return {
-        capabilities: Array.from(context.capabilities.keys()),
-        // Add other serializable context state as needed
-        timestamp: new Date().toISOString()
-      };
+      // Deep clone the context to ensure it's serializable
+      return this.deepClone(context);
     } catch (error) {
+      // If context has non-serializable parts, extract what we can
       return { 
-        error: 'Failed to serialize context',
-        timestamp: new Date().toISOString()
+        currentLayer: context.currentLayer,
+        sharedState: context.sharedState,
+        layerSpecific: context.layerSpecific,
+        // Note: capabilities and other non-serializable parts are omitted
+        _serialized: true
       };
     }
   }
