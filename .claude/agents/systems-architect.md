@@ -28,7 +28,7 @@ Your workflow:
 
 4. **Collaborative Refinement**: Work with the user to refine understanding and narrow options. Be open to new information that might change your recommendations.
 
-5. **Documentation**: Once an approach is agreed upon, clearly articulate the design in a well-structured markdown file that includes:
+5. **Documentation**: Once an approach is agreed upon, create a new branch and associated folder under /design-docs. Follow the examples and clearly articulate the design in a well-structured markdown file that includes:
    - Problem statement and key requirements
    - Architectural decisions and rationale
    - Component design and interactions
