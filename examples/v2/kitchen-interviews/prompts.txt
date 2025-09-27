@@ -1,0 +1,46 @@
+I want you to review the @examples/v2/kitchen-interviews/expert-home-chef-interview.md and systematically create a 
+  Definitions document. It should be YAML document. In the first pass, pull out all of the "things", all the tangible resources
+   needed to complete these recipies. They should be things like ingredients, tools, the intermediate elements and the outputs.
+   Ask yourself how they are defined in this context, what makes them distinct and similar, how are they related. We want to 
+  create hierarchy for each item, where a parent type creates a layer of abstraction for each, so that as we go further down 
+  the tree we can say "x is a specific type of y" or "x is a type of y but is distinguished in that is characterized by z." In 
+  some cases you'll need to infer what is needed in order to complet the "scene". For example "2 lbs of mixed meat" infers 
+  you'll need a bowl or some type of container and a scale. Make reasonable assumptions on you would expect to find in the 
+  context of item, in this case usually the kitchen. Finally, where appropriate, note the "interface" the item is presenting in
+   the context, what capability is it providing?
+
+I want you to review the @examples/v2/kitchen-interviews/expert-home-chef-interview.md and systematically create a 
+  processs document. It should be YAML document. In the first pass, pull out all of the steps, all the atomic 
+  actions/transformations. What needs to be in place to begin the action, what is changed/added/removed at the end? 
+  Does it have a substep, what inputs and outputs does it require? Is it a part of larger transformation/action, what are its 
+  inputs and outputs? In some cases you'll need to infer what is needed in order to complet the "scene". For example "2 lbs of mixed meat" infers 
+  you'll need a bowl or some type of container and a scale and that you'll need to take an action to weigh it out. 
+  Make reasonable assumptions on you would expect to find in the context of step, in this case usually the kitchen. 
+  You may only use the following grammar:
+  <step_name>:
+    description:
+    prerequisites:
+        - <name> 
+          characteristics: #only note characteristics if it's required to complete the step. A budget of time or a required skill are sneaky prerequisites.
+            - <key>: <value> #any characteristics that differentiate this resource any other resource of this name/type. May only be a key.
+    inputs: #anything that will be provided at the beginning of the step
+        - <name> 
+          characteristics:
+            - <key>: <value> #any characteristics that differentiate this resource any other resource of this name/type. 
+    outputs: #anything that will be provided at the end of the step, including how it has changed. Be verbose, if something is not there that was at the beginning it's assumed consumed.
+        - <name> 
+          characteristics:
+            - <key>: <value> #any characteristics that differentiate this resource any other resource of this name/type or further specify it
+    notes: | #any additional context or information worth noting that is not captured in the above.
+    steps: #if necessary
+        - <substep_name> #follow format above.
+ Some notes on approach:
+ * Don't repeat items across prerequisites and inputs. If it's in the input, it doesn't need to be in the prerequisite and vice versa. 
+ * Don't infer inputs or prerequisites that are not critical or extremely important to the success. Having the skill of recognizing fragrant aroma is not critical for example.
+ * If noting a particular descriptive state change in characteristics, consider what characteristic is contributing to that change in state. 
+    Do not include abstract states (e.g. "ready_for_pasta"). If has had a discernable and meaningful change in state, just set the key (.e.g "-labeled").
+ * If an input or prerequisite is altered in the process (e.g. dirtied), then note it in the output as a state change. If something that was noted at the begining is NOT in the output, 
+    it's assumed it was consumed, combined, or destroyed. 
+ * Resources of time should be disambiguated between effort, duration, attention if meaningfully different (e.g. baking may require duration of an hour but no meaningful effort 
+    aside from checking every 5m (attention) in the last 15m).
+             
