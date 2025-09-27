@@ -184,7 +184,3 @@ This means entrepreneurs can:
 - Access expertise they can't afford to hire full-time
 - Focus on their craft while processes handle the complexity
 - Scale without drowning in administrative overhead
-
----
-
-*Want to see it in action? Check out our [live examples](../examples/) or [watch a demo video](#).*
