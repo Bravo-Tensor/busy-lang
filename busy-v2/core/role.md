@@ -1,5 +1,6 @@
 ---
 Name: Role
+Type: [Document]
 Description: A specialized [Document] that defines a persona for the LLM to adopt, including its traits, principles, and a specific skillset with corresponding [Operation]s.
 ---
 

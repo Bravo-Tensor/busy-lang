@@ -1,5 +1,6 @@
 ---
 Name: WorkspaceContext
+Type: [Document]
 Description: A foundational [Document] that configures and guides agent execution within a workspace. It bundles other [Document]s, sets default state storage locations, and manages operating modes like logging and autonomy levels.
 ---
 

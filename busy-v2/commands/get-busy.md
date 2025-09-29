@@ -1,5 +1,6 @@
 ---
 Name: /get-busy
+Type: Command
 Description: The main entry point command for the BUSY framework. It loads the default workspace and role, then executes a given prompt.
 ---
 

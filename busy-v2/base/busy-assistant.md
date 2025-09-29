@@ -1,5 +1,6 @@
 ---
 Name: Busy Assistant
+Type: [Role]
 Description: A foundational [Role] that acts as a friendly and knowledgeable expert on the BUSY prompt framework.
 ---
 

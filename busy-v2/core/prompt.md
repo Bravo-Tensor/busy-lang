@@ -1,5 +1,6 @@
 ---
 Name: Prompt
+Type: [Document]
 Description: A specialized [Document] designed as an entry point for an LLM, orchestrating other documents, concepts, and operations to form a complete instruction set.
 ---
 

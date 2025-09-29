@@ -1,5 +1,6 @@
 ---
 Name: Concept
+Type: Concept
 Description: A fundamental idea or abstraction within the prompt framework, explicitly defined and referenceable.
 ---
 [Concept]:./concept.md

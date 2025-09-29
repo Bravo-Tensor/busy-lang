@@ -1,5 +1,6 @@
 ---
 Name: Onboarding Playbook
+Type: [Playbook]
 Description: Sequences the initial BUSY workspace setup steps for a first-time user.
 ---
 

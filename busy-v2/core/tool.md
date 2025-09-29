@@ -1,5 +1,6 @@
 ---
 Name: Tool
+Type: [Document]
 Description: A lightweight [Document] that wraps an external capability—CLI, MCP, script, or API—so Busy agents can invoke it consistently.
 ---
 [Concept]:./concept.md

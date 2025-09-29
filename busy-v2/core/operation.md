@@ -1,5 +1,6 @@
 ---
 Name: Operation
+Type: Operation
 Description: A defined unit of work, task, or series of steps to be executed by an LLM.
 ---
 [Concept]:./concept.md

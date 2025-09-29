@@ -1,5 +1,6 @@
 ---
 Name: Playbook
+Type: [Document]
 Description: A structured [Document] that sequences [Operation]s (and other callable concepts) with optional branching, role switching, and reusable local steps.
 ---
 [Concept]:./concept.md

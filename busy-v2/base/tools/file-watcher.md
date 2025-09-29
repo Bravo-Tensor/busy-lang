@@ -1,5 +1,6 @@
 ---
 Name: File Watcher Tool
+Type: [Tool]
 Description: Watches an inbox directory and invokes a command whenever files are added or updated.
 ---
 [Tool]:../../core/tool.md

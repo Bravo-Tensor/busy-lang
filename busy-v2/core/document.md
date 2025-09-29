@@ -1,5 +1,6 @@
 ---
 Name: Document
+Type: Document
 Description: The most atomic and fundamental structural unit of the prompt framework, encapsulating concepts, setup, and operations.
 ---
 [Concept]:./concept.md
@@ -13,7 +14,7 @@ A [Document] serves as the primary container for organizing prompts, similar to 
 
 # Local Defintions
 ## Frontmatter
-Delimited by `---`, containing metadata such as `Name` and `Description`.
+Delimited by `---`, containing metadata such as `Name`, `Type`, and `Description`. `Type` identifies the document's specialization (e.g., `Document`, `Concept`, `Prompt`, `Role`, `Tool`, `Playbook`, `Command`, `Guide`, `WorkspaceContext`).
 ## Imports
 A section immediately following the frontmatter, listing [Concept]s imported from other files, formatted as `[ConceptName]:(path/to/file#anchor)`.
 ## Local Defintions Section
