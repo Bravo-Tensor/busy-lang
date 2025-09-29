@@ -1,0 +1,27 @@
+{
+  "name": "busy-lang",
+  "version": "0.2.1",
+  "description": "Busy language tools and docs, including onboarding helpers and CLIs.",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bravo-Tensor/busy-lang.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Bravo-Tensor/busy-lang/issues"
+  },
+  "homepage": "https://github.com/Bravo-Tensor/busy-lang#readme",
+  "bin": {
+    "busy-watch": "base/tools/file-watcher.js",
+    "busy-gemini": "base/tools/busy-gemini.js"
+  },
+  "files": [
+    "base/",
+    "core/",
+    "commands/",
+    "GEMINI.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  }
+}

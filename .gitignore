@@ -41,6 +41,7 @@ compiler/src/runtime/*.js.map
 
 # Test files
 compiler/test-*.js
+**/.tmp
 
 # Documentation build artifacts
 compiler/REINSTALL_EXTENSION.md
