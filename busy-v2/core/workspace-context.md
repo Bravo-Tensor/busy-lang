@@ -8,6 +8,7 @@ Description: A foundational [Document] that configures and guides agent executio
 [Operation]:./operation.md
 [Prompt]:./prompt.md
 [Role]:./role.md
+[Tool]:./tool.md
 
 # Local Definitions
 
@@ -73,7 +74,7 @@ Read in all exisiting state and configuration. If it is not found, stop and thro
 - **Input:** None
 - **Steps:**
     1.  Read the [Bundled Documents] list from the workspace state.
-    2.  For each [Document], display its `Name`, type (e.g., `Role`, `Prompt`), and a summary of its `Description` and `Operations`.
+    2.  For each [Document], display its `Name`, type (e.g., `Role`, `Prompt`, `Tool`), and a summary of its `Description` and `Operations`.
 
 ## DisplayCurrentSettings
 - **Input:** None

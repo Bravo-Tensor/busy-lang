@@ -5,9 +5,10 @@ Description: The most atomic and fundamental structural unit of the prompt frame
 [Concept]:./concept.md
 [Document]:./document.md
 [Operation]:./operation.md
+[Tool]:./tool.md
 
 # Setup
-A [Document] serves as the primary container for organizing prompts, similar to a class in programming. Every framework concept, including other [Document]s, [Concept]s, and [Operation]s, is defined and managed within the scope of a [Document]. Always [read the entire document](./document.md#evaluatedocument) before executing any [Operations].
+A [Document] serves as the primary container for organizing prompts, similar to a class in programming. Every framework concept, including other [Document]s, [Concept]s, [Operation]s, and [Tool]s, is defined and managed within the scope of a [Document]. Always [read the entire document](./document.md#evaluatedocument) before executing any [Operations].
 
 # Local Defintions
 ## Frontmatter

@@ -9,7 +9,7 @@ Description: The main entry point command for the BUSY framework. It loads the d
 [Prompt]:../core/prompt.md
 [Role]:../core/role.md
 [WorkspaceContext]:../core/workspace-context.md
-[HelpfulAssistant]:../base/helpful-assistant.md
+[BusyAssistant]:../base/busy-assistant.md
 
 # Local Definitions
 
@@ -18,7 +18,7 @@ The user-provided prompt to be executed.
 
 # Setup
 1.  Initialize the [WorkspaceContext] by executing its `InitializeWorkspace` [Operation].
-2.  Adopt the [HelpfulAssistant] [Role] by executing its `ExecuteRole` [Operation].
+2.  Adopt the [BusyAssistant] [Role] by executing its `ExecuteRole` [Operation].
 
 # Operations
 
