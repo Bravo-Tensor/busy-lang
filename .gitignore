@@ -45,3 +45,5 @@ compiler/test-*.js
 
 # Documentation build artifacts
 compiler/REINSTALL_EXTENSION.md
+
+workspace-test/** 
