@@ -24,7 +24,7 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
     1. Export `WORKSPACE_ROOT` to the desired absolute path (e.g., `export WORKSPACE_ROOT="$(pwd)/agents/basic-workspace"`).
     2. Create the destination parent directory if necessary: `mkdir -p "$(dirname "$WORKSPACE_ROOT")"`.
     3. Copy the template: `cp -R base/templates/basic-workspace "$WORKSPACE_ROOT"` (this writes the inbox/outbox folders, `.gitkeep` markers, `instructions.md`, and `instructions.test.md`).
-    4. Create a `bin/` directory alongside the copy if it is not already present: `mkdir -p "$WORKSPACE_ROOT/bin"`.
+    4. Update all links in the workspace BUSY docs to link to the workspace BUSY folder (.e.g `$WORKSPACE_ROOT/.busy/`).
 
 ## _ReviewTemplateInstructions
 - **Purpose:** Tailor the BUSY-formatted instructions that ship with the template to your specific domain.
