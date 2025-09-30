@@ -1,0 +1,23 @@
+{
+  "name": "busy",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Bravo-Tensor/busy-lang#readme",
+  "bugs": {
+    "url": "https://github.com/Bravo-Tensor/busy-lang/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bravo-Tensor/busy-lang.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

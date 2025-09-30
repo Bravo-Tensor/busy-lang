@@ -47,3 +47,4 @@ compiler/test-*.js
 compiler/REINSTALL_EXTENSION.md
 
 workspace-test/** 
+**/.busy/**
