@@ -23,8 +23,9 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
 - **Steps:**
     1. Export `WORKSPACE_ROOT` to the desired absolute path (e.g., `export WORKSPACE_ROOT="$(pwd)/agents/basic-workspace"`).
     2. Create the destination parent directory if necessary: `mkdir -p "$(dirname "$WORKSPACE_ROOT")"`.
-    3. Copy the template: `cp -R base/templates/basic-workspace "$WORKSPACE_ROOT"` (this writes the inbox/outbox folders, `.gitkeep` markers, `instructions.md`, and `instructions.test.md`).
-    4. Update all links in the workspace BUSY docs to link to the workspace BUSY folder (.e.g `$WORKSPACE_ROOT/.busy/`).
+    3. Copy the template: `cp -R base/templates/basic-workspace "$WORKSPACE_ROOT"` (this writes the inbox/outbox folders, `.gitkeep` markers, `.trace/`, `instructions.md`, and `instructions.test.md`).
+    4. Confirm that `$WORKSPACE_ROOT/.trace/` exists and retains its `.gitkeep` placeholder so the directory is tracked across commits.
+    5. Update all links in the workspace BUSY docs to link to the workspace BUSY folder (e.g., `$WORKSPACE_ROOT/.busy/`).
 
 ## _ReviewTemplateInstructions
 - **Purpose:** Tailor the BUSY-formatted instructions that ship with the template to your specific domain.
@@ -56,3 +57,10 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
 
 ## ListPlaybookSteps
 Execute [ListPlaybookSteps] after [EvaluateDocument] to enumerate Steps 1–3.
+
+### Checklist
+- Confirm `$WORKSPACE_ROOT` contains the copied template workspace with inbox/outbox directories, `.busy/` assets, `.trace/`, and updated links.
+- Confirm `$WORKSPACE_ROOT/instructions.md` reflects any project-specific guidance or note that none was required.
+- Confirm `$WORKSPACE_ROOT/instructions.test.md` was executed and report the observed results to the user.
+- Confirm `.trace/trace.log` is ready for use (create the file if this is the initial run).
+

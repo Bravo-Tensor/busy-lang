@@ -11,6 +11,7 @@ Description: A foundational [Document] that configures and guides agent executio
 [Role]:./role.md
 [Tool]:./tool.md
 [Playbook]:./playbook.md
+[Trace Directory]:./workspace-context.md#trace-directory
 
 # Local Definitions
 
@@ -20,7 +21,7 @@ Description: A foundational [Document] that configures and guides agent executio
 ### Log Level
 Controls the verbosity of the agent's logging.
 - **verbose**: Detailed logging of all actions and thoughts.
-- **informational**: Standard logging of important actions.
+- **informational**: Standard logging of important actions, e.g. all entries and exits to [Operation]s.
 - **warning**: Logs only warnings and errors.
 - **error**: Logs only errors.
 
@@ -45,11 +46,16 @@ The default location and method for storing agent state. Any state that needs to
 ### Configuration Storage
 The default location and method for storing this any other configuration.
 
+[Trace Directory]:./workspace-context.md#trace-directory
+### Trace Directory
+The folder path where execution trace logs are written. Default to `.trace` at the workspace root so every agent run has a consistent location to append trace files. Create the directory if it does not exist before writing logs.
+
 # Setup
 Read in all exisiting state and configuration. If it is not found, stop and throw an [error](./operation.md#error) asking the user to run the `InitalizeWorkspace` [Operation]. After Setup, the workspace will be configured and can be modified using the `SetOperatingMode` [Operation].
 
 - **[State Storage]**: `GEMINI.md`
 - **[Configuration Storage]**: `GEMINI.md`
+- **[Trace Directory]**: `.trace`
 - **[Log Level]**: `informational`
 - **[Autonomy Level]**: `assisted`
 - **[Bundled Documents]**: `ALL`
@@ -61,8 +67,9 @@ Read in all exisiting state and configuration. If it is not found, stop and thro
 - **Input:** None
 - **Steps:**
     1.  Apply the default settings from the `Setup` section.
-    2.  Save everything to [Configuration Storage]
-    2.  Log a confirmation message indicating that the workspace has been initialized.
+    2.  Ensure the [Trace Directory] exists (create it if necessary) so trace logs have a stable location.
+    3.  Save everything to [Configuration Storage].
+    4.  Log a confirmation message indicating that the workspace has been initialized, including the resolved [Trace Directory] path.
 
 [SetOperatingMode]:./workspace-context.md#setoperatingmode
 ## SetOperatingMode
@@ -70,7 +77,7 @@ Read in all exisiting state and configuration. If it is not found, stop and thro
 - **Steps:**
     1.  Validate that the provided operating mode and value are valid.
     2.  Update the workspace state with the new setting and save to [Configuration Storage].
-    3.  Log a confirmation message indicating the change.
+    3.  Log a confirmation message indicating the change and note the current [Trace Directory] so developers can locate the trace output.
 
 ## ListAllDocuments
 - **Input:** None
@@ -81,5 +88,5 @@ Read in all exisiting state and configuration. If it is not found, stop and thro
 ## DisplayCurrentSettings
 - **Input:** None
 - **Steps:**
-    1.  Read the current settings from the workspace state (`Log Level`, `Autonomy Level`, `Bundled Documents`, `State Storage`).
+    1.  Read the current settings from the workspace state (`Log Level`, `Autonomy Level`, `Bundled Documents`, `State Storage`, `Trace Directory`).
     2.  Display the current settings to the user in a clear and readable format.

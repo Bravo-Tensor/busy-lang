@@ -9,6 +9,8 @@ Description: A structured [Document] that sequences [Operation]s (and other call
 [Prompt]:./prompt.md
 [Role]:./role.md
 [Tool]:./tool.md
+[Checklist]:./checklist.md
+[RunChecklist]:./checklist.md#runchecklist
 [Playbook]:./playbook.md
 [Sequence Step]:./playbook.md#sequence-step
 [Condition]:./playbook.md#condition
@@ -18,7 +20,7 @@ Description: A structured [Document] that sequences [Operation]s (and other call
 [ListPlaybookSteps]:./playbook.md#listplaybooksteps
 
 # Setup
-A [Playbook] extends the base [Document] pattern to describe a controlled flow of work. It arranges steps that may invoke other [Operation]s, [Prompt]s, [Document]s, or [Tool]s, optionally under a specified [Role Context]. Each step can be guarded by a lightweight [Condition] so that execution can branch or short-circuit. Treat the [Playbook] as an orchestrator: it does not embed heavy logic, but it clearly references the callable concepts to execute. When you encounter a [Playbook], always [EvaluateDocument](./document.md#evaluatedocument) first so that imports, setup state, and local definitions are loaded into context.
+A [Playbook] extends the base [Document] pattern to describe a controlled flow of work. It arranges steps that may invoke other [Operation]s, [Prompt]s, [Document]s, or [Tool]s, optionally under a specified [Role Context]. Each step can be guarded by a lightweight [Condition] so that execution can branch or short-circuit. Treat the [Playbook] as an orchestrator: it does not embed heavy logic, but it clearly references the callable concepts to execute. When you encounter a [Playbook], always [EvaluateDocument](./document.md#evaluatedocument) first so that imports, setup state, and local definitions are loaded into context. If the [Playbook] ends with a `### Checklist` section, treat it as a required post-run verification and execute the [Checklist].
 
 # Local Definitions
 ## Sequence Step
@@ -46,7 +48,8 @@ When instructed to run a [Playbook], do the following:
    - If a [Role Context] is defined, invoke `ExecuteRole` for that role, run the callable, then restore the previous role/state.
    - Capture outputs or state updates as directed by the step definition.
 4. **Handle Failures:** If any step cannot be resolved or produces an error, stop execution and return an [error](./operation.md#error) that includes the step name and details.
-5. **Summarize Results:** After all steps succeed, provide a concise summary of actions performed and outputs produced.
+5. **Run Checklist:** After the main sequence completes, execute [RunChecklist] if the [Playbook] defines one so every verification item is confirmed.
+6. **Summarize Results:** After all steps succeed, provide a concise summary of actions performed and outputs produced.
 
 ## ListPlaybookSteps
 Enumerate the discrete [Sequence Step]s in this [Playbook].

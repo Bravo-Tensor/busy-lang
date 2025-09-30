@@ -6,6 +6,7 @@ Description: The most atomic and fundamental structural unit of the prompt frame
 [Concept]:./concept.md
 [Document]:./document.md
 [Operation]:./operation.md
+[Checklist]:./checklist.md
 [Tool]:./tool.md
 [Playbook]:./playbook.md
 
@@ -22,7 +23,7 @@ For any local [Concept]s that are relevant to overall [Document], create a "head
 ## Setup Section
 A `# Setup` heading containing instructions or contextual data that needs to be established before any [Operation]s within the [Document] are executed. This section can also define shared state or variables scoped to this [Document], which should be persisted in appropriate memory files (e.g., AGENT.md, CLAUDE.md, GEMINI.md).
 ## Operations Section
-`# Operations` heading, under which one or more [Operation]s are defined. Each [Operation] is a callable [Concept] and is denoted by a `## Heading2`.
+`# Operations` heading, under which one or more [Operation]s are defined. Each [Operation] is a callable [Concept] and is denoted by a `## Heading2`. Each callable may conclude with a `### Checklist` that enumerates required verifications to execute.
 
 # Operations
 
@@ -31,7 +32,7 @@ When an LLM processes a [Document], it should:
 1.  **Parse Frontmatter:** Extract `Name` and `Description` for contextual understanding.
 2.  **Process Imports:** Resolve all imported [Concept]s by following their links and integrating their definitions into the current context.
 3.  **Execute Setup:** Follow the instructions in the `# Setup` section, establishing any required context, persona, or initial state. Persist any specified state to memory files.
-4.  **Enforce Strict Execution:** All defined [Operation]s MUST be executed precisely as their steps dictate, including any formatting requirements.
+4.  **Enforce Strict Execution:** All defined [Operation]s MUST be executed precisely as their steps dictate, including any [Checklist] sections they define.
 5.  **Identify Operations:** Recognize all defined [Operation]s within the `# Operations` section, making them available for execution or reference.
 6.  **Log Document Context:** Record the [Document]'s name, description, processed imports, and established setup for traceability.
 
