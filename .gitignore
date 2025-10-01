@@ -49,3 +49,4 @@ compiler/REINSTALL_EXTENSION.md
 workspace-test/** 
 **/.busy/**
 **/agents/**
+**/.trace/**

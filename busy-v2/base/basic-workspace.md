@@ -21,24 +21,33 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
 ## _CopyWorkspaceTemplate
 - **Purpose:** Materialize the template workspace that ships with inbox/outbox directories and starter instructions.
 - **Steps:**
-    1. Export `WORKSPACE_ROOT` to the desired absolute path (e.g., `export WORKSPACE_ROOT="$(pwd)/agents/basic-workspace"`).
+    1. Log entry: `timestamp | Build Basic Workspace Playbook -> _CopyWorkspaceTemplate | Starting template copy and link update.`
+    2. Export `WORKSPACE_ROOT` to the desired absolute path (e.g., `export WORKSPACE_ROOT="$(pwd)/agents/basic-workspace"`).
     2. Create the destination parent directory if necessary: `mkdir -p "$(dirname "$WORKSPACE_ROOT")"`.
     3. Copy the template: `cp -R base/templates/basic-workspace "$WORKSPACE_ROOT"` (this writes the inbox/outbox folders, `.gitkeep` markers, `.trace/`, `instructions.md`, and `instructions.test.md`).
-    4. Confirm that `$WORKSPACE_ROOT/.trace/` exists and retains its `.gitkeep` placeholder so the directory is tracked across commits.
-    5. Update all links in the workspace BUSY docs to link to the workspace BUSY folder (e.g., `$WORKSPACE_ROOT/.busy/`).
+    4. Update links in copied BUSY docs to point to project-level .busy files:
+        - `sed -i '' 's|:/.busy/|:../../../.busy/|g' "$WORKSPACE_ROOT/instructions.md"`
+        - `sed -i '' 's|:/.busy/|:../../../.busy/|g' "$WORKSPACE_ROOT/instructions.test.md"`
+    5. Confirm that `$WORKSPACE_ROOT/.trace/` exists and retains its `.gitkeep` placeholder so the directory is tracked across commits.
+    6. Log exit: `timestamp | Build Basic Workspace Playbook -> _CopyWorkspaceTemplate | Completed template copy and link update.`
+
 
 ## _ReviewTemplateInstructions
 - **Purpose:** Tailor the BUSY-formatted instructions that ship with the template to your specific domain.
 - **Steps:**
-    1. Open `$WORKSPACE_ROOT/instructions.md` (copied from the template) and read the frontmatter plus the guidance sections that reference the BUSY library.
+    1. Log entry: `timestamp | Build Basic Workspace Playbook -> _ReviewTemplateInstructions | Starting review of template instructions.`
+    2. Open `$WORKSPACE_ROOT/instructions.md` (copied from the template) and read the frontmatter plus the guidance sections that reference the BUSY library.
     2. Incorporate any domain or project-specific expectations—add new BUSY document links, required tools, or output sections as needed.
     3. Note any external assets the agent should rely on so downstream maintainers understand the workspace contract.
+    4. Log exit: `timestamp | Build Basic Workspace Playbook -> _ReviewTemplateInstructions | Completed review of template instructions.`
 
 ## _ValidateWorkspace
 - **Purpose:** Smoke-test the workspace by running the included test.
 - **Steps:**
-    1. Run the test suite defined in `$WORKSPACE_ROOT/instructions.test.md`.
+    1. Log entry: `timestamp | Build Basic Workspace Playbook -> _ValidateWorkspace | Starting workspace validation.`
+    2. Run the test suite defined in `$WORKSPACE_ROOT/instructions.test.md`.
     2. Report the results to the user.
+    3. Log exit: `timestamp | Build Basic Workspace Playbook -> _ValidateWorkspace | Completed workspace validation.`
 
 ## Step 1 — Copy Workspace Template
 - **Target:** `_CopyWorkspaceTemplate`

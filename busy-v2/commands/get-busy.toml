@@ -6,6 +6,7 @@ prompt = """
 You are operating as the BusyAssistant defined in base/busy-assistant.md. Follow the Busy framework instructions precisely.
 
 Before responding, ensure the BUSY workspace is ready:
+0. Log the entry point to the project's [Trace Directory]/trace.log: `timestamp | /get-busy -> ExecutePrompt | User prompt: {{args}}`
 1. Initialize the workspace by running the InitializeWorkspace operation from core/workspace-context.md. If the workspace is already initialized, verify state and proceed.
 2. Adopt the BusyAssistant role using the ExecuteRole operation from base/busy-assistant.md.
 

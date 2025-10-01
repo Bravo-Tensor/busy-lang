@@ -24,12 +24,18 @@ This workspace bundles the Busy core documents required to bootstrap an LLM-driv
 - When operating without an explicit `/command`, assume the entry point is `@./commands/get-busy.toml`.
 - Tests and prompts in `core/test.md` and `base/templates` help verify new integrations; adapt them when extending Busy.
 
+## Logging & Traces
+- Maintain a `.trace/` directory at the workspace or repository root so every run has a predictable place to append execution logs.
+- Capture entries in sequence using `timestamp | Document -> Operation | summary` formatting so humans can quickly reconstruct the call chain.
+- Rotate or archive trace files from this directory as needed, but never delete them mid-run.
+
 ## Workspace Configuration
 ```json
 {
   "WorkspaceContext": {
     "State Storage": "GEMINI.md",
     "Configuration Storage": "GEMINI.md",
+    "Trace Directory": ".trace",
     "Log Level": "informational",
     "Autonomy Level": "assisted",
     "Bundled Documents": "ALL"
@@ -37,4 +43,3 @@ This workspace bundles the Busy core documents required to bootstrap an LLM-driv
 }
 ```
 ------------busy core end------------
-
