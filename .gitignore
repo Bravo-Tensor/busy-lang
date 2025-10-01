@@ -41,12 +41,12 @@ compiler/src/runtime/*.js.map
 
 # Test files
 compiler/test-*.js
-**/.tmp
+**/.tmp/
 
 # Documentation build artifacts
 compiler/REINSTALL_EXTENSION.md
 
-workspace-test/** 
-**/.busy/**
-**/agents/**
-**/.trace/**
+workspace-test/
+**/.busy/
+**/agents/
+**/.trace/
