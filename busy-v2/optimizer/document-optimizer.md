@@ -12,6 +12,21 @@ Description: Iteratively improves a BUSY [Document] via auto-generated examples,
 [Trace]:../core/trace.md
 [Trace Directory]:../core/workspace-context.md#trace-directory
 [Run Directory]:../core/trace.md#run-directory
+[ChecklistVerification]:../core/trace.md#checklistverification
+[RecordChecklistVerification]:../core/trace.md#recordchecklistverification
+
+## ExampleSpec
+Represents a generated example used to exercise a document operation.
+- `operation` (string): Target operation name (e.g., `ExecutePlaybook`).
+- `id` (string): Stable identifier for the example.
+- `description` (string): Human-readable intent for the scenario.
+- `inputs` (object, optional): Named inputs and their synthesized values.
+- `preconditions` (array, optional): Preconditions to establish state before execution.
+- `expected_order` (array): Normative step order extracted from the spec.
+- `expected_statuses` (array): Expected status per step (`passed|failed|skipped`).
+- `expected_errors` (array, optional): Expected error taxonomy entries with locations.
+- `invariants` (array, optional): Must-hold conditions (e.g., “do not write outside .trace”).
+- `checklist_items` (array, optional): Checklist items that this example is intended to verify.
 [EvaluateDocument]:../core/document.md#evaluatedocument
 [ExecuteOperation]:../core/operation.md#executeoperation
 [TraceEntry]:../core/trace.md#traceentry
@@ -29,6 +44,11 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
     - On start, temporarily set Workspace `Log Level` to `verbose` for the duration of the run.
     - Record every artifact into a per-run [Run Directory].
  - `scoring.weights`: `{ status_match: 0.6, unexpected_error_rate: 0.3, checklist_pass_rate: 0.1 }` (used in [_ScoreRun]).
+ - `strict_mode`: `false` by default. When `true`:
+     - Missing `### Checklist` for an invoked operation counts as `checklist_pass_rate = 0` (not neutral).
+     - Each checklist item must have explicit evidence + rationale (via [RecordChecklistVerification]); missing evidence marks the item `failed`.
+     - Verify reference-style imports defined after frontmatter: file must exist and anchors (if present) must resolve; unresolved imports add `execution_error` and raise `unexpected_error_rate`.
+     - Treat absent or empty instruction traces as order failures.
 
 # Operations
 
@@ -43,12 +63,15 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
 - **Steps:**
     1. Log entry: `timestamp | Document Optimizer -> OptimizeDocument | begin target={{target_doc}}`.
     2. [EvaluateDocument] for `target_doc` to load its Setup and identify its Operations.
-    3. Initialize `run_id` and defaults for `max_iterations`, `stop_delta`, `autonomy`, `ancestor_scope`, `verbosity`.
+    3. Resolve `doc_type` from the frontmatter `Type` (e.g., `[Document]`, `[Operation]`, `[Playbook]`, `[Tool]`, `[Prompt]`, `[Role]`, `[Test]`, `[WorkspaceContext]`, `[Trace]`).
+    4. Initialize `run_id` and defaults for `max_iterations`, `stop_delta`, `autonomy`, `ancestor_scope`, `verbosity`.
     4. Call [Trace#CreateRunDirectory](../core/trace.md#createrundirectory) with `run_id`; write `run.json` manifest (target, objective, settings).
     5. Temporarily set Workspace `Log Level` to `verbose` for this run; on completion, restore prior level.
-    6. For `iteration` in `1..max_iterations`:
-        - Call [_GenerateExamples] with `target_doc` and `objective` → `examples` (plus `holdout`). Save to `runs/<run_id>/examples/` and `holdout/`.
-        - Call [_RunExamples] with `examples` → structured traces (append to [Trace] `optimizer.ndjson`) and per-example instruction traces under `runs/<run_id>/trial-traces/` and `trial-instructions/`.
+    7. For `iteration` in `1..max_iterations`:
+        - Call [_GenerateExamples] with `target_doc`, `doc_type`, and `objective` → `examples` (plus `holdout`). Save to `runs/<run_id>/examples/` and `holdout/` with a generator manifest describing type-specific cases.
+        - Call [_RunExamples] with `examples` → structured traces (append to [Trace] `optimizer.ndjson` after scoring) and per-example instruction traces under `runs/<run_id>/trial-traces/` and `trial-instructions/`.
+        - Call [_VerifyChecklist] to enumerate and verify `### Checklist` items corresponding to the invoked operation in `target_doc`; for each item, record a [ChecklistVerification] under `runs/<run_id>/checklists/` and attach a summary to the human-readable trial log.
+        - If `strict_mode` is enabled, call [_PreflightStrictChecks] to validate imports/anchors and instruction-trace presence, recording violations under `runs/<run_id>/logs/` and annotating example errors.
         - Call [_VerifyOrderOfOperations] over all example traces to ensure strict order adherence; record any mismatches as errors and artifacts under the run directory.
         - Call [_ScoreRun] with the collected traces and `objective` → `score` and breakdown. Write `iterations/iteration-<n>/manifest.json`.
         - If `iteration == 1`, set `best_score = score`.
@@ -68,13 +91,41 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
 - Confirm Workspace `Log Level` was set to `verbose` during the run and restored afterward.
 
 ## _GenerateExamples
-- **Input:** `target_doc`, `objective`, `run_id`.
+- **Input:** `target_doc`, `doc_type` (optional), `objective`, `run_id`.
 - **Steps:**
-    1. Parse `target_doc` [Operations] via [Document#ListOperations](../core/document.md#listoperations).
-    2. For each operation, synthesize 3–5 examples covering base, edge, and negative cases consistent with the `objective`.
-    3. Reserve 1–2 holdout examples per operation not used for patch selection.
-    4. Persist generated `examples` to `runs/<run_id>/examples/` and `examples.json`; write `holdout/` and `holdout.json`.
-    5. Return `examples` and a small `holdout` set.
+    1. Parse frontmatter to extract `Name`, `Type`, and `Description`; if `doc_type` is not provided, derive it from `Type`. If unknown, treat as a generic `[Document]` for generation purposes.
+    2. Analyze structure:
+        - Collect [Operations] via [Document#ListOperations](../core/document.md#listoperations).
+        - For each operation heading, extract normative steps by reading ordered lists under the operation (e.g., “When … it should: 1., 2., 3.”).
+        - Detect `Input:` blocks either under the operation body or via a `## Input` local definition pattern; capture input names and hints.
+        - Detect `### Checklist` items and record their text for verification.
+        - Mine `# Setup` and “Local Definitions” for defaults (e.g., `Trace Directory`, paths, autonomy) to seed inputs.
+    3. Synthesize inputs (heuristics):
+        - Paths: prefer workspace‑relative paths; if hints include “Trace Directory”, set to `.trace`.
+        - Enumerations: choose nominal and edge values (first/last); include an invalid value for negative cases.
+        - Free‑text: derive minimal and longer variants from `Description` keywords.
+        - Missing inputs: generate cases where one required input is omitted to trigger a clear [error].
+    4. Generate examples per operation ensuring coverage:
+        - Happy path: all inputs present; `expected_statuses` all `passed`; `expected_order` equals normative order.
+        - Missing input: omit one required input; `expected_errors` include `missing_input` at the earliest step that requires it; subsequent steps `skipped`.
+        - Policy/guard rails: craft a case that would violate a constraint (e.g., out‑of‑order attempt), expecting the spec to enforce correct behavior. Treat the violation as `negative` with `expected_statuses` reflecting the enforcement.
+        - Checklist coverage: ensure each checklist item appears in at least one example’s `checklist_items` with planned evidence sources (e.g., files written, logs appended, outputs returned).
+        - Type‑aware priors (when recognizable):
+            • `[Document]`: include `EvaluateDocument` (well‑formed, unresolved import per policy) and `ListOperations` (some ops, none).
+            • `[Operation]`: include `ExecuteOperation` (missing inputs, nested op reference) and `RunChecklist` enforcement.
+            • `[Playbook]`: include `ExecutePlaybook` (condition false skip, role context, private op) and `ListPlaybookSteps`.
+            • `[Tool]`: include `InvokeTool` (missing inputs, simulate vs. run) and `DescribeCapability`.
+            • `[Prompt]`: include `ExecutePrompt` orchestration cases.
+            • `[Role]`: include `ExecuteRole` with and without incoming task.
+            • `[Test]`: include `RunTestSuite` sandbox behavior and `RunTest` teardown.
+            • `[WorkspaceContext]`: include `InitializeWorkspace` and `SetOperatingMode`.
+            • `[Trace]`: include `RecordTraceEntry` and `SummarizeRun` round‑trip.
+        - Unknown/custom types: fall back to generic coverage over discovered operations and their steps using the heuristics above.
+    5. Reserve holdout examples that exercise different branches than the selection set (e.g., a different missing input, a different checklist item focus).
+    6. Persist artifacts:
+        - Write `examples/examples.json` (array of ExampleSpec) and `holdout/holdout.json`.
+        - Write `examples/generation.json` capturing `doc_type`, discovered operations, extracted inputs, checklists, and coverage matrix (steps × examples, checklist × examples).
+    7. Return the `examples` and `holdout` sets.
 
 ## _RunExamples
 - **Input:** `examples`, `run_id`, `iteration`, `target_doc`, `trace_file`.
@@ -84,7 +135,10 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
         - For each instruction/step executed, record an instruction-level trace:
             - Append `{ index, expected, observed, status, notes }` using [Trace#RecordStepTrace](../core/trace.md#recordsteptrace) to `trial-traces/example-<id>.ndjson`.
             - Write a human-readable `trial-instructions/example-<id>.md` capturing every instruction with timing and outcomes.
-        - Capture run-level results, errors, and metrics; defer emitting the final [TraceEntry] until scoring so it can include `order_ok`, `score_components`, and computed `score`.
+        - If the target operation defines a `### Checklist`, enumerate each item in order and for each:
+            - Produce evidence and a short rationale derived from observed steps or artifacts.
+            - Append a [ChecklistVerification] line using [RecordChecklistVerification] to `checklists/example-<id>.jsonl` and mirror a summary into the human-readable log.
+        - Capture run-level results, errors, and metrics; defer emitting the final [TraceEntry] until scoring so it can include `order_ok`, `score_components`, `checklist_verifications`, and computed `score`.
         - Persist any intermediate artifacts (e.g., resolved imports, evaluated setup state) under `runs/<run_id>/logs/` via [Trace#RecordArtifact](../core/trace.md#recordartifact).
     2. Echo brief summaries to `trace.log` for readability.
 
@@ -97,6 +151,9 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
 - **Input:** Traces for `run_id` and `iteration`, plus `objective` and `scoring.weights`.
 - **Steps:**
     1. For each example, derive `status_match`, `unexpected_error_rate`, and `checklist_pass_rate` from the instruction-level traces and checklist results; verify order-of-operations to compute `order_ok`.
+       - If `strict_mode` and the invoked operation has no `### Checklist`, set `checklist_pass_rate = 0`.
+       - If `strict_mode` and any checklist item lacks evidence, mark that item `failed` and lower `checklist_pass_rate` accordingly.
+       - If `strict_mode` and unresolved imports/anchors were detected, add an `execution_error` to errors and increase `unexpected_error_rate`.
     2. Compute per-example scores using the default formula and weights:
        `score_example = order_ok * (w_s*status_match + w_e*(1 - unexpected_error_rate) + w_c*checklist_pass_rate)`.
     3. Aggregate the iteration score as the mean of per-example scores; compute pass/fail totals and error taxonomy breakdowns.
@@ -105,6 +162,22 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
         - Update `iterations/iteration-<n>/manifest.json` with `mean_score`, `weights`, and error breakdowns.
     5. For each example, compose and append a final [TraceEntry] to the `trace_file` including `order_ok`, `score_components`, and `score` using [Trace#RecordTraceEntry](../core/trace.md#recordtraceentry).
     6. Return the iteration `mean_score` and a concise breakdown for reporting.
+
+## _PreflightStrictChecks
+- **Input:** `run_id`, `target_doc`.
+- **Steps:**
+    1. Parse reference-style imports directly below frontmatter, lines formatted as `[Alias]: path[#anchor]`.
+    2. For each import, resolve path relative to `target_doc`; if the file does not exist, record a violation.
+    3. If an anchor fragment is present, scan the target file’s headings and confirm the anchor resolves (normalize case/punctuation). Record any unresolved anchors as violations.
+    4. Confirm instruction-level trace files exist for each example; if any are missing or empty, record an order verification violation.
+    5. Write violations as JSON into `runs/<run_id>/logs/strict-violations.json` for downstream scoring.
+
+## _VerifyChecklist
+- **Input:** `run_id`, `iteration`, `target_doc`.
+- **Steps:**
+    1. For each example, locate the invoked operation’s `### Checklist` in `target_doc` (if any) and ensure each item has a corresponding [ChecklistVerification] record.
+    2. If any item lacks evidence or a rationale, record a `checklist_failure` in errors and mark its verification `failed` with an explanatory note.
+    3. Summarize per-example checklist pass/fail counts for inclusion in scoring (`checklist_pass_rate`).
 
 ## _VerifyOrderOfOperations
 - **Input:** `run_id`, `iteration`, `target_doc`.

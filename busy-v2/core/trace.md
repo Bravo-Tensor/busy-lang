@@ -28,7 +28,8 @@ An NDJSON object (one JSON per line) capturing a single example/run observation.
 - `metrics` (object): `{ duration_ms, passes, fails, retries }`.
 - `order_ok` (boolean, optional): Whether the observed instruction order matched the expected sequence.
 - `score_components` (object, optional): See [ScoreComponents].
-- `score` (number): Scalar fitness for the entry (0..1 recommended). If `score_components` is present, `score` SHOULD equal the computed value from the default or configured formula.
+ - `score` (number): Scalar fitness for the entry (0..1 recommended). If `score_components` is present, `score` SHOULD equal the computed value from the default or configured formula.
+ - `checklist_verifications` (array, optional): See [ChecklistVerification].
 - `attribution` (object): `{ file, section, rationale }` pointing to likely edit sites.
 - `timestamp` (string): ISO-8601 timestamp of the entry.
 
@@ -65,6 +66,15 @@ score_example = order_ok * (w_s*status_match + w_e*(1 - unexpected_error_rate) +
 
 Where `order_ok` is treated as 1 if order verification passes, else 0. The weights `(w_s, w_e, w_c)` default to `(0.6, 0.3, 0.1)` and MAY be overridden per run (see [CreateRunDirectory]).
 
+## ChecklistVerification
+Represents a single checklist item verification captured during a run.
+
+- `item` (string): The exact checklist item text.
+- `status` (string): `passed` | `failed` | `skipped`.
+- `evidence` (string|object): Artifacts or observations supporting the status.
+- `rationale` (string): Brief explanation of how evidence satisfies the item.
+- `timestamp` (string): ISO-8601 timestamp for the verification event.
+
 ## Run Directory
 A per-run folder under the [Trace Directory] for storing all artifacts with maximal transparency.
 
@@ -78,6 +88,7 @@ A per-run folder under the [Trace Directory] for storing all artifacts with maxi
   - `patches/` — Applied patches and rollback diffs.
   - `iterations/` — `iteration-<n>/manifest.json`, scores, and summaries.
   - `logs/` — Verbose internal processing logs.
+  - `checklists/` — Per-example checklist verifications (`example-<id>.jsonl`).
 - Top-level files:
   - `run.json` — Run manifest: target document, objective, autonomy, ancestor scope, start timestamp, versions.
   - `summary.json` — Final scores and outcome.
@@ -118,3 +129,10 @@ A per-run folder under the [Trace Directory] for storing all artifacts with maxi
 - **Steps:**
     1. Serialize the step record as one JSON line.
     2. Append to `trial-traces/example-<example_id>.ndjson` under the run directory.
+
+## RecordChecklistVerification
+- **Input:** `run_id`, `example_id`, and a [ChecklistVerification] record.
+- **Steps:**
+    1. Serialize the record to a single-line JSON string.
+    2. Append to `checklists/example-<example_id>.jsonl` under the run directory.
+    3. Optionally mirror a summary into the example’s human-readable instruction log.
