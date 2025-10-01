@@ -28,6 +28,7 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
 - `verbosity`: `verbose` (forces detailed, instruction-level traces for all trials)
     - On start, temporarily set Workspace `Log Level` to `verbose` for the duration of the run.
     - Record every artifact into a per-run [Run Directory].
+ - `scoring.weights`: `{ status_match: 0.6, unexpected_error_rate: 0.3, checklist_pass_rate: 0.1 }` (used in [_ScoreRun]).
 
 # Operations
 
@@ -83,7 +84,7 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
         - For each instruction/step executed, record an instruction-level trace:
             - Append `{ index, expected, observed, status, notes }` using [Trace#RecordStepTrace](../core/trace.md#recordsteptrace) to `trial-traces/example-<id>.ndjson`.
             - Write a human-readable `trial-instructions/example-<id>.md` capturing every instruction with timing and outcomes.
-        - Capture run-level results, errors, and metrics; compose a [TraceEntry] and call [Trace#RecordTraceEntry](../core/trace.md#recordtraceentry) into `trace_file`.
+        - Capture run-level results, errors, and metrics; defer emitting the final [TraceEntry] until scoring so it can include `order_ok`, `score_components`, and computed `score`.
         - Persist any intermediate artifacts (e.g., resolved imports, evaluated setup state) under `runs/<run_id>/logs/` via [Trace#RecordArtifact](../core/trace.md#recordartifact).
     2. Echo brief summaries to `trace.log` for readability.
 
@@ -93,13 +94,17 @@ Default controls (may be overridden via inputs to `OptimizeDocument`):
 - A corresponding [TraceEntry] exists in `optimizer.ndjson`.
 
 ## _ScoreRun
-- **Input:** Traces for `run_id` and `iteration`, plus `objective`.
+- **Input:** Traces for `run_id` and `iteration`, plus `objective` and `scoring.weights`.
 - **Steps:**
-    1. Compute a scalar score per example (e.g., checklist pass rate) and aggregate to an iteration score.
-    2. Incorporate order-of-operations verification results as critical failures.
-    3. Break down failures by ErrorTaxonomy for attribution.
-    4. Persist `iterations/iteration-<n>/manifest.json` with scores and failure breakdown.
-    5. Return `score` and a concise breakdown for reporting.
+    1. For each example, derive `status_match`, `unexpected_error_rate`, and `checklist_pass_rate` from the instruction-level traces and checklist results; verify order-of-operations to compute `order_ok`.
+    2. Compute per-example scores using the default formula and weights:
+       `score_example = order_ok * (w_s*status_match + w_e*(1 - unexpected_error_rate) + w_c*checklist_pass_rate)`.
+    3. Aggregate the iteration score as the mean of per-example scores; compute pass/fail totals and error taxonomy breakdowns.
+    4. Persist results:
+        - Write `iterations/iteration-<n>/scores.json` containing per-example `score_components`, `order_ok`, `score`, and weights.
+        - Update `iterations/iteration-<n>/manifest.json` with `mean_score`, `weights`, and error breakdowns.
+    5. For each example, compose and append a final [TraceEntry] to the `trace_file` including `order_ok`, `score_components`, and `score` using [Trace#RecordTraceEntry](../core/trace.md#recordtraceentry).
+    6. Return the iteration `mean_score` and a concise breakdown for reporting.
 
 ## _VerifyOrderOfOperations
 - **Input:** `run_id`, `iteration`, `target_doc`.

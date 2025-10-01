@@ -26,7 +26,9 @@ An NDJSON object (one JSON per line) capturing a single example/run observation.
 - `steps` (array): Each `{ step, expected, observed, status, notes }`.
 - `errors` (array): Normalized error objects (see ErrorTaxonomy).
 - `metrics` (object): `{ duration_ms, passes, fails, retries }`.
-- `score` (number): Scalar fitness for the entry (0..1 recommended).
+- `order_ok` (boolean, optional): Whether the observed instruction order matched the expected sequence.
+- `score_components` (object, optional): See [ScoreComponents].
+- `score` (number): Scalar fitness for the entry (0..1 recommended). If `score_components` is present, `score` SHOULD equal the computed value from the default or configured formula.
 - `attribution` (object): `{ file, section, rationale }` pointing to likely edit sites.
 - `timestamp` (string): ISO-8601 timestamp of the entry.
 
@@ -46,6 +48,22 @@ Default files relative to the [Trace Directory]:
 - `trace.log`: Human-readable narrative entries using `timestamp | Document -> Operation | summary`.
 - `optimizer.ndjson`: Programmatic entries for optimizer iterations and example scoring.
 - `runs.ndjson`: Programmatic entries for ad-hoc or non-optimizer example runs.
+
+## ScoreComponents
+Structured fields used to compute per-example scores.
+
+- `status_match` (number): Fraction of steps whose observed status matches the expected status for the example (0..1).
+- `unexpected_error_rate` (number): Fraction of steps that produced an error not expected by the example (0..1).
+- `checklist_pass_rate` (number): Fraction of checklist items that passed for the example (0..1).
+- `weights` (object): `{ status_match: 0.6, unexpected_error_rate: 0.3, checklist_pass_rate: 0.1 }` by default unless overridden.
+
+Default formula:
+
+```
+score_example = order_ok * (w_s*status_match + w_e*(1 - unexpected_error_rate) + w_c*checklist_pass_rate)
+```
+
+Where `order_ok` is treated as 1 if order verification passes, else 0. The weights `(w_s, w_e, w_c)` default to `(0.6, 0.3, 0.1)` and MAY be overridden per run (see [CreateRunDirectory]).
 
 ## Run Directory
 A per-run folder under the [Trace Directory] for storing all artifacts with maximal transparency.
