@@ -1,6 +1,6 @@
 ---
 Name: Concept
-Type: Concept
+Type: [Concept]
 Description: A fundamental idea or abstraction within the prompt framework, explicitly defined and referenceable.
 ---
 [Concept]:./concept.md
@@ -9,6 +9,10 @@ Description: A fundamental idea or abstraction within the prompt framework, expl
 
 # Setup
 A [Concept] is a named idea or abstraction that holds explicit meaning within the project's scope. It serves as a building block for [Document]s and [Operation]s.
+
+Import vs. reference policy:
+- References to [Concept]s inside prose may occasionally point to placeholders or namespaces that are not materialized yet; treat these as soft references to guide interpretation.
+- Imports declared in a [Document]'s `Imports` section MUST resolve deterministically. Unresolved imports during [EvaluateDocument](./document.md#evaluatedocument) constitute an [error](./operation.md#error) and should halt processing before `Setup`.
 
 # Operations
 

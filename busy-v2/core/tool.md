@@ -44,6 +44,12 @@ When an LLM is asked to run a [Tool], it should:
 4.  **Execute or Simulate:** Carry out the call exactly as described. If execution is not possible in the current environment, produce a step-by-step plan or command snippet that the caller can run manually.
 5.  **Handle Outputs:** Store results according to the [Outputs] definition (e.g., write to an outbox file, append to a log). Confirm success criteria or raise an [error](./operation.md#error) when the contract cannot be satisfied.
 
+### Checklist
+- Inputs collected and validated against [Inputs]; missing values reported via [error].
+- Invocation assembled according to [Invocation Contract] (including env vars and files).
+- Execution performed or a runnable plan provided with exact commands/request.
+- Outputs stored in the declared locations and success criteria confirmed.
+
 ## DescribeCapability
 Summarize what the [Tool] does so other agents can decide when to invoke it.
 1.  Read the [Capability], [Inputs], and [Outputs] definitions.

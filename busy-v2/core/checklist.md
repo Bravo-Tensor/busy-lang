@@ -1,6 +1,6 @@
 ---
 Name: Checklist
-Type: Concept
+Type: [Concept]
 Description: A required verification sequence appended to an [Operation] or [Playbook] that confirms all critical outcomes before completion.
 ---
 [Concept]:./concept.md
@@ -24,3 +24,8 @@ When a callable defines a [Checklist], the agent must:
 2. **Verify Sequentially:** Address each item in order, gathering evidence or logs that demonstrate the outcome is satisfied. If an item cannot be verified, stop and return an [error](./operation.md#error) describing the gap.
 3. **Record Evidence:** Note how each verification was satisfied (e.g., test output, file diff, user confirmation) so downstream consumers understand the proof of completion.
 4. **Confirm Completion:** Once all items are verified, explicitly state that the [Checklist] has been completed and summarize any findings uncovered during verification.
+
+### Checklist
+- All checklist items enumerated and verified in order.
+- Evidence recorded for each item or an [error] returned specifying the missing verification.
+- Final confirmation of checklist completion logged or reported to the caller.

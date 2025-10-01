@@ -12,7 +12,7 @@ Description: A specialized [Document] designed as an entry point for an LLM, orc
 
 # Local Definitions
 ## Prompt Text
-The text that is being provided to be executed by an LLM as a user. The [Operations] and any other [Concepts] required for the [Document] to process the [prompt text] may be explictly provided, in part or whole, or may need to be inferred in real time to meet the format and control flow of a [Document].
+The text that is being provided to be executed by an LLM as a user. The [Operations] and any other [Concepts] required for the [Document] to process the [prompt text] may be explicitly provided, in part or whole, or may need to be inferred in real time to meet the format and control flow of a [Document].
 
 # Setup
 A [Prompt] is a top-level [Document] that an LLM will directly interact with. Its primary purpose is to define the overall task, import necessary contextual elements, and guide the LLM through a series of [Operation]s to achieve a specific goal. It extends the base [Document] structure by emphasizing its role as an executable instruction set for the LLM.
@@ -27,3 +27,10 @@ When an LLM executes a [Prompt], it should:
 4.  **Execute Defined Operations:** Systematically execute the [Operation]s defined within its `# Operations` section, or imported or inferred [Operation]s, as needed to fulfill the prompt's objective.
 5.  **Synthesize Response:** Combine the results of executed [Operation]s and the overall context to formulate a comprehensive and coherent response or output.
 6.  **Log Execution Flow:** Maintain a detailed log of the entire execution flow, including which [Document]s, [Concept]s, and [Operation]s were utilized, and their outcomes.
+
+### Checklist
+- Evaluated as a [Document] and setup completed.
+- Goal interpreted from [prompt text] and context.
+- Necessary operations orchestrated and executed in order.
+- Final response synthesized and returned.
+- Execution flow logged with key actions and results.

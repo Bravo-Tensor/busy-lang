@@ -63,7 +63,7 @@ Assertions that verify the observed behavior. Check outputs, side effects, logs,
 ## RunTestSuite
 Execute every [Test Case] in the [Test Suite].
 
-1. **Evaluate Document:** Run [EvaluateDocument](./document.md#evaluatedocument) so imports, [Shared Setup], and local concepts are loaded. During this phase, create the `.test` sandbox, replicate the required project assets into it, and enable verbose [logging level](./workspace-context.md/#log-level) with the log sink set to `.test/test.log`.
+1. **Evaluate Document:** Run [EvaluateDocument](./document.md#evaluatedocument) so imports, [Shared Setup], and local concepts are loaded. During this phase, create the `.test` sandbox, replicate the required project assets into it, and enable verbose [logging level](./workspace-context.md#log-level) with the log sink set to `.test/test.log`.
 2. **Collect Test Cases:** List all `##` headings under `# Operations` whose names do not start with `_`. Preserve their order unless an explicit dependency is documented.
 3. **Run Sequentially:** For each collected [Test Case], call [RunTest](./test.md#runtest), ensuring that all actions stream detailed diagnostics to the configured log file. Allow the [Tear Down] steps to reset shared state between cases.
 4. **Aggregate Results:** Track pass/fail for each [Test Case]. When a failure occurs, ensure [Tear Down] has executed before returning an [error](./operation.md#error) that includes the failing case name, failing phase (Given/When/Then), and diagnostic notes.

@@ -51,6 +51,13 @@ When instructed to run a [Playbook], do the following:
 5. **Run Checklist:** After the main sequence completes, execute [RunChecklist] if the [Playbook] defines one so every verification item is confirmed.
 6. **Summarize Results:** After all steps succeed, provide a concise summary of actions performed and outputs produced.
 
+### Checklist
+- Document evaluated; private operations loaded.
+- All steps resolved or skipped based on conditions with reasons logged.
+- Failures reported with step names and details; execution halted appropriately.
+- Checklist (if defined) executed after main sequence.
+- Final summary produced and logged.
+
 ## ListPlaybookSteps
 Enumerate the discrete [Sequence Step]s in this [Playbook].
 1. Parse the [Playbook] after [EvaluateDocument].

@@ -51,7 +51,7 @@ The default location and method for storing this any other configuration.
 The folder path where execution trace logs are written. Default to `.trace` at the workspace root so every agent run has a consistent location to append trace files. Create the directory if it does not exist before writing logs.
 
 # Setup
-Read in all exisiting state and configuration. If it is not found, stop and throw an [error](./operation.md#error) asking the user to run the `InitalizeWorkspace` [Operation]. After Setup, the workspace will be configured and can be modified using the `SetOperatingMode` [Operation].
+Read in all existing state and configuration. If it is not found, stop and throw an [error](./operation.md#error) asking the user to run the `InitializeWorkspace` [Operation]. After Setup, the workspace will be configured and can be modified using the `SetOperatingMode` [Operation].
 
 - **[State Storage]**: `GEMINI.md`
 - **[Configuration Storage]**: `GEMINI.md`
@@ -62,7 +62,7 @@ Read in all exisiting state and configuration. If it is not found, stop and thro
 
 # Operations
 
-[InitalizeWorkspace]:./workspace-context.md#initializeworkspace
+[InitializeWorkspace]:./workspace-context.md#initializeworkspace
 ## InitializeWorkspace
 - **Input:** None
 - **Steps:**
