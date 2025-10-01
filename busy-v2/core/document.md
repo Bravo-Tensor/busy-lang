@@ -1,6 +1,6 @@
 ---
 Name: Document
-Type: Document
+Type: [Document]
 Description: The most atomic and fundamental structural unit of the prompt framework, encapsulating concepts, setup, and operations.
 ---
 [Concept]:./concept.md
@@ -13,17 +13,17 @@ Description: The most atomic and fundamental structural unit of the prompt frame
 # Setup
 A [Document] serves as the primary container for organizing prompts, similar to a class in programming. Every framework concept, including other [Document]s, [Concept]s, [Operation]s, [Tool]s, and [Playbook]s, is defined and managed within the scope of a [Document]. Always [read the entire document](./document.md#evaluatedocument) before executing any [Operations].
 
-# Local Defintions
+# Local Definitions
 ## Frontmatter
 Delimited by `---`, containing metadata such as `Name`, `Type`, and `Description`. `Type` identifies the document's specialization (e.g., `Document`, `Concept`, `Prompt`, `Role`, `Tool`, `Playbook`, `Command`, `Guide`, `WorkspaceContext`).
 ## Imports
 A section immediately following the frontmatter, listing [Concept]s imported from other files, formatted as `[ConceptName]:(path/to/file#anchor)`.
-## Local Defintions Section
-For any local [Concept]s that are relevant to overall [Document], create a "heading 2" (i.e. ##) in it's name (e.g. `## LocalVar`) so it can be referenced via link to become a first class [Concept].
+## Local Definitions Section
+For any local [Concept]s that are relevant to overall [Document], create a "heading 2" (i.e., `##`) in its name (e.g., `## LocalVar`) so it can be referenced via link to become a first-class [Concept].
 ## Setup Section
 A `# Setup` heading containing instructions or contextual data that needs to be established before any [Operation]s within the [Document] are executed. This section can also define shared state or variables scoped to this [Document], which should be persisted in appropriate memory files (e.g., AGENT.md, CLAUDE.md, GEMINI.md).
 ## Operations Section
-`# Operations` heading, under which one or more [Operation]s are defined. Each [Operation] is a callable [Concept] and is denoted by a `## Heading2`. Each callable may conclude with a `### Checklist` that enumerates required verifications to execute.
+`# Operations` heading, under which one or more [Operation]s are defined. Each [Operation] is a callable [Concept] and is denoted by a level-2 heading (`##`). Each callable may conclude with a `### Checklist` that enumerates required verifications to execute.
 
 # Operations
 
@@ -36,6 +36,13 @@ When an LLM processes a [Document], it should:
 5.  **Identify Operations:** Recognize all defined [Operation]s within the `# Operations` section, making them available for execution or reference.
 6.  **Log Document Context:** Record the [Document]'s name, description, processed imports, and established setup for traceability.
 
+### Checklist
+- Frontmatter parsed and `Name`/`Description` captured.
+- Imports resolved and integrated into context.
+- Setup executed; any state persisted as specified.
+- All Operations identified and made available.
+- Document context logged (including resolved imports and setup notes).
+
 ## ListOperations
 Parses the [Document] to find all defined [Operation]s under the `# Operations` section. 
 ### Steps
@@ -46,3 +53,8 @@ Parses the [Document] to find all defined [Operation]s under the `# Operations` 
 - The output MUST be presented as a numbered list.
 - Each number MUST correspond to an operation.
 - The user MUST be able to invoke an operation by its number.
+
+### Checklist
+- Returns only operations defined under `# Operations`.
+- Output formatted as a numbered list.
+- Each item clearly maps to an invocable operation.
