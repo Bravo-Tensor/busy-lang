@@ -1,6 +1,6 @@
 ---
 Name: Checklist
-Type: [Concept]
+Type: [Document]
 Description: A required verification sequence appended to an [Operation] or [Playbook] that confirms all critical outcomes before completion.
 ---
 [Concept]:./concept.md
