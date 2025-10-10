@@ -1,6 +1,6 @@
 {
   "name": "busy-lang",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Busy language tools and docs, including onboarding helpers and CLIs.",
   "license": "GPL-3.0-or-later",
   "repository": {
