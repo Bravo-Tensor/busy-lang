@@ -4,15 +4,16 @@ Type: [Document]
 Description: Defines a structured, append-only trace format (NDJSON) and taxonomy used by BUSY documents and playbooks to log example runs, scores, and optimizer iterations.
 ---
 
+# [Imports](./document.md#imports-section)
 [Document]:./document.md
 [Operation]:./operation.md
 [WorkspaceContext]:./workspace-context.md
 [Trace Directory]:./workspace-context.md#trace-directory
 
-# Setup
+# [Setup](./document.md#setup-section)
 All traces are written under the current workspace's [Trace Directory]. Use human-readable logs for narrative (`trace.log`) and NDJSON for programmatic analysis (`optimizer.ndjson`, `runs.ndjson`). Append-only; do not delete or rewrite past entries mid-run.
 
-# Local Definitions
+# [Local Definitions](./document.md#local-definitions-section)
 
 ## TraceEntry
 An NDJSON object (one JSON per line) capturing a single example/run observation.
@@ -93,9 +94,9 @@ A per-run folder under the [Trace Directory] for storing all artifacts with maxi
   - `run.json` — Run manifest: target document, objective, autonomy, ancestor scope, start timestamp, versions.
   - `summary.json` — Final scores and outcome.
 
-# Operations
+# [Operations](./document.md#operations-section)
 
-## RecordTraceEntry
+## [RecordTraceEntry][Operation]
 - **Input:** Target file name (e.g., `optimizer.ndjson`), a `TraceEntry` object.
 - **Steps:**
     1. Ensure [Trace Directory] exists; create if missing.
@@ -103,34 +104,34 @@ A per-run folder under the [Trace Directory] for storing all artifacts with maxi
     3. Append the line to the target NDJSON file under [Trace Directory].
     4. Optionally add a brief summary line to `trace.log` for human readability.
 
-## SummarizeRun
+## [SummarizeRun][Operation]
 - **Input:** `run_id` and target NDJSON file (e.g., `optimizer.ndjson`).
 - **Steps:**
     1. Collect all entries sharing the `run_id`.
     2. Compute aggregate metrics: mean score, pass/fail totals, error breakdown.
     3. Present a succinct summary for the user and write a summary line to `trace.log`.
 
-## CreateRunDirectory
+## [CreateRunDirectory][Operation]
 - **Input:** `run_id`, optional layout overrides.
 - **Steps:**
     1. Ensure `.trace/runs/<run_id>/` exists with the subfolders listed in [Run Directory].
     2. Write `run.json` manifest capturing configuration, objective, and environment details.
     3. Write an initial `iterations/iteration-1/manifest.json` placeholder.
 
-## RecordArtifact
+## [RecordArtifact][Operation]
 - **Input:** `run_id`, `relative_path` (under the run directory), `content` (string or JSON), optional `binary` flag.
 - **Steps:**
     1. Resolve absolute path under `.trace/runs/<run_id>/`.
     2. Create parent folders if missing; write `content` to the file.
     3. If JSON, ensure single-line NDJSON where appropriate; otherwise pretty-print if `.json`.
 
-## RecordStepTrace
+## [RecordStepTrace][Operation]
 - **Input:** `run_id`, `example_id`, a step record `{ index, expected, observed, status, notes }`.
 - **Steps:**
     1. Serialize the step record as one JSON line.
     2. Append to `trial-traces/example-<example_id>.ndjson` under the run directory.
 
-## RecordChecklistVerification
+## [RecordChecklistVerification][Operation]
 - **Input:** `run_id`, `example_id`, and a [ChecklistVerification] record.
 - **Steps:**
     1. Serialize the record to a single-line JSON string.

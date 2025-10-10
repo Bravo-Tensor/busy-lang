@@ -4,6 +4,7 @@ Type: [Playbook]
 Description: Provisions a folder-based agent workspace with inbox/outbox automation and a Gemini handoff script.
 ---
 
+# [Imports](../core/document.md#imports-section)
 [Playbook]:../core/playbook.md
 [Document]:../core/document.md
 [Operation]:../core/operation.md
@@ -13,12 +14,12 @@ Description: Provisions a folder-based agent workspace with inbox/outbox automat
 [ExecutePlaybook]:../core/playbook.md#executeplaybook
 [ListPlaybookSteps]:../core/playbook.md#listplaybooksteps
 
-# Setup
+# [Setup](../core/document.md#setup-section)
 This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repository root with shell access. The starter assets live in `base/templates/basic-workspace`; define an absolute target path (for example `agents/basic-workspace`) and export it as `$WORKSPACE_ROOT` before copying the template.
 
-# Operations
+# [Operations](../core/document.md#operations-section)
 
-## _CopyWorkspaceTemplate
+## [_CopyWorkspaceTemplate][Operation]
 - **Purpose:** Materialize the template workspace that ships with inbox/outbox directories and starter instructions.
 - **Steps:**
     1. Log entry: `timestamp | Build Basic Workspace Playbook -> _CopyWorkspaceTemplate | Starting template copy and link update.`
@@ -32,7 +33,7 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
     6. Log exit: `timestamp | Build Basic Workspace Playbook -> _CopyWorkspaceTemplate | Completed template copy and link update.`
 
 
-## _ReviewTemplateInstructions
+## [_ReviewTemplateInstructions][Operation]
 - **Purpose:** Tailor the BUSY-formatted instructions that ship with the template to your specific domain.
 - **Steps:**
     1. Log entry: `timestamp | Build Basic Workspace Playbook -> _ReviewTemplateInstructions | Starting review of template instructions.`
@@ -41,7 +42,7 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
     3. Note any external assets the agent should rely on so downstream maintainers understand the workspace contract.
     4. Log exit: `timestamp | Build Basic Workspace Playbook -> _ReviewTemplateInstructions | Completed review of template instructions.`
 
-## _ValidateWorkspace
+## [_ValidateWorkspace][Operation]
 - **Purpose:** Smoke-test the workspace by running the included test.
 - **Steps:**
     1. Log entry: `timestamp | Build Basic Workspace Playbook -> _ValidateWorkspace | Starting workspace validation.`
@@ -49,27 +50,26 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
     2. Report the results to the user.
     3. Log exit: `timestamp | Build Basic Workspace Playbook -> _ValidateWorkspace | Completed workspace validation.`
 
-## Step 1 — Copy Workspace Template
+## [Step 1 — Copy Workspace Template](../core/playbook.md#sequence-step)
 - **Target:** `_CopyWorkspaceTemplate`
 - **Role Context:** [BusyAssistant]
 - **Notes:** The BusyAssistant can clarify directory conventions or BUSY-specific best practices while you scaffold.
 
-## Step 2 — Customize Instructions
+## [Step 2 — Customize Instructions](../core/playbook.md#sequence-step)
 - **Target:** `_ReviewTemplateInstructions`
 - **Role Context:** [BusyAssistant]
 - **Notes:** Customize the instructions to capture the agent’s tone, constraints, and expected deliverables.
 
-## Step 3 — Validate Workspace
+## [Step 3 — Validate Workspace](../core/playbook.md#sequence-step)
 - **Target:** `_ValidateWorkspace`
 - **Role Context:** [BusyAssistant]
 - **Notes:** This will run the test suite to ensure the workspace is functioning correctly.
 
-## ListPlaybookSteps
+## [ListPlaybookSteps](../core/playbook.md#listplaybooksteps)
 Execute [ListPlaybookSteps] after [EvaluateDocument] to enumerate Steps 1–3.
 
-### Checklist
+### [Checklist](../core/checklist.md#checklist)
 - Confirm `$WORKSPACE_ROOT` contains the copied template workspace with inbox/outbox directories, `.busy/` assets, `.trace/`, and updated links.
 - Confirm `$WORKSPACE_ROOT/instructions.md` reflects any project-specific guidance or note that none was required.
 - Confirm `$WORKSPACE_ROOT/instructions.test.md` was executed and report the observed results to the user.
 - Confirm `.trace/trace.log` is ready for use (create the file if this is the initial run).
-

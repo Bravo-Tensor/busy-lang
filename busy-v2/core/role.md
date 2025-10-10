@@ -4,13 +4,15 @@ Type: [Document]
 Description: A specialized [Document] that defines a persona for the LLM to adopt, including its traits, principles, and a specific skillset with corresponding [Operation]s.
 ---
 
+# [Imports](./document.md#imports-section)
 [Concept]:./concept.md
 [Document]:./document.md
 [Operation]:./operation.md
 [Prompt]:./prompt.md
 [Role]:./role.md
+[Checklist]:./checklist.md
 
-# Local Definitions
+# [Local Definitions](./document.md#local-definitions-section)
 [Persona]:./role.md#persona
 [Traits]:./role.md#traits
 [Principles]:./role.md#principles
@@ -28,20 +30,20 @@ A set of core rules, guidelines, or a code of conduct that the [Role] must adher
 ## Skillset
 A list of abilities, areas of expertise, and specialized knowledge that the [Role] possesses.
 
-# Setup
-A [Role] is a specialized [Document] that allows the LLM to assume a consistent persona. When a [Role] [Document] is active, the LLM MUST embody the defined [Persona], consistently exhibiting its [Traits] and adhering to its [Principles]. The `Setup` section of a [Role] is responsible for this initial transformation. Review both the inputs of this invocation as well as the context available through the lens of this [Role].
+# [Setup](./document.md#setup-section)
+A [Role] is a specialized [Document] that allows the LLM to assume a consistent persona. When a [Role] [Document] is active, the LLM MUST embody the defined [Persona], consistently exhibiting its [Traits] and adhering to its [Principles]. The `# [Setup](./document.md#setup-section)` section of a [Role] is responsible for this initial transformation. Review both the inputs of this invocation as well as the context available through the lens of this [Role].
 
-# Operations
+# [Operations](./document.md#operations-section)
 
-## ExecuteRole
+## [ExecuteRole][Operation]
 This is the primary [Operation] for a [Role] [Document]. It determines the [Role]'s behavior based on the execution context.
 
-1.  **Assume Persona:** First, process the [Role] as a standard [Document] by following the [EvaluateDocument](./document.md#evaluatedocument) [Operation]. This includes executing the `Setup` section to internalize the [Persona], [Traits], and [Principles]. Log the assumption of the [Role].
+1.  **Assume Persona:** First, process the [Role] as a standard [Document] by following the [EvaluateDocument](./document.md#evaluatedocument) [Operation]. This includes executing the `# [Setup](./document.md#setup-section)` section to internalize the [Persona], [Traits], and [Principles]. Log the assumption of the [Role].
 2.  **Check for Incoming Task:** Determine if a specific [Prompt] or [Operation] was provided alongside the [Role] invocation, or if a more implicit/unstructured task was requested. If the latter, be sure to infer the task and map it into the conceptual structure of an [Operation]. If you are unable to do so without removing ambiguity, then return an [error](./operation.md#error).
 3.  **Execute Task (if provided):** If an incoming task exists, the [Role] seamlessly proceeds to execute that [Prompt] or [Operation], applying its unique [Persona] and [Skillset] to the task at hand.
 4.  **Introduce Self (if no task):** If the [Role] was executed without a specific task, it must greet the user in character, introduce itself, and present a "menu" of the [Operation]s it is capable of performing by invoking the [ListOperations](./document.md#listoperations) [Operation].
 
-### Checklist
-- Persona assumed (traits and principles internalized) and logged.
-- If a task was provided: executed the task under the role context; otherwise presented a concise menu of available operations.
-- Any state or outputs produced are clearly attributed to this role.
+### [Checklist](./checklist.md#checklist)
+- [Persona] assumed ([Traits] and [Principles] internalized) and logged.
+- If a task was provided: executed the task under the role context; otherwise presented a concise menu of available [Operation]s.
+- Any state or outputs produced are clearly attributed to this [Role].

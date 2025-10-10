@@ -3,20 +3,22 @@ Name: Concept
 Type: [Concept]
 Description: A fundamental idea or abstraction within the prompt framework, explicitly defined and referenceable.
 ---
+# [Imports](./document.md#imports-section)
+
 [Concept]:./concept.md
 [Document]:./document.md
 [Operation]:./operation.md
 
-# Setup
+# [Setup](./document.md#setup-section)
 A [Concept] is a named idea or abstraction that holds explicit meaning within the project's scope. It serves as a building block for [Document]s and [Operation]s.
 
 Import vs. reference policy:
 - References to [Concept]s inside prose may occasionally point to placeholders or namespaces that are not materialized yet; treat these as soft references to guide interpretation.
-- Imports declared in a [Document]'s `Imports` section MUST resolve deterministically. Unresolved imports during [EvaluateDocument](./document.md#evaluatedocument) constitute an [error](./operation.md#error) and should halt processing before `Setup`.
+- Imports declared in a [Document]'s `Imports` section MUST resolve deterministically. Unresolved imports during [EvaluateDocument](./document.md#evaluatedocument) constitute an [error](./operation.md#error) and should halt processing before [Setup](./document.md#setup-section).
 
-# Operations
+# [Operations](./document.md#operations-section)
 
-## EvaluateConcept
+## [EvaluateConcept][Operation]
 When an LLM encounters a [Concept], it should:
 1.  **Identify the Concept:** Recognize the named [Concept] (e.g., `[MyConcept][Concept]`).
     *Note: All references to other [Concept]s, [Document]s, or [Operation]s should use the preferred markdown reference style: define the link at the top (e.g., `[ReferenceName]:(./path/to/file.md#optional-anchor)`) and then refer to it as `[ReferenceName]` or `[LocalAlias][ReferenceName]`. Inline links are acceptable but less preferred.*

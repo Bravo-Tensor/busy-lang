@@ -35,8 +35,8 @@ A `# Setup` heading containing instructions or contextual data that needs to be 
 ## [EvaluateDocument](./operation.md)
 When an LLM processes a [Document], it should:
 1.  **Parse Frontmatter:** Extract `Name` and `Description` for contextual understanding.
-2.  **Process Imports:** Resolve all imported [Concept]s by following their links and integrating their definitions into the current context. If any import cannot be resolved (invalid path or anchor), immediately return an [error] describing the missing import and stop further processing; do not execute Setup or later steps.
-3.  **Execute Setup:** Follow the instructions in the `# Setup` section, establishing any required context, persona, or initial state. Persist any specified state to memory files.
+2.  **Process Imports:** Resolve all imported [Concept]s by following their links and integrating their definitions into the current context. If any import cannot be resolved (invalid path or anchor), immediately return an [error] describing the missing import and stop further processing; do not execute [Setup](./document.md#setup-section) or later steps.
+3.  **Execute Setup:** Follow the instructions in the `# [Setup](./document.md#setup-section)` section, establishing any required context, persona, or initial state. Persist any specified state to memory files.
 4.  **Enforce Strict Execution:** All defined [Operation]s MUST be executed precisely as their steps dictate, including any [Checklist] sections they define.
 5.  **Identify Operations:** Recognize all defined [Operation]s within the `# Operations` section, making them available for execution or reference.
 6.  **Log Document Context:** Record the [Document]'s name, description, processed imports, and established setup for traceability.

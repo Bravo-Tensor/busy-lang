@@ -4,6 +4,7 @@ Type: [Checklist]
 Description: Verification checklist to ensure any BUSY [Document] follows required structural conventions.
 ---
 
+# [Imports](../core/document.md#imports-section)
 [Document]:../core/document.md
 [Concept]:../core/concept.md
 [Operation]:../core/operation.md
@@ -32,11 +33,13 @@ Use this [Checklist] whenever you draft or revise a BUSY [Document]. It focuses 
    2. Confirm the frontmatter `Type` is a bracketed reference to the correct BUSY concept (e.g., `[Playbook]`, `[Tool]`).
    3. Confirm reference-style imports follow immediately after the frontmatter, one per line as `[Alias]:relative/path[#anchor]`.
    4. Verify each import path exists and any anchor resolves to a heading within the target file.
+   5. Confirm a `# [Imports](../core/document.md#imports-section)` heading appears directly above the reference definitions (even when no external imports are required).
 2. Concept References
    1. Confirm every section heading outside `# Local Definitions` wraps its title in a link to the concept it invokes (e.g., `# [Setup](path)`); if a heading is unlinked, ensure it introduces a new concept first defined under `# Local Definitions`.
    2. Confirm any local concepts are grouped under `# Local Definitions` using level-2 headings (`## ConceptName`) with canonical names so they can be referenced internally or externally.
    3. Verify new concepts are introduced only under `# Local Definitions`, and any later references link back to that definition or an import.
    4. Confirm concept references in prose are linked to their defining [Document]s (e.g., `[Operation]`, `[Checklist]`), or establish them under `# Local Definitions` before reuse.
+   5. Confirm section links do not point back to the same heading (no self-referential anchors); they must reference a canonical concept definition or imported/local definition anchor.
 3. Sections and Operations
    1. Confirm a `# [Setup](../core/document.md#setup-section)` section is present and either establishes required context or explicitly states when no setup actions are needed.
    2. When the [Document] defines callable work, confirm a `# [Operations](../core/document.md#operations-section)` section exists.

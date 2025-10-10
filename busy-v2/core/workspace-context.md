@@ -3,6 +3,7 @@ Name: WorkspaceContext
 Type: [Document]
 Description: A foundational [Document] that configures and guides agent execution within a workspace. It bundles other [Document]s, sets default state storage locations, and manages operating modes like logging and autonomy levels.
 ---
+# [Imports](./document.md#imports-section)
 
 [Concept]:./concept.md
 [Document]:./document.md
@@ -13,7 +14,7 @@ Description: A foundational [Document] that configures and guides agent executio
 [Playbook]:./playbook.md
 [Trace Directory]:./workspace-context.md#trace-directory
 
-# Local Definitions
+# [Local Definitions](./document.md#local-definitions-section)
 
 ## Operating Modes
 
@@ -50,8 +51,8 @@ The default location and method for storing this any other configuration.
 ### Trace Directory
 The folder path where execution trace logs are written. Default to `.trace` at the workspace root so every agent run has a consistent location to append trace files. Create the directory if it does not exist before writing logs.
 
-# Setup
-Read in all existing state and configuration. If it is not found, stop and throw an [error](./operation.md#error) asking the user to run the `InitializeWorkspace` [Operation]. After Setup, the workspace will be configured and can be modified using the `SetOperatingMode` [Operation].
+# [Setup](./document.md#setup-section)
+Read in all existing state and configuration. If it is not found, stop and throw an [error](./operation.md#error) asking the user to run the `InitializeWorkspace` [Operation]. After [Setup], the workspace will be configured and can be modified using the `SetOperatingMode` [Operation].
 
 - **[State Storage]**: `GEMINI.md`
 - **[Configuration Storage]**: `GEMINI.md`
@@ -60,32 +61,32 @@ Read in all existing state and configuration. If it is not found, stop and throw
 - **[Autonomy Level]**: `assisted`
 - **[Bundled Documents]**: `ALL`
 
-# Operations
+# [Operations](./document.md#operations-section)
 
 [InitializeWorkspace]:./workspace-context.md#initializeworkspace
-## InitializeWorkspace
+## [InitializeWorkspace][Operation]
 - **Input:** None
 - **Steps:**
-    1.  Apply the default settings from the `Setup` section.
+    1.  Apply the default settings from the `# [Setup](./document.md#setup-section)` section.
     2.  Ensure the [Trace Directory] exists (create it if necessary) so trace logs have a stable location.
     3.  Save everything to [Configuration Storage].
     4.  Log a confirmation message indicating that the workspace has been initialized, including the resolved [Trace Directory] path.
 
 [SetOperatingMode]:./workspace-context.md#setoperatingmode
-## SetOperatingMode
+## [SetOperatingMode][Operation]
 - **Input:** The name of the operating mode to set (e.g., `Log Level`) and the desired value (e.g., `verbose`).
 - **Steps:**
     1.  Validate that the provided operating mode and value are valid.
     2.  Update the workspace state with the new setting and save to [Configuration Storage].
     3.  Log a confirmation message indicating the change and note the current [Trace Directory] so developers can locate the trace output.
 
-## ListAllDocuments
+## [ListAllDocuments][Operation]
 - **Input:** None
 - **Steps:**
     1.  Read the [Bundled Documents] list from the workspace state.
     2.  For each [Document], display its `Name`, type (e.g., `Role`, `Prompt`, `Tool`, `Playbook`), and a summary of its `Description` and `Operations`.
 
-## DisplayCurrentSettings
+## [DisplayCurrentSettings][Operation]
 - **Input:** None
 - **Steps:**
     1.  Read the current settings from the workspace state (`Log Level`, `Autonomy Level`, `Bundled Documents`, `State Storage`, `Trace Directory`).
