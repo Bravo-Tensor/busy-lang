@@ -4,20 +4,20 @@ Type: [Playbook]
 Description: Provisions a folder-based agent workspace with inbox/outbox automation and a Gemini handoff script.
 ---
 
-# [Imports](../core/document.md#imports-section)
-[Playbook]:../core/playbook.md
-[Document]:../core/document.md
-[Operation]:../core/operation.md
-[Tool]:../core/tool.md
-[BusyAssistant]:./busy-assistant.md
-[EvaluateDocument]:../core/document.md#evaluatedocument
-[ExecutePlaybook]:../core/playbook.md#executeplaybook
-[ListPlaybookSteps]:../core/playbook.md#listplaybooksteps
+# [Imports](../core/document.busy.md#imports-section)
+[Playbook]:../core/playbook.busy.md
+[Document]:../core/document.busy.md
+[Operation]:../core/operation.busy.md
+[Tool]:../core/tool.busy.md
+[BusyAssistant]:./busy-assistant.busy.md
+[EvaluateDocument]:../core/document.busy.md#evaluatedocument
+[ExecutePlaybook]:../core/playbook.busy.md#executeplaybook
+[ListPlaybookSteps]:../core/playbook.busy.md#listplaybooksteps
 
-# [Setup](../core/document.md#setup-section)
+# [Setup](../core/document.busy.md#setup-section)
 This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repository root with shell access. The starter assets live in `base/templates/basic-workspace`; define an absolute target path (for example `agents/basic-workspace`) and export it as `$WORKSPACE_ROOT` before copying the template.
 
-# [Operations](../core/document.md#operations-section)
+# [Operations](../core/document.busy.md#operations-section)
 
 ## [_CopyWorkspaceTemplate][Operation]
 - **Purpose:** Materialize the template workspace that ships with inbox/outbox directories and starter instructions.
@@ -50,25 +50,27 @@ This [Playbook] scaffolds a minimal agent workspace. Run it from your BUSY repos
     2. Report the results to the user.
     3. Log exit: `timestamp | Build Basic Workspace Playbook -> _ValidateWorkspace | Completed workspace validation.`
 
-## [Step 1 — Copy Workspace Template](../core/playbook.md#sequence-step)
+## [ExecutePlaybook](../core/playbook.busy.md#executeplaybook)
+
+### [Step 1 — Copy Workspace Template](../core/playbook.busy.md#sequence-step)
 - **Target:** `_CopyWorkspaceTemplate`
 - **Role Context:** [BusyAssistant]
 - **Notes:** The BusyAssistant can clarify directory conventions or BUSY-specific best practices while you scaffold.
 
-## [Step 2 — Customize Instructions](../core/playbook.md#sequence-step)
+### [Step 2 — Customize Instructions](../core/playbook.busy.md#sequence-step)
 - **Target:** `_ReviewTemplateInstructions`
 - **Role Context:** [BusyAssistant]
-- **Notes:** Customize the instructions to capture the agent’s tone, constraints, and expected deliverables.
+- **Notes:** Customize the instructions to capture the agent's tone, constraints, and expected deliverables.
 
-## [Step 3 — Validate Workspace](../core/playbook.md#sequence-step)
+### [Step 3 — Validate Workspace](../core/playbook.busy.md#sequence-step)
 - **Target:** `_ValidateWorkspace`
 - **Role Context:** [BusyAssistant]
 - **Notes:** This will run the test suite to ensure the workspace is functioning correctly.
 
-## [ListPlaybookSteps](../core/playbook.md#listplaybooksteps)
+## [ListPlaybookSteps](../core/playbook.busy.md#listplaybooksteps)
 Execute [ListPlaybookSteps] after [EvaluateDocument] to enumerate Steps 1–3.
 
-### [Checklist](../core/checklist.md#checklist)
+### [Checklist](../core/checklist.busy.md#checklist)
 - Confirm `$WORKSPACE_ROOT` contains the copied template workspace with inbox/outbox directories, `.busy/` assets, `.trace/`, and updated links.
 - Confirm `$WORKSPACE_ROOT/instructions.md` reflects any project-specific guidance or note that none was required.
 - Confirm `$WORKSPACE_ROOT/instructions.test.md` was executed and report the observed results to the user.
