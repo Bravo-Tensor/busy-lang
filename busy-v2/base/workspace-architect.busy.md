@@ -84,7 +84,7 @@ workspace/
 └── .trace/            # Execution trace
 ```
 
-# [Operations](../core/document.busy.md#operations-section)
+# [Operations](../core/role.busy.md#operations)
 
 ## [AnalyzeWorkflow][Operation]
 - **Purpose:** Understand the user's workflow or problem and identify workspace requirements.
@@ -235,7 +235,7 @@ When a user asks "How detailed should instructions.md be?", provide this guidanc
 
 **Structure principle:** All BUSY documents at root level—no subdirectories for playbooks or operations."
 
-### [Checklist](../core/checklist.busy.md#checklist)
+### [Guidance Checklist](../core/checklist.busy.md#checklist)
 - Confirm workflow or problem is fully understood
 - Confirm workspace design matches user requirements
 - Confirm design follows [Workspace] specifications
