@@ -272,7 +272,9 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
 
 /**
  * Inherit operations from parent documents
- * If a document extends another document, inherit operations that are not explicitly overridden
+ * Inherits from:
+ * 1. Documents in the 'extends' array (explicit extension)
+ * 2. Documents in the 'types' array (implicit type-based inheritance)
  */
 function inheritOperations(
   docs: BusyDocument[],
@@ -286,7 +288,10 @@ function inheritOperations(
 
   // Process each document
   for (const doc of docs) {
-    if (doc.extends.length === 0) continue;
+    // Collect parent names from both extends and types
+    const parentNames = [...doc.extends, ...doc.types];
+
+    if (parentNames.length === 0) continue;
 
     // Get operations currently in this document
     const existingOps = new Set<string>();
@@ -297,7 +302,7 @@ function inheritOperations(
     }
 
     // Inherit from parent documents
-    for (const parentName of doc.extends) {
+    for (const parentName of parentNames) {
       const parentDoc = docByName.get(parentName);
       if (!parentDoc) {
         debug.parser('Parent document not found: %s', parentName);

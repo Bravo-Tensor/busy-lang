@@ -32,6 +32,17 @@ export function extractOperations(
 
   for (const child of operationsSection.children) {
     const operation = createOperation(child, docId, filePath);
+
+    // Skip empty operations (just reference headers with no content)
+    // These are placeholders that should be inherited from parent documents
+    if (operation.content.trim().length === 0 &&
+        operation.steps.length === 0 &&
+        operation.checklist.length === 0 &&
+        child.children.length === 0) {
+      debug.localdefs('Skipping empty operation: %s (likely a reference header)', operation.name);
+      continue;
+    }
+
     operations.push(operation);
   }
 

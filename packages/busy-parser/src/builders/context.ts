@@ -135,10 +135,13 @@ export function buildContext(
   for (const edge of edges) {
     if (edge.role === 'calls') {
       const target = repo.byId[edge.to];
-      if (target && target.kind === 'section') {
+      if (target) {
+        // Accept both sections and operations as call targets
+        const title = target.kind === 'operation' ? target.name :
+                      target.kind === 'section' ? target.title : undefined;
         calls.push({
           ref: edge.to,
-          title: target.title,
+          title,
         });
       }
     }
