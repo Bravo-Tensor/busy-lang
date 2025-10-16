@@ -4,15 +4,17 @@ import path from 'path';
 import {
   Repo,
   BusyDocument,
+  Playbook,
   ConceptBase,
   LocalDef,
   Operation,
   ImportDef,
   Edge,
   Section,
+  File,
 } from './types/schema.js';
 import { parseFrontMatter } from './parsers/frontmatter.js';
-import { parseSections, getAllSections } from './parsers/sections.js';
+import { parseSections, getAllSections, findSection } from './parsers/sections.js';
 import { extractLocalDefs } from './parsers/localdefs.js';
 import { extractOperations } from './parsers/operations.js';
 import { extractImports, resolveImportTarget } from './parsers/imports.js';
@@ -26,15 +28,15 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
   debug.parser('Loading repo from globs: %o', globs);
 
   // Find all markdown files
-  const files = await fg(globs, {
+  const filePaths = await fg(globs, {
     absolute: true,
     onlyFiles: true,
   });
 
-  debug.parser('Found %d files', files.length);
+  debug.parser('Found %d files', filePaths.length);
 
   // Sort files for determinism
-  files.sort();
+  filePaths.sort();
 
   // Build file map for resolution
   const fileMap = new Map<string, { docId: string; path: string }>();
@@ -42,7 +44,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
   // First pass: parse frontmatter to build file map
   const fileContents = new Map<string, string>();
 
-  for (const filePath of files) {
+  for (const filePath of filePaths) {
     const content = await readFile(filePath, 'utf-8');
     fileContents.set(filePath, content);
 
@@ -64,47 +66,47 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
   }
 
   // Second pass: parse documents
-  const docs: BusyDocument[] = [];
+  const files: File[] = []; // Lightweight file representations
+  const docs: (BusyDocument | Playbook)[] = []; // Full concept definitions
   const allLocaldefs = new Map<string, LocalDef>();
   const allOperations = new Map<string, Operation>();
   const allImports: ImportDef[] = [];
   const allEdges: Edge[] = [];
   const allSections = new Map<string, Section>();
 
-  for (const filePath of files) {
+  // Store document parts temporarily before building final docs
+  const docParts = new Map<string, {
+    filePath: string;
+    content: string;
+    frontmatter: any;
+    docId: string;
+    types: string[];
+    extends: string[];
+    sections: Section[];
+    localdefs: LocalDef[];
+    operations: Operation[];
+    setup: any;
+    imports: ImportDef[];
+    symbols: Record<string, { docId?: string; slug?: string }>;
+  }>();
+
+  for (const filePath of filePaths) {
     const content = fileContents.get(filePath)!;
 
     // Parse frontmatter
     const { frontmatter, content: mdContent, docId, kind, types, extends: extends_ } =
       parseFrontMatter(content, filePath);
 
-    // Count lines
-    const lines = content.split('\n');
-    const lineStart = 1;
-    const lineEnd = lines.length;
-
     // Parse sections
     const sections = parseSections(mdContent, docId, filePath);
 
-    // Create document
-    const doc: BusyDocument = {
-      kind: 'document', // All top-level files are documents
-      id: docId,
+    // Create file representation (lightweight - just sections)
+    files.push({
       docId,
-      slug: docId.toLowerCase(),
-      name: frontmatter.Name,
-      description: frontmatter.Description,
-      types,
-      extends: extends_,
-      tags: frontmatter.Tags ?? [],
-      attrs: frontmatter as Record<string, unknown>,
       path: filePath,
-      lineStart,
-      lineEnd,
+      name: frontmatter.Name,
       sections,
-    };
-
-    docs.push(doc);
+    });
 
     // Index all sections
     for (const section of getAllSections(sections)) {
@@ -123,30 +125,61 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
       allOperations.set(operation.id, operation);
     }
 
+    // Extract setup (if present)
+    const setupSection = findSection(sections, 'setup');
+    const setup = setupSection ? {
+      kind: 'setup' as const,
+      id: `${docId}::setup`, // Use :: for concept IDs
+      docId,
+      slug: 'setup',
+      name: 'Setup',
+      content: setupSection.content,
+      types: [],
+      extends: [],
+      sectionRef: setupSection.id, // sectionRef uses # for section references
+    } : undefined;
+
     // Extract imports
     const { imports, symbols } = extractImports(content, docId);
+
+    // Store document parts
+    docParts.set(docId, {
+      filePath,
+      content,
+      frontmatter,
+      docId,
+      types,
+      extends: extends_,
+      sections,
+      localdefs,
+      operations,
+      setup,
+      imports,
+      symbols,
+    });
 
     // Resolve imports
     for (const importDef of imports) {
       const resolved = resolveImportTarget(importDef.target, docId, fileMap);
-      importDef.resolved = resolved;
 
-      // Update symbol table
-      if (symbols[importDef.label]) {
-        symbols[importDef.label] = resolved;
-      }
-
-      // Create import edge
+      // Store resolved as ConceptId (string) per schema
       if (resolved.docId) {
-        const targetId = resolved.slug
+        const resolvedId = resolved.slug
           ? `${resolved.docId}#${resolved.slug}`
           : resolved.docId;
+        importDef.resolved = resolvedId;
 
+        // Create import edge
         allEdges.push({
           from: docId,
-          to: targetId,
+          to: resolvedId,
           role: 'imports',
         });
+      }
+
+      // Update symbol table (keeps object format for easy lookup)
+      if (symbols[importDef.label]) {
+        symbols[importDef.label] = resolved;
       }
 
       allImports.push(importDef);
@@ -174,40 +207,79 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
             role: 'extends',
           });
         } else {
-          warn(`Unresolved extends: ${parent} in ${localdef.id}`, {
-            file: filePath,
-            line: localdef.lineStart,
-          });
+          warn(`Unresolved extends: ${parent} in ${localdef.id}`);
         }
       }
+    }
+  }
+
+  // Build final document structures with inline arrays
+  for (const [docId, parts] of docParts) {
+    const isPlaybook = parts.types.some((t) => t.toLowerCase() === 'playbook');
+
+    if (isPlaybook) {
+      // Extract sequence from ExecutePlaybook operation
+      const sequence = extractPlaybookSequence(parts.sections);
+
+      const doc: Playbook = {
+        kind: 'playbook',
+        id: parts.docId,
+        docId: parts.docId,
+        slug: parts.docId.toLowerCase(),
+        name: parts.frontmatter.Name,
+        content: parts.content,
+        types: parts.types,
+        extends: parts.extends,
+        sectionRef: `${parts.docId}#`, // Root reference
+        imports: parts.imports,
+        localdefs: parts.localdefs,
+        setup: parts.setup!,
+        operations: parts.operations,
+        sequence,
+      };
+      docs.push(doc);
+    } else {
+      const doc: BusyDocument = {
+        kind: 'document',
+        id: parts.docId,
+        docId: parts.docId,
+        slug: parts.docId.toLowerCase(),
+        name: parts.frontmatter.Name,
+        content: parts.content,
+        types: parts.types,
+        extends: parts.extends,
+        sectionRef: `${parts.docId}#`, // Root reference
+        imports: parts.imports,
+        localdefs: parts.localdefs,
+        setup: parts.setup!,
+        operations: parts.operations,
+      };
+      docs.push(doc);
     }
   }
 
   // Inherit operations from parent documents
   inheritOperations(docs, allOperations);
 
-  // Build concepts array (includes all documents)
+  // Build concepts array (includes all documents as ConceptBase)
   const concepts: ConceptBase[] = docs.map((doc) => ({
     kind: doc.kind,
     id: doc.id,
     docId: doc.docId,
     slug: doc.slug,
     name: doc.name,
-    description: doc.description,
+    content: doc.content,
     types: doc.types,
     extends: doc.extends,
-    tags: doc.tags,
-    attrs: doc.attrs,
-    path: doc.path,
-    lineStart: doc.lineStart,
-    lineEnd: doc.lineEnd,
+    sectionRef: doc.sectionRef,
+    children: [], // ConceptBase has children for hierarchy
   }));
 
   // Build byId index
   const byId: Record<string, Section | LocalDef | Operation | ConceptBase> = {};
 
-  for (const doc of docs) {
-    byId[doc.id] = doc;
+  for (const concept of concepts) {
+    byId[concept.id] = concept;
   }
 
   for (const [id, section] of allSections) {
@@ -233,27 +305,30 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
     }
   }
 
-  // Build byDoc index
-  const byDoc: Record<string, { doc: BusyDocument; bySlug: Record<string, Section> }> = {};
+  // Build byFile index
+  const byFile: Record<string, { concept: BusyDocument | Playbook; bySlug: Record<string, Section> }> = {};
 
   for (const doc of docs) {
     const bySlug: Record<string, Section> = {};
+    const parts = docParts.get(doc.docId);
 
-    for (const section of getAllSections(doc.sections)) {
-      bySlug[section.slug] = section;
+    if (parts) {
+      for (const section of getAllSections(parts.sections)) {
+        bySlug[section.slug] = section;
+      }
     }
 
-    byDoc[doc.docId] = { doc, bySlug };
+    byFile[doc.docId] = { concept: doc, bySlug };
   }
 
   const repo: Repo = {
-    docs,
+    files,
     concepts,
     localdefs: Object.fromEntries(allLocaldefs),
     operations: Object.fromEntries(allOperations),
     imports: allImports,
     byId,
-    byDoc,
+    byFile,
     edges: allEdges,
   };
 
@@ -277,11 +352,11 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
  * 2. Documents in the 'types' array (implicit type-based inheritance)
  */
 function inheritOperations(
-  docs: BusyDocument[],
+  docs: (BusyDocument | Playbook)[],
   allOperations: Map<string, Operation>
 ): void {
   // Build doc lookup by name
-  const docByName = new Map<string, BusyDocument>();
+  const docByName = new Map<string, BusyDocument | Playbook>();
   for (const doc of docs) {
     docByName.set(doc.name, doc);
   }
@@ -316,9 +391,8 @@ function inheritOperations(
           if (!existingOps.has(op.slug)) {
             const inheritedOp: Operation = {
               ...op,
-              id: `${doc.docId}#${op.slug}`,
+              id: `${doc.docId}::${op.slug}`, // Use :: for concept IDs
               docId: doc.docId,
-              path: doc.path,
             };
             allOperations.set(inheritedOp.id, inheritedOp);
             existingOps.add(op.slug);
@@ -342,7 +416,7 @@ function resolveSymbol(
   nameOrLabel: string,
   currentDocId: string,
   localdefs: Map<string, LocalDef>,
-  docs: BusyDocument[],
+  docs: (BusyDocument | Playbook)[],
   symbols: Record<string, { docId?: string; slug?: string }>
 ): string | undefined {
   // 1. Check for LocalDef in same doc
@@ -364,4 +438,37 @@ function resolveSymbol(
   }
 
   return undefined;
+}
+
+/**
+ * Extract sequence of operations from a playbook's ExecutePlaybook operation
+ * Looks for sections with "Step" in the title and extracts Target metadata
+ */
+function extractPlaybookSequence(sections: Section[]): string[] {
+  const sequence: string[] = [];
+
+  // Find ExecutePlaybook operation in the Operations section
+  const allSecs = getAllSections(sections);
+  const executePlaybook = allSecs.find(
+    (sec) => sec.title.toLowerCase() === 'executeplaybook'
+  );
+
+  if (!executePlaybook) {
+    return sequence;
+  }
+
+  // Look for child sections that are steps (contain "step" in title, case-insensitive)
+  for (const child of executePlaybook.children) {
+    if (child.title.toLowerCase().includes('step')) {
+      // Extract Target field from content
+      // Pattern: - **Target:** `OperationName`
+      const targetMatch = child.content.match(/^\s*-\s*\*\*Target:\*\*\s*`([^`]+)`/m);
+      if (targetMatch) {
+        sequence.push(targetMatch[1]);
+        debug.parser('Found playbook sequence step: %s -> %s', child.title, targetMatch[1]);
+      }
+    }
+  }
+
+  return sequence;
 }

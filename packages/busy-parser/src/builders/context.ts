@@ -25,16 +25,14 @@ export function buildContext(
     throw new Error(`Operation not found: ${opRef}`);
   }
 
-  const operation = {
-    ref: opRef,
-    title: opNode.kind === 'operation' ? opNode.name : opNode.title,
-    content: opNode.content,
-    attrs: opNode.attrs,
-    ...(opNode.kind === 'operation' && {
-      steps: opNode.steps,
-      checklist: opNode.checklist,
-    }),
-  };
+  // Get the full Operation object
+  let operation: Operation;
+  if (opNode.kind === 'operation') {
+    operation = opNode;
+  } else {
+    // If it's a section, we need to find the operation or throw
+    throw new Error(`Expected operation but got section: ${opRef}`);
+  }
 
   // 2. Collect outgoing edges from the operation section
   const edges = repo.edges.filter((edge) => {
@@ -52,119 +50,37 @@ export function buildContext(
 
   debug.context('Found %d outgoing edges', edges.length);
 
-  // 3. Defs closure
-  const includedDefIds = new Set<string>();
-  const defsToProcess: string[] = [];
-
-  // Find all LocalDef refs
-  for (const edge of edges) {
-    if (edge.role === 'ref') {
-      const target = repo.byId[edge.to];
-      if (target && target.kind === 'localdef') {
-        includedDefIds.add(target.id);
-        defsToProcess.push(target.id);
-      }
-    }
-  }
-
-  // Traverse extends edges transitively
-  while (defsToProcess.length > 0) {
-    const defId = defsToProcess.pop()!;
-    const def = repo.localdefs[defId];
-
-    if (!def) continue;
-
-    // Find extends edges from this def
-    const extendsEdges = repo.edges.filter(
-      (edge) => edge.from === defId && edge.role === 'extends'
-    );
-
-    for (const edge of extendsEdges) {
-      if (!includedDefIds.has(edge.to)) {
-        includedDefIds.add(edge.to);
-        defsToProcess.push(edge.to);
-      }
-    }
-  }
-
-  // Build defs array with topological order (parents before children)
-  const defsArray: Array<Pick<LocalDef, 'id' | 'name' | 'content' | 'extends'>> = [];
-  const processed = new Set<string>();
-
-  function addDefWithParents(defId: string) {
-    if (processed.has(defId)) return;
-
-    const def = repo.localdefs[defId];
-    if (!def) return;
-
-    // Add parents first
-    const extendsEdges = repo.edges.filter(
-      (edge) => edge.from === defId && edge.role === 'extends'
-    );
-
-    for (const edge of extendsEdges) {
-      addDefWithParents(edge.to);
-    }
-
-    // Add this def
-    let content = def.content;
-
-    if (maxDefChars && content.length > maxDefChars) {
-      content = trimContent(content, maxDefChars);
-    }
-
-    defsArray.push({
-      id: def.id,
-      name: def.name,
-      content,
-      extends: def.extends,
-    });
-
-    processed.add(defId);
-  }
-
-  for (const defId of includedDefIds) {
-    addDefWithParents(defId);
-  }
-
-  debug.context('Included %d definitions', defsArray.length);
-
-  // 4. Calls
-  const calls: Array<{ ref: string; title?: string }> = [];
+  // 3. Calls (just array of concept IDs)
+  const calls: string[] = [];
 
   for (const edge of edges) {
     if (edge.role === 'calls') {
-      const target = repo.byId[edge.to];
-      if (target) {
-        // Accept both sections and operations as call targets
-        const title = target.kind === 'operation' ? target.name :
-                      target.kind === 'section' ? target.title : undefined;
-        calls.push({
-          ref: edge.to,
-          title,
-        });
-      }
+      calls.push(edge.to);
     }
   }
 
   debug.context('Found %d calls', calls.length);
 
-  // 5. Symbols
+  // 4. Symbols
   // Get the document's import symbol table
-  const docInfo = repo.byDoc[opNode.docId];
+  const fileInfo = repo.byFile[opNode.docId];
   const docImports = repo.imports.filter((imp) => imp.docId === opNode.docId);
 
   const symbols: Record<string, { docId?: string; slug?: string }> = {};
 
   for (const imp of docImports) {
     if (imp.resolved) {
-      symbols[imp.label] = imp.resolved;
+      // Parse ConceptId string back to { docId, slug }
+      const parts = imp.resolved.split('#');
+      symbols[imp.label] = {
+        docId: parts[0],
+        slug: parts[1],
+      };
     }
   }
 
   const payload: ContextPayload = {
     operation,
-    defs: defsArray,
     calls,
     symbols,
   };

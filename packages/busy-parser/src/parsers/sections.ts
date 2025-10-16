@@ -53,12 +53,22 @@ export function parseSections(
     });
   });
 
-  // Build section tree
+  // Build section tree and populate extends map
   const sections = buildSectionTree(headings, content, docId, filePath);
 
   debug.sections('Found %d top-level sections', sections.length);
 
   return sections;
+}
+
+/**
+ * Get extends information for a section by ID
+ * This is stored separately since Section schema doesn't include extends
+ */
+const sectionExtendsMap = new Map<string, string[]>();
+
+export function getSectionExtends(sectionId: string): string[] {
+  return sectionExtendsMap.get(sectionId) ?? [];
 }
 
 /**
@@ -150,12 +160,14 @@ function buildSectionTree(
       path: filePath,
       lineStart: heading.lineStart,
       lineEnd: contentEnd,
-      tags: [],
-      attrs: {},
-      extends: heading.extends,
       content: sectionContent,
       children: [],
     };
+
+    // Store extends metadata separately (not in Section schema)
+    if (heading.extends.length > 0) {
+      sectionExtendsMap.set(section.id, heading.extends);
+    }
 
     // Find parent and add to tree
     while (stack.length > 0 && stack[stack.length - 1].depth >= heading.depth) {

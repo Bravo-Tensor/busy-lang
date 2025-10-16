@@ -119,10 +119,10 @@ function inferKind(types: string[]): ConceptBase['kind'] {
 }
 
 /**
- * Infer extends from types (placeholder for future logic)
+ * Infer extends from types
+ * All Type references should be included in extends
  */
-function inferExtendsFromTypes(_types: string[]): string[] {
-  // For now, no automatic inference from types
-  // In the future, could infer base concepts from types
-  return [];
+function inferExtendsFromTypes(types: string[]): string[] {
+  // All types are also extends - they define what this concept is based on
+  return types;
 }

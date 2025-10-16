@@ -24,7 +24,7 @@ program
 
       const repo = await loadRepo(globs);
 
-      console.log(`✓ Loaded ${repo.docs.length} documents`);
+      console.log(`✓ Loaded ${repo.files.length} files`);
       console.log(`✓ Found ${Object.keys(repo.localdefs).length} local definitions`);
       console.log(`✓ Found ${Object.keys(repo.operations).length} operations`);
       console.log(`✓ Found ${repo.imports.length} imports`);
@@ -67,7 +67,7 @@ program
             });
 
             allContexts[id] = context;
-            console.log(`✓ ${operation.name} (${context.defs.length} defs, ${context.calls.length} calls)`);
+            console.log(`✓ ${operation.name} (${context.calls.length} calls)`);
           } catch (err) {
             console.error(`✗ Failed to build context for ${id}: ${err}`);
           }
@@ -88,8 +88,7 @@ program
           includeChildren: options.includeChildren,
         });
 
-        console.log(`✓ Operation: ${context.operation.title}`);
-        console.log(`✓ Included ${context.defs.length} definitions`);
+        console.log(`✓ Operation: ${context.operation.name}`);
         console.log(`✓ Found ${context.calls.length} callable operations`);
 
         if (options.output) {
@@ -121,9 +120,9 @@ program
         console.log('  node [shape=box];');
         console.log('');
 
-        // Nodes
-        for (const doc of repo.docs) {
-          console.log(`  "${doc.id}" [label="${doc.name}\\n(${doc.kind})"];`);
+        // Nodes - use concepts instead of docs/files
+        for (const concept of repo.concepts) {
+          console.log(`  "${concept.id}" [label="${concept.name}\\n(${concept.kind})"];`);
         }
 
         for (const [id, localdef] of Object.entries(repo.localdefs)) {

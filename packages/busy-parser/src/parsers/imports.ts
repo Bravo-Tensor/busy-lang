@@ -35,14 +35,10 @@ export function extractImports(
       docId,
       slug: label.toLowerCase(),
       name: label,
-      description: undefined,
+      content: '', // Imports don't have content
       types: [],
       extends: [],
-      tags: [],
-      attrs: {},
-      path: '', // Will be set from resolved target
-      lineStart: 0,
-      lineEnd: 0,
+      sectionRef: '', // Imports don't belong to a section
       label,
       target,
       resolved: undefined, // Will be resolved later

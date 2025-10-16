@@ -1,6 +1,6 @@
 import { Section, LocalDef, DocId } from '../types/schema.js';
 import { createSlug } from '../utils/slugify.js';
-import { findSection, getAllSections } from './sections.js';
+import { findSection, getAllSections, getSectionExtends } from './sections.js';
 import { debug } from '../utils/logger.js';
 
 const LOCAL_DEFS_ALIASES = [
@@ -70,8 +70,14 @@ function createLocalDef(
   const slug = section.slug;
   const id = `${docId}::${slug}`;
 
-  // Parse attrs from content
-  const { attrs, extends: extendsArr } = parseLocalDefAttrs(section.content);
+  // Parse extends from content
+  const { extends: extendsFromContent } = parseLocalDefAttrs(section.content);
+
+  // Get extends from section heading (e.g., ## [MyDef][Type])
+  const extendsFromHeading = getSectionExtends(section.id);
+
+  // Combine both sources of extends
+  const extends_ = Array.from(new Set([...extendsFromContent, ...extendsFromHeading]));
 
   return {
     kind: 'localdef',
@@ -79,16 +85,10 @@ function createLocalDef(
     docId,
     slug,
     name: section.title,
-    description: attrs.Description as string | undefined,
-    types: [],
-    extends: extendsArr,
-    tags: Array.isArray(attrs.Tags) ? attrs.Tags : [],
-    attrs,
-    path: filePath,
-    lineStart: section.lineStart,
-    lineEnd: section.lineEnd,
-    depth: section.depth,
     content: section.content,
+    types: [],
+    extends: extends_,
+    sectionRef: section.id,
   };
 }
 

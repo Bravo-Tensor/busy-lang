@@ -1,5 +1,5 @@
 import { Section, Operation, DocId } from '../types/schema.js';
-import { getAllSections, findSection } from './sections.js';
+import { getAllSections, findSection, getSectionExtends } from './sections.js';
 import { debug } from '../utils/logger.js';
 
 const OPERATIONS_SECTION_ALIASES = [
@@ -73,10 +73,13 @@ function createOperation(
   filePath: string
 ): Operation {
   const slug = section.slug;
-  const id = `${docId}#${slug}`;
+  const id = `${docId}::${slug}`; // Use :: for concept IDs
 
   // Parse steps and checklist from content
-  const { steps, checklist, attrs } = parseOperationContent(section);
+  const { steps, checklist } = parseOperationContent(section);
+
+  // Get extends from section heading (e.g., ## [ValidateInput][Operation])
+  const extends_ = getSectionExtends(section.id);
 
   return {
     kind: 'operation',
@@ -84,16 +87,10 @@ function createOperation(
     docId,
     slug,
     name: section.title,
-    description: attrs.Description as string | undefined,
-    types: [],
-    extends: section.extends,
-    tags: section.tags,
-    attrs,
-    path: filePath,
-    lineStart: section.lineStart,
-    lineEnd: section.lineEnd,
-    depth: section.depth,
     content: section.content,
+    types: [],
+    extends: extends_,
+    sectionRef: section.id, // sectionRef uses # for section references
     steps,
     checklist,
   };
@@ -105,11 +102,9 @@ function createOperation(
 function parseOperationContent(section: Section): {
   steps: string[];
   checklist: string[];
-  attrs: Record<string, unknown>;
 } {
   const steps: string[] = [];
   const checklist: string[] = [];
-  const attrs: Record<string, unknown> = {};
 
   // Look for Steps subsection
   const stepsSection = section.children.find(
@@ -132,7 +127,7 @@ function parseOperationContent(section: Section): {
     checklist.push(...extractListItems(checklistSection.content));
   }
 
-  return { steps, checklist, attrs };
+  return { steps, checklist };
 }
 
 /**
