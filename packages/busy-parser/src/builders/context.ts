@@ -141,6 +141,147 @@ export function childrenOf(repo: Repo, nameOrRef: string): string[] {
 }
 
 /**
+ * Context for a specific concept
+ */
+export interface ConceptContext {
+  concept: Section | LocalDef | Operation | ConceptBase;
+  // Outgoing edges grouped by role
+  calls: string[];        // concepts this concept calls
+  extends: string[];      // concepts this concept extends
+  imports: string[];      // concepts this concept imports
+  refs: string[];         // concepts this concept references
+  // Incoming edges grouped by role
+  calledBy: string[];     // concepts that call this concept
+  extendedBy: string[];   // concepts that extend this concept
+  importedBy: string[];   // concepts that import this concept
+  referencedBy: string[]; // concepts that reference this concept
+  // All edges for advanced usage
+  allEdges: {
+    outgoing: Array<{ to: string; role: string }>;
+    incoming: Array<{ from: string; role: string }>;
+  };
+  // Content dictionary for imported and referenced concepts
+  contentMap: Record<string, string>; // conceptId -> content
+}
+
+/**
+ * Get comprehensive context for any concept by ID
+ * Returns all relationships (calls, extends, imports, refs) both outgoing and incoming
+ */
+export function getConceptContext(
+  repo: Repo,
+  conceptId: string
+): ConceptContext {
+  debug.context('Building concept context for: %s', conceptId);
+
+  // 1. Get the concept
+  const concept = repo.byId[conceptId];
+  if (!concept) {
+    throw new Error(`Concept not found: ${conceptId}`);
+  }
+
+  // 2. Get all outgoing edges
+  // For operations and localdefs, also include edges from their parent section and document
+  let edgeSources = [conceptId];
+
+  if (concept.kind === 'operation' || concept.kind === 'localdef') {
+    // Add the section
+    if ('sectionRef' in concept && concept.sectionRef) {
+      edgeSources.push(concept.sectionRef);
+    }
+    // Add the document
+    if ('docId' in concept && concept.docId) {
+      edgeSources.push(concept.docId);
+    }
+  }
+
+  const outgoingEdges = repo.edges.filter((edge) => edgeSources.includes(edge.from));
+
+  // 3. Get all incoming edges
+  const incomingEdges = repo.edges.filter((edge) => edge.to === conceptId);
+
+  // 4. Group outgoing edges by role
+  const calls = outgoingEdges
+    .filter((e) => e.role === 'calls')
+    .map((e) => e.to);
+
+  const extendsEdges = outgoingEdges
+    .filter((e) => e.role === 'extends')
+    .map((e) => e.to);
+
+  const importsEdges = outgoingEdges
+    .filter((e) => e.role === 'imports')
+    .map((e) => e.to);
+
+  const refs = outgoingEdges
+    .filter((e) => e.role === 'ref')
+    .map((e) => e.to);
+
+  // 5. Group incoming edges by role
+  const calledBy = incomingEdges
+    .filter((e) => e.role === 'calls')
+    .map((e) => e.from);
+
+  const extendedBy = incomingEdges
+    .filter((e) => e.role === 'extends')
+    .map((e) => e.from);
+
+  const importedBy = incomingEdges
+    .filter((e) => e.role === 'imports')
+    .map((e) => e.from);
+
+  const referencedBy = incomingEdges
+    .filter((e) => e.role === 'ref')
+    .map((e) => e.from);
+
+  debug.context(
+    'Found: %d calls, %d extends, %d imports, %d refs (outgoing)',
+    calls.length,
+    extendsEdges.length,
+    importsEdges.length,
+    refs.length
+  );
+
+  debug.context(
+    'Found: %d calledBy, %d extendedBy, %d importedBy, %d referencedBy (incoming)',
+    calledBy.length,
+    extendedBy.length,
+    importedBy.length,
+    referencedBy.length
+  );
+
+  // 6. Build content map for imports and refs
+  const contentMap: Record<string, string> = {};
+  const contentConceptIds = new Set([...importsEdges, ...refs]);
+
+  for (const id of contentConceptIds) {
+    const relatedConcept = repo.byId[id];
+    if (relatedConcept && 'content' in relatedConcept) {
+      contentMap[id] = relatedConcept.content;
+    }
+  }
+
+  debug.context('Built content map with %d entries', Object.keys(contentMap).length);
+
+  return {
+    concept,
+    calls,
+    extends: extendsEdges,
+    imports: importsEdges,
+    refs,
+    calledBy,
+    extendedBy,
+    importedBy,
+    referencedBy,
+    allEdges: {
+      outgoing: outgoingEdges.map((e) => ({ to: e.to, role: e.role })),
+      incoming: incomingEdges.map((e) => ({ from: e.from, role: e.role })),
+    },
+    contentMap,
+  };
+}
+
+/**
  * Write context to JSON file
  */
 export async function writeContext(

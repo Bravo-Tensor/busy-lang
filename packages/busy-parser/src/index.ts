@@ -1,6 +1,7 @@
 // Main exports
 export { loadRepo } from './loader.js';
-export { buildContext, writeContext, get, parentsOf, childrenOf } from './builders/context.js';
+export { buildContext, writeContext, get, parentsOf, childrenOf, getConceptContext } from './builders/context.js';
+export { mergeRepos, extendRepo, loadRepoFromJSON } from './merge.js';
 
 // Type exports
 export type {
@@ -20,7 +21,7 @@ export type {
   FrontMatter,
 } from './types/schema.js';
 
-export type { BuildOpts } from './builders/context.js';
+export type { BuildOpts, ConceptContext } from './builders/context.js';
 
 // Zod Schema exports for validation in other repos
 export {
