@@ -1,0 +1,10 @@
+**
+!dist/**
+!syntaxes/**
+!language-configuration.json
+!package.json
+node_modules/**
+src/**
+*.ts
+tsconfig.json
+.gitignore

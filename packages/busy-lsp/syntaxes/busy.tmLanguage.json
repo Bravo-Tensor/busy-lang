@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "BUSY",
+  "scopeName": "text.html.markdown.busy",
+  "patterns": [
+    { "include": "#frontmatter" },
+    { "include": "#busy-sections" },
+    { "include": "#busy-imports" },
+    { "include": "#busy-references" },
+    { "include": "#busy-operations" },
+    { "include": "text.html.markdown" }
+  ],
+  "repository": {
+    "frontmatter": {
+      "name": "meta.embedded.block.yaml",
+      "begin": "\\A---$",
+      "end": "^---$",
+      "patterns": [
+        {
+          "match": "^(Name|Type|Description|Extends|Tags|Provider):\\s*(.*)$",
+          "captures": {
+            "1": { "name": "keyword.other.busy" },
+            "2": { "name": "string.unquoted.busy" }
+          }
+        }
+      ]
+    },
+    "busy-sections": {
+      "patterns": [
+        {
+          "match": "^(#+)\\s*(\\[?)(Imports|Setup|Local Definitions|Operations|Triggers|Tools)(\\]?)(.*)$",
+          "captures": {
+            "1": { "name": "punctuation.definition.heading.markdown" },
+            "2": { "name": "punctuation.definition.bracket.busy" },
+            "3": { "name": "entity.name.section.busy" },
+            "4": { "name": "punctuation.definition.bracket.busy" },
+            "5": { "name": "markup.heading.markdown" }
+          }
+        },
+        {
+          "match": "^(###)\\s*(\\[?)(Input|Output|Steps|Checklist|Providers|Examples)(\\]?)(.*)$",
+          "captures": {
+            "1": { "name": "punctuation.definition.heading.markdown" },
+            "2": { "name": "punctuation.definition.bracket.busy" },
+            "3": { "name": "entity.name.tag.busy" },
+            "4": { "name": "punctuation.definition.bracket.busy" },
+            "5": { "name": "markup.heading.markdown" }
+          }
+        }
+      ]
+    },
+    "busy-imports": {
+      "match": "^(\\[)([^\\]]+)(\\])(:)\\s*([^#\\s]+)(#[^\\s]+)?$",
+      "captures": {
+        "1": { "name": "punctuation.definition.bracket.busy" },
+        "2": { "name": "entity.name.import.busy" },
+        "3": { "name": "punctuation.definition.bracket.busy" },
+        "4": { "name": "punctuation.separator.busy" },
+        "5": { "name": "string.other.link.busy" },
+        "6": { "name": "entity.name.anchor.busy" }
+      }
+    },
+    "busy-references": {
+      "patterns": [
+        {
+          "match": "(\\[)([^\\]]+)(\\])(\\[)([^\\]]+)(\\])",
+          "captures": {
+            "1": { "name": "punctuation.definition.bracket.busy" },
+            "2": { "name": "variable.other.busy" },
+            "3": { "name": "punctuation.definition.bracket.busy" },
+            "4": { "name": "punctuation.definition.bracket.busy" },
+            "5": { "name": "entity.name.type.busy" },
+            "6": { "name": "punctuation.definition.bracket.busy" }
+          }
+        },
+        {
+          "match": "(\\[)([A-Z][a-zA-Z0-9]+)(\\])(?![:\\(])",
+          "captures": {
+            "1": { "name": "punctuation.definition.bracket.busy" },
+            "2": { "name": "variable.other.reference.busy" },
+            "3": { "name": "punctuation.definition.bracket.busy" }
+          }
+        }
+      ]
+    },
+    "busy-operations": {
+      "match": "^(##)\\s*(\\[)([A-Z][a-zA-Z0-9]+)(\\])(\\[Operation\\])?",
+      "captures": {
+        "1": { "name": "punctuation.definition.heading.markdown" },
+        "2": { "name": "punctuation.definition.bracket.busy" },
+        "3": { "name": "entity.name.function.busy" },
+        "4": { "name": "punctuation.definition.bracket.busy" },
+        "5": { "name": "entity.name.type.busy" }
+      }
+    }
+  }
+}
