@@ -46,6 +46,7 @@ compiler/test-*.js
 # Documentation build artifacts
 compiler/REINSTALL_EXTENSION.md
 
+busy-project/
 workspace-test/
 **/.busy/
 **/agents/
