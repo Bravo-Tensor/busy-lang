@@ -4,7 +4,8 @@ import { Command } from 'commander';
 import { parseDocument, resolveImports } from '../parser.js';
 import { writeFile, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { resolve, basename } from 'path';
+import { resolve, basename, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import {
   initWorkspace,
   checkWorkspace,
@@ -15,12 +16,16 @@ import {
   getPackageInfo,
 } from '../commands/package.js';
 
+// Read version from package.json
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(await readFile(resolve(__dirname, '../../package.json'), 'utf-8'));
+
 const program = new Command();
 
 program
   .name('busy')
   .description('BUSY Document Parser CLI')
-  .version('0.1.0');
+  .version(packageJson.version);
 
 // Parse command - parse a single BUSY document
 program
