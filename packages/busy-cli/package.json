@@ -1,5 +1,5 @@
 {
-  "name": "@busy-lang/cli",
+  "name": "busy-cli",
   "version": "0.1.0",
   "description": "CLI for BUSY document framework - parse, validate, and manage BUSY workspaces",
   "type": "module",
