@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write  # Required for npm provenance/OIDC
     defaults:
       run:
         working-directory: packages/busy-cli
@@ -68,10 +68,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Publish to npm
+      - name: Publish to npm with provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
   publish-lsp:
     if: startsWith(github.ref, 'refs/tags/lsp-v') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.package == 'lsp' || github.event.inputs.package == 'both'))
