@@ -147,6 +147,14 @@ Runtime tools for Orgata platform integration.
 | Type | Tool |
 | Description | Time-based event generation for scheduling |
 
+### Data Tool
+
+| Field | Value |
+|-------|-------|
+| Path | ./toolbox/data-tool.busy.md |
+| Type | Tool |
+| Description | CRUD data access for model instances through pluggable adapters |
+
 ### Gmail Tool
 
 | Field | Value |
