@@ -384,13 +384,13 @@ export class DiagnosticsProvider {
     diagnostics: Diagnostic[]
   ): void {
     for (const op of parsed.operations) {
-      // BUSY032: Operation names must be CamelCase
-      const camelCasePattern = /^[A-Z][a-zA-Z0-9]*$/;
+      // BUSY032: Operation names must be camelCase or PascalCase
+      const camelCasePattern = /^[a-zA-Z][a-zA-Z0-9]*$/;
       if (!camelCasePattern.test(op.name)) {
         diagnostics.push({
           severity: DiagnosticSeverity.Warning,
           range: this.lineRange(op.line),
-          message: `Operation name '${op.name}' should be CamelCase (e.g., CreateInstance, UpdateRecord)`,
+          message: `Operation name '${op.name}' should be camelCase or PascalCase (e.g., createInstance, UpdateRecord)`,
           source: 'busy',
           code: 'BUSY032',
         });
