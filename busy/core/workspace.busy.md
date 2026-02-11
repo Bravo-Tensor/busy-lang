@@ -285,7 +285,7 @@ A valid workspace must satisfy:
 
 # [Operations](./document.busy.md#operations-section)
 
-## [ValidateWorkspace][Operation]
+## validateWorkspace
 
 ### [Input]
 - `workspace_path`: Directory path of the workspace to verify.
@@ -307,7 +307,7 @@ A valid workspace must satisfy:
 ### [Output]
 - Validation report indicating pass/fail status plus any errors or warnings.
 
-## [ParseWorkspaceConfig][Operation]
+## parseWorkspaceConfig
 
 ### [Input]
 - `workspace_file`: Path to a `.workspace` configuration file.
@@ -323,7 +323,7 @@ A valid workspace must satisfy:
 ### [Output]
 - Structured workspace configuration plus any parsing warnings.
 
-## [DetectWorkspaceType][Operation]
+## detectWorkspaceType
 
 ### [Input]
 - `workspace_path`: Directory path to classify.

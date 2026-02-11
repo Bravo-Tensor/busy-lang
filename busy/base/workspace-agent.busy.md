@@ -46,7 +46,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 
 # [Operations](../core/role.busy.md#operations)
 
-## [ExecuteWorkspace][Operation]
+## executeWorkspace
 
 ### [Input]
 - `workspace_path`: Path to the workspace directory that must be executed.
@@ -75,7 +75,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 ### [Output]
 - Workspace execution results written to `output/` along with trace entries documenting the run.
 
-## [ExecuteMultiStepWorkspace][Operation]
+## executeMultiStepWorkspace
 
 ### [Input]
 - `workspace_config`: Parsed workspace configuration describing the playbook structure.
@@ -94,7 +94,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 ### [Output]
 - Completed multi-step execution with per-step deliverables and consolidated final output.
 
-## [ExecuteNestedWorkspaces][Operation]
+## executeNestedWorkspaces
 
 ### [Input]
 - `nested_workspaces`: Ordered list of nested workspace definitions resolved from configuration.
@@ -112,7 +112,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 ### [Output]
 - Aggregated outputs and status notes from each nested workspace invocation.
 
-## [AssumeWorkspaceRole][Operation]
+## assumeWorkspaceRole
 
 ### [Input]
 - `role_path`: Path to the workspace `role.md` file.
@@ -128,7 +128,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 ### [Output]
 - Active role context that combines workspace persona details with core Workspace Agent capabilities.
 
-## [LogExecution][Operation]
+## logExecution
 
 ### [Input]
 - `timestamp`: ISO-8601 timestamp for the log entry.
@@ -144,7 +144,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 ### [Output]
 - Persisted log entry (and optional detailed trace) documenting the action.
 
-## [ValidateBeforeExecution][Operation]
+## validateBeforeExecution
 
 ### [Input]
 - `workspace_path`: Directory path of the workspace to validate.
@@ -162,7 +162,7 @@ I am a capable and adaptable workspace executor. My primary function is to take 
 ### [Output]
 - Validation report summarizing pass/fail status and any blocking issues.
 
-## [RevalidateWorkspace][Operation]
+## revalidateWorkspace
 
 ### [Input]
 - `workspace_path`: Directory path of the workspace that requires revalidation.

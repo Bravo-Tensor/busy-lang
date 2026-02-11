@@ -41,7 +41,7 @@ A list of abilities, areas of expertise, and specialized knowledge that the [Rol
 
 # [Operations](./document.busy.md#operations-section)
 
-## [ExecuteRole][Operation]
+## executeRole
 
 ### [Input][Input Section]
 - `role_document`: The BUSY [Role] being invoked.

@@ -167,25 +167,25 @@ Configuration:
 - Coordinate manual email triage with automated processing
 - Archive messages when "processed" label added
 
-# [Operations](../core/document.busy.md#operations-section)
+# Operations
 
-## [SendEmail][Operation]
+## sendEmail
 
 Send an email message through Gmail with recipient, subject, and body content.
 
-### [Inputs]
+### Inputs
 - `to`: Recipient email address
 - `subject`: Email subject line
 - `body`: Email message body
 - `cc`: Carbon copy recipients (optional)
 - `bcc`: Blind carbon copy recipients (optional)
 
-### [Outputs]
+### Outputs
 - `message_id`: ID of the sent message
 - `thread_id`: Thread ID containing the message
 - `success`: Boolean indicating send success
 
-### [Providers]
+### Providers
 
 #### composio
 
@@ -197,26 +197,26 @@ Parameters:
   cc: cc
   bcc: bcc
 
-### [Examples]
+### Examples
 - Send notification: send_email(to='user@example.com', subject='Daily Summary', body='Your summary...')
 - Send with CC: send_email(to='client@company.com', subject='Update', body='Report...', cc='team@company.com')
 
-## [ReadInbox][Operation]
+## readInbox
 
 Retrieve messages from Gmail inbox with optional filtering by query or labels.
 
-### [Inputs]
+### Inputs
 - `max_results`: Maximum number of messages to retrieve (default: 10)
 - `label_ids`: Filter by Gmail label IDs (optional)
 - `query`: Gmail search query string (optional)
 - `page_token`: Pagination token from previous response to fetch next page (optional)
 
-### [Outputs]
+### Outputs
 - `messages`: List of inbox message objects with id, subject, from, date, snippet
 - `result_size_estimate`: Total number of messages matching criteria
 - `next_page_token`: Token to fetch next page of results (if more available)
 
-### [Providers]
+### Providers
 
 #### composio
 
@@ -229,24 +229,24 @@ Parameters:
 
 Note: Response includes pagination data with `nextPageToken` and `resultSizeEstimate`. Use `page_token` to fetch additional pages.
 
-### [Examples]
+### Examples
 - Read recent inbox: read_inbox(max_results=20)
 - Read unread messages: read_inbox(query='is:unread', max_results=50)
 - Fetch next page: read_inbox(query='newer_than:1d', max_results=20, page_token='TOKEN_FROM_PREVIOUS_RESPONSE')
 
-## [SearchEmails][Operation]
+## searchEmails
 
 Search emails using Gmail search query syntax for complex filtering.
 
-### [Inputs]
+### Inputs
 - `query`: Gmail search query string (required)
 - `max_results`: Maximum number of results (default: 10)
 
-### [Outputs]
+### Outputs
 - `messages`: List of message objects matching search query
 - `result_size_estimate`: Total number of messages found
 
-### [Providers]
+### Providers
 
 #### composio
 
@@ -255,23 +255,23 @@ Parameters:
   query: q
   max_results: maxResults
 
-### [Examples]
+### Examples
 - Search by sender: search_emails(query='from:boss@company.com', max_results=10)
 - Search with date: search_emails(query='subject:invoice after:2025/12/01')
 - Search attachments: search_emails(query='has:attachment from:client@company.com')
 
-## [GetThread][Operation]
+## getThread
 
 Retrieve a complete email thread by thread ID with all messages in the conversation.
 
-### [Inputs]
+### Inputs
 - `thread_id`: Gmail thread identifier (required)
 
-### [Outputs]
+### Outputs
 - `thread`: Thread object with all messages in the conversation
 - `messages`: List of messages in the thread
 
-### [Providers]
+### Providers
 
 #### composio
 
@@ -279,21 +279,21 @@ Action: GMAIL_GET_THREAD
 Parameters:
   thread_id: id
 
-### [Examples]
+### Examples
 - Get thread details: get_thread(thread_id='thread-xyz789')
 
-## [MarkAsRead][Operation]
+## markAsRead
 
 Mark a Gmail message as read by removing the UNREAD label.
 
-### [Inputs]
+### Inputs
 - `message_id`: Gmail message identifier (required)
 
-### [Outputs]
+### Outputs
 - `success`: Boolean indicating operation success
 - `message_id`: ID of the message marked as read
 
-### [Providers]
+### Providers
 
 #### composio
 
@@ -301,5 +301,5 @@ Action: GMAIL_MARK_AS_READ
 Parameters:
   message_id: id
 
-### [Examples]
+### Examples
 - Mark message read: mark_as_read(message_id='msg-abc123')

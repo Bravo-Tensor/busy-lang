@@ -39,9 +39,32 @@ jq 'if .content and (.content | length > 10000)
     else . end'
 ```
 
+# Setup
+
+## Directory Structure Reference
+
+```
+workspace/
+├── .workspace           # Metadata (protected, use workspace API)
+├── .checkpoints/        # LangGraph checkpoints (internal)
+├── .libraries/          # Read-only library mounts
+│   └── busy/            # Default BUSY library
+├── documents/           # Operations, playbooks, custom content
+│   └── toolbox/         # Workspace-local tools
+├── input/               # Input data
+└── output/              # Output data
+```
+
+## Security Notes
+
+- Cannot write to `.libraries/` (read-only)
+- Cannot modify `.workspace` directly (use workspace API)
+- Cannot access paths outside workspace root
+- Large file content is truncated in responses to preserve context
+
 # Operations
 
-## read_file
+## readFile
 
 Read content from a file in the workspace.
 
@@ -57,7 +80,7 @@ Read content from a file in the workspace.
 
 ### Examples
 - read_file(path="input/data.json")
-- read_file(path=".libraries/busy/core/operation.busy.md")
+- read_file(path=".libraries/busy-v2/core/operation.busy.md")
 - read_file(path="documents/config.yaml", encoding="utf-8")
 
 ### Providers
@@ -69,7 +92,7 @@ Parameters:
   path: path
   encoding: encoding
 
-## write_file
+## writeFile
 
 Write content to a file in the workspace.
 
@@ -99,7 +122,7 @@ Parameters:
   mode: mode
   create_dirs: create_dirs
 
-## list_files
+## listFiles
 
 List files and directories in a workspace path.
 
@@ -127,7 +150,7 @@ Parameters:
   pattern: pattern
   recursive: recursive
 
-## file_exists
+## fileExists
 
 Check if a file or directory exists.
 
@@ -150,7 +173,7 @@ Action: RUNTIME_FILE_EXISTS
 Parameters:
   path: path
 
-## delete_file
+## deleteFile
 
 Delete a file from the workspace (not available for libraries).
 
@@ -171,26 +194,3 @@ Delete a file from the workspace (not available for libraries).
 Action: RUNTIME_DELETE_FILE
 Parameters:
   path: path
-
----
-
-## Directory Structure Reference
-
-```
-workspace/
-├── .workspace           # Metadata (protected, use workspace API)
-├── .checkpoints/        # LangGraph checkpoints (internal)
-├── .libraries/          # Read-only library mounts
-│   └── busy/            # Default BUSY library
-├── documents/           # Operations, playbooks, custom content
-│   └── toolbox/         # Workspace-local tools
-├── input/               # Input data
-└── output/              # Output data
-```
-
-## Security Notes
-
-- Cannot write to `.libraries/` (read-only)
-- Cannot modify `.workspace` directly (use workspace API)
-- Cannot access paths outside workspace root
-- Large file content is truncated in responses to preserve context

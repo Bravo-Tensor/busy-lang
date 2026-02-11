@@ -24,7 +24,7 @@ Import vs. reference policy:
 
 # [Operations](./document.busy.md#operations-section)
 
-## [EvaluateConcept][Operation]
+## evaluateConcept
 
 ### [Input][Input Section]
 - `concept_reference`: The linked [Concept] encountered during execution.

@@ -30,7 +30,7 @@ List of [Checklist Item] that are to be verified, in no particular order. This m
 A single verification statement inside the [Checklist]. Items should be concrete, observable outcomes (e.g., "Repository lint passes without warnings") rather than vague sentiments. Prefer actionable wording so the agent can demonstrate evidence for each item.
 
 # [Operations](./document.busy.md#operations-section)
-## [RunChecklist][Operation]
+## runChecklist
 
 ### [Input][Input Section]
 - `checklist`: The [Checklist] associated with the just-completed callable.

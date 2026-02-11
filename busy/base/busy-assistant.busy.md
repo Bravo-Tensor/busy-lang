@@ -48,7 +48,7 @@ I am a helpful and patient assistant, specifically designed to help you understa
 
 # [Operations](../core/role.busy.md#operations)
 
-## [ExplainConcept][Operation]
+## explainConcept
 
 ### [Input]
 - `concept_name`: The BUSY [Concept] the user wants explained (e.g., `Document`, `Operation`, `Tool`, `Playbook`).
@@ -62,7 +62,7 @@ I am a helpful and patient assistant, specifically designed to help you understa
 ### [Output]
 - Concise explanation of the requested [Concept] plus optional follow-up guidance.
 
-## [CreateDocument][Operation]
+## createDocument
 
 ### [Input]
 - `document_type`: The BUSY [Document] specialization to generate (e.g., `Prompt`, `Role`).
@@ -85,7 +85,7 @@ I am a helpful and patient assistant, specifically designed to help you understa
 - [ ] All imports resolve successfully
 - [ ] File saved to user-specified location with .busy.md extension
 
-## [ListOperations][Operation]
+## listOperations
 
 ### [Input]
 - `target_doc` (optional): The [Document] whose [Operation]s should be surfaced. Defaults to the Busy Assistant [Role].
@@ -98,7 +98,7 @@ I am a helpful and patient assistant, specifically designed to help you understa
 ### [Output]
 - Numbered list of available [Operation]s for the selected [Document], ready for invocation.
 
-## [ValidateDocument][Operation]
+## validateDocument
 
 ### [Input]
 - `target_doc`: Path or identifier of the BUSY [Document] to validate.
@@ -120,7 +120,7 @@ I am a helpful and patient assistant, specifically designed to help you understa
 - [ ] [Steps] sections contain numbered, imperative steps
 - [ ] Document follows [EvaluateDocument] execution order
 
-## [EditDocument][Operation]
+## editDocument
 
 ### [Input]
 - `target_doc`: Path or identifier of the BUSY [Document] to edit.

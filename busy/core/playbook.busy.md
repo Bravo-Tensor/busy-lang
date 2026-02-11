@@ -44,7 +44,7 @@ A locally defined [Operation] within the [Playbook] that supports reuse across s
 
 # [Operations](./document.busy.md#operations-section)
 
-## [ExecutePlaybook][Operation]
+## executePlaybook
 
 ### [Input][Input Section]
 - `playbook_document`: The BUSY [Playbook] to execute.
@@ -73,7 +73,7 @@ A locally defined [Operation] within the [Playbook] that supports reuse across s
 - Checklist (if defined) executed after main sequence.
 - Final summary produced and logged.
 
-## [ListPlaybookSteps][Operation]
+## listPlaybookSteps
 
 ### [Input][Input Section]
 - `playbook_document`: The BUSY [Playbook] whose steps should be enumerated.

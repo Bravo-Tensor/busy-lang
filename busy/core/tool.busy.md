@@ -405,7 +405,7 @@ Parameters:
 
 # [Operations](./document.busy.md#operations-section)
 
-## [InvokeTool][Operation]
+## invokeTool
 
 ### [Input][Input Section]
 - `tool_document`: The BUSY [Tool] definition to execute.
@@ -429,7 +429,7 @@ Parameters:
 - Response processing applied if defined (or skipped with warning on failure).
 - Outputs stored in the declared locations and success criteria confirmed.
 
-## [DescribeCapability][Operation]
+## describeCapability
 
 ### [Input][Input Section]
 - `tool_document`: The BUSY [Tool] definition being summarized.

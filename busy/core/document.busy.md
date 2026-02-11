@@ -50,7 +50,7 @@ A `# Setup` heading containing instructions or contextual data that needs to be 
 
 # [Operations](#operations-section)
 
-## [EvaluateDocument][Operation]
+## evaluateDocument
 
 ### [Input][Input Section]
 - `document`: The BUSY [Document] currently being evaluated.
@@ -73,7 +73,7 @@ A `# Setup` heading containing instructions or contextual data that needs to be 
 - All Operations identified and made available.
 - Document context logged (including resolved imports and setup notes).
 
-## [ListOperations][Operation]
+## listOperations
 
 ### [Input][Input Section]
 - `document`: The BUSY [Document] whose operations should be enumerated.

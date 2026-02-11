@@ -33,9 +33,59 @@ handles channel-specific formatting.
 jq '.'
 ```
 
+# Setup
+## Channel Formatting
+
+Messages are automatically formatted for the target channel:
+
+| Channel | Formatting |
+|---------|------------|
+| Telegram | Markdown, inline buttons for options |
+| REST API | JSON with structured metadata |
+| (Future) Email | HTML email template |
+| (Future) Slack | Slack Block Kit |
+
+## HITL (Human-in-the-Loop) Behavior
+
+When `ask_user` or `confirm` is called:
+
+1. Operation execution pauses
+2. Message is sent to user
+3. State is checkpointed (MemorySaver)
+4. On user response, execution resumes
+5. If timeout, default value is used (or error if no default)
+
+## Memory Integration
+
+Conversation context is maintained across messages:
+- Previous messages in thread are available
+- Working memory persists relevant facts
+- Semantic memory cards can be referenced
+
+## Example: Multi-Step Confirmation
+
+```yaml
+Steps:
+  - Ask user to confirm deletion
+  - If confirmed:
+    - Perform deletion
+    - Notify success
+  - If not confirmed:
+    - Notify cancellation
+```
+
+Translates to:
+
+```
+confirm(message="Delete 15 items?")
+  → If confirmed: [delete items]
+  → send_message("15 items deleted successfully")
+  → Else: send_message("Deletion cancelled")
+```
+
 # Operations
 
-## send_message
+## sendMessage
 
 Send a message to the user.
 
@@ -64,7 +114,7 @@ Parameters:
   priority: priority
   silent: silent
 
-## ask_user
+## askUser
 
 Ask the user a question and wait for their response (Human-in-the-Loop).
 
@@ -149,52 +199,3 @@ Parameters:
   type: type
 
 ---
-
-## Channel Formatting
-
-Messages are automatically formatted for the target channel:
-
-| Channel | Formatting |
-|---------|------------|
-| Telegram | Markdown, inline buttons for options |
-| REST API | JSON with structured metadata |
-| (Future) Email | HTML email template |
-| (Future) Slack | Slack Block Kit |
-
-## HITL (Human-in-the-Loop) Behavior
-
-When `ask_user` or `confirm` is called:
-
-1. Operation execution pauses
-2. Message is sent to user
-3. State is checkpointed (MemorySaver)
-4. On user response, execution resumes
-5. If timeout, default value is used (or error if no default)
-
-## Memory Integration
-
-Conversation context is maintained across messages:
-- Previous messages in thread are available
-- Working memory persists relevant facts
-- Semantic memory cards can be referenced
-
-## Example: Multi-Step Confirmation
-
-```yaml
-Steps:
-  - Ask user to confirm deletion
-  - If confirmed:
-    - Perform deletion
-    - Notify success
-  - If not confirmed:
-    - Notify cancellation
-```
-
-Translates to:
-
-```
-confirm(message="Delete 15 items?")
-  → If confirmed: [delete items]
-  → send_message("15 items deleted successfully")
-  → Else: send_message("Deletion cancelled")
-```

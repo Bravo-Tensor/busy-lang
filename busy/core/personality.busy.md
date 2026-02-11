@@ -54,7 +54,7 @@ Optional section that defines how the agent adapts its behavior based on familia
 
 # [Operations](./document.busy.md#operations-section)
 
-## [LoadPersonality][Operation]
+## loadPersonality
 
 ### [Input][Input Section]
 - `personality_document`: The BUSY [Personality] document to load.
@@ -76,7 +76,7 @@ Optional section that defines how the agent adapts its behavior based on familia
 - Optional sections parsed if available.
 - Agent persona successfully configured.
 
-## [ValidatePersonality][Operation]
+## validatePersonality
 
 ### [Input][Input Section]
 - `personality_document`: The BUSY [Personality] document to validate.

@@ -63,11 +63,22 @@ How this model connects to other models:
 ## [Persistence Section]
 [Persistence Section]:./model.busy.md#persistence-section
 [Persistence]:./model.busy.md#persistence-section
-Where and how instances of this model are stored. Specifies the adapter, format, and location for record storage.
+Declares which adapter handles storage for this model. Models define **what** data looks like, not **where** or **how** it's stored.
+
+**Include:**
+- Which adapter to use (e.g., File Adapter, Database Adapter)
+- ID format convention (e.g., `p_{uuid}`)
+
+**Do not include:**
+- Storage paths (`data/model/{id}.json`)
+- CRUD operation examples or query examples
+- Adapter-specific implementation details
+
+Storage paths and formats are the adapter's responsibility. This separation allows swapping adapters without changing models.
 
 # [Operations](./document.busy.md#operations-section)
 
-## [CreateInstance][Operation]
+## createInstance
 
 Create a new instance of this model.
 
@@ -91,7 +102,7 @@ Create a new instance of this model.
 - Identity assigned and unique
 - Instance persisted
 
-## [UpdateInstance][Operation]
+## updateInstance
 
 Modify an existing instance of this model.
 
@@ -116,7 +127,7 @@ Modify an existing instance of this model.
 - Lifecycle transition valid (if state changed)
 - Changes persisted
 
-## [TransitionState][Operation]
+## transitionState
 
 Move an instance through its lifecycle.
 
@@ -141,7 +152,7 @@ Move an instance through its lifecycle.
 - Trigger recorded
 - Change persisted
 
-## [FindByIdentity][Operation]
+## findByIdentity
 
 Retrieve a single instance by its identity.
 
@@ -159,7 +170,7 @@ Retrieve a single instance by its identity.
 - Query executed
 - Result returned or not-found indicated
 
-## [ListInstances][Operation]
+## listInstances
 
 Retrieve multiple instances, optionally filtered.
 

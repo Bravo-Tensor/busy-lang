@@ -29,7 +29,7 @@ The text that is being provided to be executed by an LLM as a user. The [Operati
 
 # [Operations](./document.busy.md#operations-section)
 
-## [ExecutePrompt][Operation]
+## executePrompt
 
 ### [Input][Input Section]
 - `prompt_document`: The BUSY [Prompt] being executed, including its [Prompt Text].

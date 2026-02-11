@@ -140,79 +140,79 @@ Configuration:
 - Polling required to check for new data
 - Time-based business logic (end of day processing, nightly reports)
 
-# [Operations](../core/document.busy.md#operations-section)
+# Operations
 
-## [ScheduleAlarm][Operation]
+## scheduleAlarm
 
 Register a cron schedule with the Event Service to generate time-based events.
 
-### [Inputs]
+### Inputs
 - `alarm_id`: Unique identifier for the alarm (required)
 - `workspace_id`: Workspace ID for alarm scoping (required)
 - `schedule`: Cron expression defining when alarm fires (required)
 - `event_payload`: Additional metadata included in alarm event (optional)
 
-### [Outputs]
+### Outputs
 - `alarm_id`: Unique identifier of the registered alarm
 - `workspace_id`: Workspace ID owning the alarm
 - `schedule`: Cron expression for the alarm
 - `success`: Boolean indicating registration success
 
-### [Providers]
+### Providers
 
 #### event_service
 
-Endpoint: POST /cron/register
+Action: SCHEDULE_ALARM
 Parameters:
   alarm_id: alarm_id
   workspace_id: workspace_id
   schedule: schedule
   event_payload: event_payload
 
-### [Examples]
+### Examples
 - Daily check: schedule_alarm(alarm_id='daily-inbox', workspace_id='ws-123', schedule='0 6 * * *')
 - Hourly sync: schedule_alarm(alarm_id='sync-data', workspace_id='ws-123', schedule='0 * * * *')
 
-## [CancelAlarm][Operation]
+## cancelAlarm
 
 Remove a scheduled alarm by alarm_id.
 
-### [Inputs]
+### Inputs
 - `alarm_id`: Unique identifier of alarm to cancel (required)
 
-### [Outputs]
+### Outputs
 - `alarm_id`: ID of the cancelled alarm
 - `success`: Boolean indicating cancellation success
 
-### [Providers]
+### Providers
 
 #### event_service
 
-Endpoint: DELETE /cron/unregister/{alarm_id}
+Action: CANCEL_ALARM
 Parameters:
   alarm_id: alarm_id
 
-### [Examples]
+### Examples
 - Cancel alarm: cancel_alarm(alarm_id='daily-inbox')
 
-## [ListAlarms][Operation]
+## listAlarms
 
 List all scheduled alarms for a workspace.
 
-### [Inputs]
+### Inputs
 - `workspace_id`: Workspace ID to filter alarms (required)
 
-### [Outputs]
+### Outputs
 - `alarms`: Array of alarm configurations
 - `count`: Number of active alarms for workspace
 
-### [Providers]
+### Providers
 
 #### event_service
 
-Endpoint: GET /cron/alarms
+Action: LIST_ALARMS
 Parameters:
   workspace_id: workspace_id
 
-### [Examples]
+### Examples
 - List workspace alarms: list_alarms(workspace_id='ws-123')

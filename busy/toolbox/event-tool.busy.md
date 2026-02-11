@@ -10,6 +10,32 @@ Provider: runtime
 > Emit custom events and subscribe to event streams. Events are published to Redis Streams
 > and can trigger other operations via workspace trigger configuration.
 
+## Usage in Triggers
+
+Events emitted via this tool can trigger operations. Configure in workspace `.workspace`:
+
+```json
+{
+  "triggers": [
+    {
+      "event_type": "order.completed",
+      "filter": {"total": {"$gt": 100}},
+      "operation": "SendThankYouEmail",
+      "queue_when_paused": true
+    }
+  ]
+}
+```
+
+### Filter Syntax
+
+| Pattern | Matches |
+|---------|---------|
+| `order.*` | order.created, order.completed, order.cancelled |
+| `user.signup` | Exact match only |
+| `{"status": "success"}` | Payload field match |
+| `{"amount": {"$gt": 100}}` | Numeric comparison |
+
 ## [Capability]
 
 - Emit custom events with typed payloads
@@ -70,7 +96,7 @@ Parameters:
   payload: payload
   correlation_id: correlation_id
 
-## query_events
+## queryEvents
 
 Query recent events from the event stream.
 
@@ -97,30 +123,4 @@ Parameters:
   since: since
   limit: limit
 
----
 
-## Usage in Triggers
-
-Events emitted via this tool can trigger operations. Configure in workspace `.workspace`:
-
-```json
-{
-  "triggers": [
-    {
-      "event_type": "order.completed",
-      "filter": {"total": {"$gt": 100}},
-      "operation": "SendThankYouEmail",
-      "queue_when_paused": true
-    }
-  ]
-}
-```
-
-### Filter Syntax
-
-| Pattern | Matches |
-|---------|---------|
-| `order.*` | order.created, order.completed, order.cancelled |
-| `user.signup` | Exact match only |
-| `{"status": "success"}` | Payload field match |
-| `{"amount": {"$gt": 100}}` | Numeric comparison |

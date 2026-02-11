@@ -19,7 +19,7 @@ Use this [Checklist] whenever you draft or revise a BUSY [Document]. It focuses 
 
 # [Operations](../core/checklist.busy.md#operations)
 
-## [RunBusyFormattingRules][Operation]
+## runBusyFormattingRules
 
 ### [Input]
 - `target_doc`: Path or identifier of the BUSY [Document] under review.
