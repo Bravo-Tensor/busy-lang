@@ -1,6 +1,6 @@
 {
   "name": "busy-cli",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "CLI for BUSY document framework - parse, validate, and manage BUSY workspaces",
   "type": "module",
   "main": "./dist/index.js",
