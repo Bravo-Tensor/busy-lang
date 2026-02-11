@@ -2,7 +2,7 @@
   "name": "busy-lsp",
   "displayName": "BUSY Language Support",
   "description": "Language server and VS Code extension for BUSY markdown documents",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "publisher": "busy-lang",
   "repository": {
     "type": "git",
