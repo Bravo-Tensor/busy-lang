@@ -5,6 +5,12 @@ Description: Read, write, and manage files in the workspace filesystem
 Provider: runtime
 ---
 
+# [Imports](../core/document.busy.md#imports-section)
+
+[Capability]:../core/tool.busy.md#capability
+[Invocation Contract]:../core/tool.busy.md#invocation-contract
+[Response Processing]:../core/tool.busy.md#response-processing
+
 # File Tool
 
 > Workspace file operations for persistence. All paths are relative to the workspace root.

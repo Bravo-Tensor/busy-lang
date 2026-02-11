@@ -5,6 +5,13 @@ Description: Emit and subscribe to events in the Orgata event bus
 Provider: runtime
 ---
 
+# [Imports](../core/document.busy.md#imports-section)
+
+[Capability]:../core/tool.busy.md#capability
+[Invocation Contract]:../core/tool.busy.md#invocation-contract
+[Response Processing]:../core/tool.busy.md#response-processing
+[Events]:../core/tool.busy.md#events
+
 # Event Tool
 
 > Emit custom events and subscribe to event streams. Events are published to Redis Streams

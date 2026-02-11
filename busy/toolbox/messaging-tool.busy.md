@@ -5,6 +5,12 @@ Description: Send and receive messages to users across different channels
 Provider: runtime
 ---
 
+# [Imports](../core/document.busy.md#imports-section)
+
+[Capability]:../core/tool.busy.md#capability
+[Invocation Contract]:../core/tool.busy.md#invocation-contract
+[Response Processing]:../core/tool.busy.md#response-processing
+
 # Messaging Tool
 
 > User communication through Maui, Orgata's messaging hub. Messages are automatically

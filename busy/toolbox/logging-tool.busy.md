@@ -5,6 +5,12 @@ Description: Record activity logs for audit, debugging, and traceability
 Provider: runtime
 ---
 
+# [Imports](../core/document.busy.md#imports-section)
+
+[Capability]:../core/tool.busy.md#capability
+[Invocation Contract]:../core/tool.busy.md#invocation-contract
+[Response Processing]:../core/tool.busy.md#response-processing
+
 # Logging Tool
 
 > Application-level logging for BUSY operations. Records structured log entries
