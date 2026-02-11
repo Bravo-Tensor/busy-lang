@@ -367,7 +367,7 @@ Definition content.
     const content = `
 # [Operations]
 
-## [Run Full Analysis][Operation]
+## [Run Full Analysis]
 
 ### [Steps]
 1. Analyze data

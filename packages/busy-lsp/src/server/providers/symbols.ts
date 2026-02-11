@@ -67,11 +67,11 @@ export class SymbolProvider {
       kind = SymbolKind.Interface;
     }
 
-    // Check if it's an operation definition
-    const opMatch = heading.text.match(/^\[([^\]]+)\]\[Operation\]/);
-    if (opMatch) {
+    // Check if it's an operation definition (match by name in parsed operations)
+    const operation = parsed.operations.find((op) => op.name === name);
+    if (operation) {
       kind = SymbolKind.Function;
-      name = opMatch[1];
+      name = operation.name;
     }
 
     // Check if it's a local definition

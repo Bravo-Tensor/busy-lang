@@ -198,28 +198,26 @@ export class HoverProvider {
   }
 
   private getHoverForHeading(headingText: string, parsed: ParsedDocument): Hover | null {
-    // Check if heading defines an operation
-    const opMatch = headingText.match(/^\[([^\]]+)\]\[Operation\]/);
-    if (opMatch) {
-      const opName = opMatch[1];
-      const operation = parsed.operations.find((op) => op.name === opName);
-      if (operation) {
-        let contents = `**Operation Definition**: \`${opName}\`\n\n`;
-        if (operation.inputs.length > 0) {
-          contents += `**Inputs**: ${operation.inputs.join(', ')}\n`;
-        }
-        if (operation.outputs.length > 0) {
-          contents += `**Outputs**: ${operation.outputs.join(', ')}\n`;
-        }
-        contents += `**Steps**: ${operation.steps.length}`;
-
-        return {
-          contents: {
-            kind: MarkupKind.Markdown,
-            value: contents,
-          },
-        };
+    // Check if heading defines an operation (match by name in parsed operations)
+    const bracketMatch = headingText.match(/^\[([^\]]+)\]/);
+    const operationName = bracketMatch ? bracketMatch[1] : headingText;
+    const operation = parsed.operations.find((op) => op.name === operationName);
+    if (operation) {
+      let contents = `**Operation Definition**: \`${operation.name}\`\n\n`;
+      if (operation.inputs.length > 0) {
+        contents += `**Inputs**: ${operation.inputs.join(', ')}\n`;
       }
+      if (operation.outputs.length > 0) {
+        contents += `**Outputs**: ${operation.outputs.join(', ')}\n`;
+      }
+      contents += `**Steps**: ${operation.steps.length}`;
+
+      return {
+        contents: {
+          kind: MarkupKind.Markdown,
+          value: contents,
+        },
+      };
     }
 
     // Standard section hover

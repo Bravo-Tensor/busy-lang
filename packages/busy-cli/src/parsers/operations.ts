@@ -303,7 +303,7 @@ function createOperation(
   // Parse steps and checklist from content
   const { steps, checklist } = parseOperationContent(section);
 
-  // Get extends from section heading (e.g., ## [ValidateInput][Operation])
+  // Get extends from section heading (e.g., ## [ValidateInput][SomeType])
   const extends_ = getSectionExtends(section.id);
 
   return {
