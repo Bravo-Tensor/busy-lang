@@ -352,16 +352,17 @@ const packageCmd = program
 // Package add
 packageCmd
   .command('add')
-  .description('Add a package from URL')
-  .argument('<url>', 'URL to the BUSY document')
+  .description('Add a package from URL or local folder')
+  .argument('<url>', 'URL or local path to the BUSY document or folder')
   .option('-d, --dir <directory>', 'Workspace directory', '.')
+  .option('-r, --recursive', 'Recursively add all files from a local folder')
   .action(async (url: string, options) => {
     try {
       const workspaceRoot = resolve(options.dir);
 
       console.log(`\nAdding package from: ${url}\n`);
 
-      const result = await addPackage(workspaceRoot, url);
+      const result = await addPackage(workspaceRoot, url, { recursive: options.recursive });
 
       console.log(`  ID:       ${result.id}`);
       console.log(`  Provider: ${result.provider}`);

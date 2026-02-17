@@ -347,3 +347,141 @@ export async function fetchPackageFromManifest(
     integrity,
   };
 }
+
+/**
+ * Recursively discover all files in a directory.
+ * Skips hidden directories (e.g. .git, .libraries) and node_modules.
+ */
+export async function discoverFiles(dirPath: string): Promise<string[]> {
+  const results: string[] = [];
+
+  async function walk(dir: string) {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+        continue;
+      }
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else if (entry.isFile()) {
+        results.push(fullPath);
+      }
+    }
+  }
+
+  await walk(dirPath);
+  return results;
+}
+
+/**
+ * Fetch a package from a local folder, copying all files.
+ *
+ * If a package.busy.md exists, its metadata (name, version, description) is used.
+ * Otherwise, metadata is derived from the folder name.
+ */
+export async function fetchPackageFromLocalFolder(
+  workspaceRoot: string,
+  folderPath: string,
+): Promise<FetchPackageResult> {
+  const absolutePath = path.isAbsolute(folderPath)
+    ? folderPath
+    : path.resolve(process.cwd(), folderPath);
+
+  // Verify it's a directory
+  const stat = await fs.stat(absolutePath);
+  if (!stat.isDirectory()) {
+    throw new Error(`Not a directory: ${absolutePath}`);
+  }
+
+  // Try to read manifest for metadata
+  const manifestPath = path.join(absolutePath, 'package.busy.md');
+  let manifest: PackageManifest | null = null;
+  let manifestContent: string | null = null;
+
+  try {
+    manifestContent = await fs.readFile(manifestPath, 'utf-8');
+    manifest = parsePackageManifest(manifestContent);
+  } catch {
+    // No manifest - that's fine
+  }
+
+  const packageName = manifest?.name || path.basename(absolutePath);
+
+  // Discover all files in the folder
+  const discoveredFiles = await discoverFiles(absolutePath);
+
+  // Filter out package.busy.md itself (handled separately)
+  const filesToCopy = discoveredFiles
+    .filter(f => path.basename(f) !== 'package.busy.md')
+    .map(f => ({
+      relativePath: path.relative(absolutePath, f),
+      absolutePath: f,
+    }));
+
+  // Initialize cache
+  const cache = new CacheManager(workspaceRoot);
+  await cache.init();
+
+  // Copy files
+  let combinedContent = '';
+  const documents: PackageDocument[] = [];
+
+  for (const file of filesToCopy) {
+    try {
+      const content = await fs.readFile(file.absolutePath, 'utf-8');
+      combinedContent += content;
+
+      const cachePath = path.join(packageName, file.relativePath);
+      await cache.save(cachePath, content);
+
+      documents.push({
+        name: path.basename(file.relativePath, path.extname(file.relativePath)),
+        relativePath: './' + file.relativePath,
+      });
+    } catch (error) {
+      console.warn(`Warning: Failed to read ${file.absolutePath}: ${error}`);
+    }
+  }
+
+  // Save manifest if it exists
+  if (manifestContent) {
+    await cache.save(path.join(packageName, 'package.busy.md'), manifestContent);
+  }
+
+  // Calculate integrity
+  const integrity = calculateIntegrity(combinedContent);
+
+  // Add to registry
+  const registry = new PackageRegistry(workspaceRoot);
+  try {
+    await registry.load();
+  } catch {
+    await registry.init();
+    await registry.load();
+  }
+
+  const entry: PackageEntry = {
+    id: packageName,
+    description: manifest?.description || '',
+    source: absolutePath,
+    provider: 'local',
+    cached: `.libraries/${packageName}`,
+    version: manifest?.version || 'latest',
+    fetched: new Date().toISOString(),
+    integrity,
+    category: 'Packages',
+  };
+
+  registry.addPackage(entry);
+  await registry.save();
+
+  return {
+    name: packageName,
+    version: manifest?.version || 'latest',
+    description: manifest?.description || '',
+    documents,
+    cached: `.libraries/${packageName}`,
+    integrity,
+  };
+}

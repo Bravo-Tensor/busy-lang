@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { CacheManager, calculateIntegrity, deriveCachePath } from '../cache/index.js';
 import { PackageRegistry, PackageEntry, deriveEntryId, deriveCategory } from '../registry/index.js';
 import { providerRegistry } from '../providers/index.js';
-import { isPackageManifestUrl, fetchPackageFromManifest } from '../package/manifest.js';
+import { isPackageManifestUrl, fetchPackageFromManifest, fetchPackageFromLocalFolder } from '../package/manifest.js';
 
 // Ensure providers are registered
 import '../providers/local.js';
@@ -166,12 +166,41 @@ export async function checkWorkspace(workspaceRoot: string, options?: { skipExte
 }
 
 /**
- * Add a package from URL
+ * Add a package from URL or local folder
  *
  * If the URL points to a package.busy.md manifest, fetches the entire package.
+ * If it's a local directory with --recursive (or without a manifest), copies all files.
  * Otherwise, fetches a single file.
  */
-export async function addPackage(workspaceRoot: string, url: string): Promise<AddResult> {
+export async function addPackage(workspaceRoot: string, url: string, options?: { recursive?: boolean }): Promise<AddResult> {
+  // Check if this is a local directory that should use folder-based discovery
+  if (url.startsWith('./') || url.startsWith('../') || url.startsWith('/') || (!url.includes('://') && !url.startsWith('http'))) {
+    const resolvedPath = path.isAbsolute(url) ? url : path.resolve(process.cwd(), url);
+    try {
+      const stat = await fs.stat(resolvedPath);
+      if (stat.isDirectory()) {
+        const manifestExists = await fs.stat(path.join(resolvedPath, 'package.busy.md'))
+          .then(() => true).catch(() => false);
+
+        if (options?.recursive || !manifestExists) {
+          // Use folder-based discovery: --recursive flag or no manifest available
+          const result = await fetchPackageFromLocalFolder(workspaceRoot, resolvedPath);
+          return {
+            id: result.name,
+            source: resolvedPath,
+            provider: 'local',
+            cached: result.cached,
+            version: result.version,
+            integrity: result.integrity,
+          };
+        }
+        // Has manifest and not --recursive: fall through to manifest-based flow
+      }
+    } catch {
+      // Not a directory or doesn't exist - fall through to normal handling
+    }
+  }
+
   // Check if this is a package manifest URL
   if (isPackageManifestUrl(url)) {
     // Use manifest-based package installation
