@@ -36,6 +36,7 @@ Defines what makes each instance of this model unique. This is the field or comb
 [Fields]:./model.busy.md#fields-section
 A table listing what information this model holds. Each field has:
 - **Field**: The name of the piece of information
+- **Type**: The data type (string, text, integer, float, boolean, datetime, json, uuid)
 - **Meaning**: What this field represents in plain language
 - **Required**: Whether every instance must have this field (Yes/No)
 
@@ -66,15 +67,15 @@ How this model connects to other models:
 Declares which adapter handles storage for this model. Models define **what** data looks like, not **where** or **how** it's stored.
 
 **Include:**
-- Which adapter to use (e.g., File Adapter, Database Adapter)
-- ID format convention (e.g., `p_{uuid}`)
+- `Adapter:` — which adapter to use (e.g., `Data Tool`)
+- `ID format:` — ID convention (e.g., `p_{uuid}`)
 
 **Do not include:**
-- Storage paths (`data/model/{id}.json`)
-- CRUD operation examples or query examples
+- Storage paths or file formats
+- CRUD operation examples
 - Adapter-specific implementation details
 
-Storage paths and formats are the adapter's responsibility. This separation allows swapping adapters without changing models.
+The runtime's adapter registry selects the storage backend (file, database) based on workspace configuration. The `Type` column in [Fields] enables schema-aware database storage with typed columns.
 
 # [Operations](./document.busy.md#operations-section)
 
