@@ -194,7 +194,7 @@ export type { Section };
 
 // ConceptBase schema - need to keep as regular object schema to allow .extend()
 const ConceptBaseSchemaObject = z.object({
-  kind: z.enum(['concept', 'document', 'operation', 'checklist', 'tool', 'playbook', 'localdef', 'importdef', 'setup']),
+  kind: z.enum(['concept', 'document', 'operation', 'checklist', 'tool', 'playbook', 'view', 'config', 'localdef', 'importdef', 'setup']),
   id: ConceptIdSchema,
   docId: DocIdSchema,
   slug: z.string(),
@@ -261,6 +261,18 @@ export const PlaybookSchema = LegacyBusyDocumentSchema.extend({
     sequence: z.array(ConceptIdSchema), // Ordered array of operation references
   })
 
+// View schema - extends LegacyBusyDocument with display section
+// Views follow MVC: imports=Model, localDefs=ViewModel, template=View, operations=Controller
+export const ViewSchema = LegacyBusyDocumentSchema.extend({
+    kind: z.literal('view'),
+    display: z.string().optional(), // Markdown template (optional — LORE can generate)
+  })
+
+// Config schema - extends LegacyBusyDocument, semantically a singleton Model
+export const ConfigSchema = LegacyBusyDocumentSchema.extend({
+    kind: z.literal('config'),
+  })
+
 // Edge schema
 export const EdgeRoleSchema = z.enum(['ref', 'calls', 'extends', 'imports']);
 export const EdgeSchema = z.object({
@@ -287,7 +299,7 @@ export const RepoSchema = z.object({
   byId: z.record(z.union([SectionSchema, LocalDefSchema, LegacyOperationSchema, ConceptBaseSchema])),
   byFile: z.record( // Renamed from byDoc for clarity
     z.object({
-      concept: z.union([LegacyBusyDocumentSchema, PlaybookSchema]), // The concept defined in this file
+      concept: z.union([LegacyBusyDocumentSchema, PlaybookSchema, ViewSchema, ConfigSchema]), // The concept defined in this file
       bySlug: z.record(SectionSchema),
     })
   ),
@@ -319,6 +331,8 @@ export type Slug = z.infer<typeof SlugSchema>;
 // Section and ConceptBase types defined above to avoid circular references
 export type LegacyBusyDocument = z.infer<typeof LegacyBusyDocumentSchema>;
 export type Playbook = z.infer<typeof PlaybookSchema>;
+export type View = z.infer<typeof ViewSchema>;
+export type Config = z.infer<typeof ConfigSchema>;
 export type LocalDef = z.infer<typeof LocalDefSchema>;
 export type LegacyOperation = z.infer<typeof LegacyOperationSchema>;
 export type ImportDef = z.infer<typeof ImportDefSchema>;
