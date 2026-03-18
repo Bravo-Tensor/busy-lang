@@ -160,7 +160,7 @@ type Section = {
 };
 
 type ConceptBase = {
-  kind: 'concept' | 'document' | 'operation' | 'checklist' | 'tool' | 'playbook' | 'localdef' | 'importdef' | 'setup';
+  kind: 'concept' | 'document' | 'operation' | 'checklist' | 'tool' | 'playbook' | 'view' | 'config' | 'localdef' | 'importdef' | 'setup';
   id: string;
   docId: string;
   slug: string;
