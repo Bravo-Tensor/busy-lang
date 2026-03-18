@@ -261,11 +261,11 @@ export const PlaybookSchema = LegacyBusyDocumentSchema.extend({
     sequence: z.array(ConceptIdSchema), // Ordered array of operation references
   })
 
-// View schema - extends LegacyBusyDocument with template section
+// View schema - extends LegacyBusyDocument with display section
 // Views follow MVC: imports=Model, localDefs=ViewModel, template=View, operations=Controller
 export const ViewSchema = LegacyBusyDocumentSchema.extend({
     kind: z.literal('view'),
-    template: z.string().optional(), // Markdown template (optional — LORE can generate)
+    display: z.string().optional(), // Markdown template (optional — LORE can generate)
   })
 
 // Config schema - extends LegacyBusyDocument, semantically a singleton Model

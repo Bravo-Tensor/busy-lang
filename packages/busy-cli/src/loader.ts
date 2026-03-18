@@ -245,16 +245,16 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
       docs.push(doc);
     } else if (isView) {
       // Extract template section with full content (including children)
-      const templateSection = findSection(parts.sections, 'template');
-      let templateContent: string | undefined;
-      if (templateSection) {
+      const displaySection = findSection(parts.sections, 'display');
+      let displayContent: string | undefined;
+      if (displaySection) {
         // Reconstruct full template from section + children content
-        templateContent = getSectionFullContent(templateSection);
+        displayContent = getSectionFullContent(displaySection);
       }
       const doc: View = {
         ...baseFields,
         kind: 'view',
-        template: templateContent,
+        display: displayContent,
       };
       docs.push(doc);
     } else if (isConfig) {

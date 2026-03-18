@@ -46,7 +46,7 @@ A summary row combining Prospect data.
 - \`stage\` — from [Prospect].stage
 - \`health\` — from [Prospect].health_status
 
-# Template
+# Display
 
 ## Pipeline Summary
 | Stage | Count |
@@ -74,7 +74,7 @@ Reload prospect data from the database.
 const VIEW_NO_TEMPLATE = `---
 Name: Simple View
 Type: [View]
-Description: A view without an explicit template section
+Description: A view without an explicit display section
 ---
 
 # Imports
@@ -171,27 +171,27 @@ describe('View and Config Types', () => {
   });
 
   describe('View Document', () => {
-    it('has template content when Template section exists', () => {
+    it('has display content when Display section exists', () => {
       const viewDocId = Object.keys(repo.byFile).find(id =>
         repo.byFile[id].concept.name === 'Prospect Pipeline'
       )!;
       const viewDoc = repo.byFile[viewDocId].concept;
       expect(viewDoc.kind).toBe('view');
       if (viewDoc.kind === 'view') {
-        expect(viewDoc.template).toBeDefined();
-        expect(viewDoc.template).toContain('{{#each stageSummary}}');
-        expect(viewDoc.template).toContain('{{#each prospects}}');
+        expect(viewDoc.display).toBeDefined();
+        expect(viewDoc.display).toContain('{{#each stageSummary}}');
+        expect(viewDoc.display).toContain('{{#each prospects}}');
       }
     });
 
-    it('has undefined template when no Template section', () => {
+    it('has undefined display when no Display section', () => {
       const viewDocId = Object.keys(repo.byFile).find(id =>
         repo.byFile[id].concept.name === 'Simple View'
       )!;
       const viewDoc = repo.byFile[viewDocId].concept;
       expect(viewDoc.kind).toBe('view');
       if (viewDoc.kind === 'view') {
-        expect(viewDoc.template).toBeUndefined();
+        expect(viewDoc.display).toBeUndefined();
       }
     });
 
