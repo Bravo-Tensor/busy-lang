@@ -594,10 +594,10 @@ module.exports = [
     }
   },
 
-  // BUSY031: Operation headings should link to Operation concept
+  // BUSY031: Operation headings must be plain camelCase names (no brackets)
   {
     names: ["BUSY031"],
-    description: "Operation headings should use format ## [OperationName][Operation]",
+    description: "Operation headings should be plain camelCase names, e.g., ## myOperation",
     tags: ["busy", "operations"],
     function: function BUSY031(params, onError) {
       const opsLine = findLineNumber(params.lines, /^#\s+\[?Operations\]?/);
@@ -624,11 +624,11 @@ module.exports = [
         if (heading.line >= nextH1) break;
 
         if (inOps && heading.level === 2) {
-          // Should match [Name][Operation] or similar pattern
-          if (!heading.text.match(/^\[.+\]\[.+\]/)) {
+          // Operation headings should be plain camelCase — no brackets
+          if (heading.text.match(/\[/)) {
             onError({
               lineNumber: heading.line,
-              detail: `Operation heading should link to its type, e.g., ## [${heading.text.replace(/[\[\]]/g, '')}][Operation]`
+              detail: `Operation heading should be a plain name without brackets, e.g., ## ${heading.text.replace(/[\[\]]/g, '')}`
             });
           }
         }
