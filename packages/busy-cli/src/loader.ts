@@ -5,6 +5,8 @@ import {
   Repo,
   BusyDocument,
   Playbook,
+  View,
+  Config,
   ConceptBase,
   LocalDef,
   Operation,
@@ -67,7 +69,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
 
   // Second pass: parse documents
   const files: File[] = []; // Lightweight file representations
-  const docs: (BusyDocument | Playbook)[] = []; // Full concept definitions
+  const docs: (BusyDocument | Playbook | View | Config)[] = []; // Full concept definitions
   const allLocaldefs = new Map<string, LocalDef>();
   const allOperations = new Map<string, Operation>();
   const allImports: ImportDef[] = [];
@@ -215,45 +217,51 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
 
   // Build final document structures with inline arrays
   for (const [docId, parts] of docParts) {
-    const isPlaybook = parts.types.some((t) => t.toLowerCase() === 'playbook');
+    const typesLower = parts.types.map((t) => t.toLowerCase());
+    const isPlaybook = typesLower.includes('playbook');
+    const isView = typesLower.includes('view');
+    const isConfig = typesLower.includes('config');
+
+    // Base fields shared across all document kinds
+    const baseFields = {
+      id: parts.docId,
+      docId: parts.docId,
+      slug: parts.docId.toLowerCase(),
+      name: parts.frontmatter.Name,
+      content: parts.content,
+      types: parts.types,
+      extends: parts.extends,
+      sectionRef: `${parts.docId}#`, // Root reference
+      imports: parts.imports,
+      localdefs: parts.localdefs,
+      setup: parts.setup!,
+      operations: parts.operations,
+    };
 
     if (isPlaybook) {
       // Extract sequence from ExecutePlaybook operation
       const sequence = extractPlaybookSequence(parts.sections);
-
-      const doc: Playbook = {
-        kind: 'playbook',
-        id: parts.docId,
-        docId: parts.docId,
-        slug: parts.docId.toLowerCase(),
-        name: parts.frontmatter.Name,
-        content: parts.content,
-        types: parts.types,
-        extends: parts.extends,
-        sectionRef: `${parts.docId}#`, // Root reference
-        imports: parts.imports,
-        localdefs: parts.localdefs,
-        setup: parts.setup!,
-        operations: parts.operations,
-        sequence,
+      const doc: Playbook = { ...baseFields, kind: 'playbook', sequence };
+      docs.push(doc);
+    } else if (isView) {
+      // Extract template section with full content (including children)
+      const templateSection = findSection(parts.sections, 'template');
+      let templateContent: string | undefined;
+      if (templateSection) {
+        // Reconstruct full template from section + children content
+        templateContent = getSectionFullContent(templateSection);
+      }
+      const doc: View = {
+        ...baseFields,
+        kind: 'view',
+        template: templateContent,
       };
       docs.push(doc);
+    } else if (isConfig) {
+      const doc: Config = { ...baseFields, kind: 'config' };
+      docs.push(doc);
     } else {
-      const doc: BusyDocument = {
-        kind: 'document',
-        id: parts.docId,
-        docId: parts.docId,
-        slug: parts.docId.toLowerCase(),
-        name: parts.frontmatter.Name,
-        content: parts.content,
-        types: parts.types,
-        extends: parts.extends,
-        sectionRef: `${parts.docId}#`, // Root reference
-        imports: parts.imports,
-        localdefs: parts.localdefs,
-        setup: parts.setup!,
-        operations: parts.operations,
-      };
+      const doc: BusyDocument = { ...baseFields, kind: 'document' };
       docs.push(doc);
     }
   }
@@ -306,7 +314,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
   }
 
   // Build byFile index
-  const byFile: Record<string, { concept: BusyDocument | Playbook; bySlug: Record<string, Section> }> = {};
+  const byFile: Record<string, { concept: BusyDocument | Playbook | View | Config; bySlug: Record<string, Section> }> = {};
 
   for (const doc of docs) {
     const bySlug: Record<string, Section> = {};
@@ -352,11 +360,11 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
  * 2. Documents in the 'types' array (implicit type-based inheritance)
  */
 function inheritOperations(
-  docs: (BusyDocument | Playbook)[],
+  docs: (BusyDocument | Playbook | View | Config)[],
   allOperations: Map<string, Operation>
 ): void {
   // Build doc lookup by name
-  const docByName = new Map<string, BusyDocument | Playbook>();
+  const docByName = new Map<string, BusyDocument | Playbook | View | Config>();
   for (const doc of docs) {
     docByName.set(doc.name, doc);
   }
@@ -438,6 +446,19 @@ function resolveSymbol(
   }
 
   return undefined;
+}
+
+/**
+ * Get the full content of a section including all nested children.
+ * Reconstructs the original markdown by walking the section tree.
+ */
+function getSectionFullContent(section: Section): string {
+  let content = section.content;
+  for (const child of section.children) {
+    const prefix = '#'.repeat(child.depth);
+    content += `\n${prefix} ${child.title}\n${getSectionFullContent(child)}`;
+  }
+  return content.trim();
 }
 
 /**
