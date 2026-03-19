@@ -55,7 +55,7 @@ The presentation layout written in markdown. May include Handlebars-style placeh
 
 # [Operations](./document.busy.md#operations-section)
 
-## renderView
+## [renderView](./operation.busy.md)
 
 Compile and render this view using current data.
 
@@ -80,7 +80,7 @@ Compile and render this view using current data.
 - View model fields resolved
 - Display rendered or generated
 
-## refreshView
+## [refreshView](./operation.busy.md)
 
 Reload data from sources and re-render.
 
