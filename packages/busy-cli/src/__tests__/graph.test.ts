@@ -69,6 +69,16 @@ Description: Cycle B
 [CycleA]:./cycle-a.busy.md
 `;
 
+const SELF_CYCLE_DOC = `---
+Name: Self Cycle
+Type: [Document]
+Description: Self-referencing type-style doc
+---
+
+# Imports
+[SelfCycle]:./self-cycle.busy.md
+`;
+
 function setupFixtures() {
   mkdirSync(FIXTURES_DIR, { recursive: true });
   writeFileSync(join(FIXTURES_DIR, 'prospect.busy.md'), MODEL_DOC);
@@ -77,6 +87,7 @@ function setupFixtures() {
   writeFileSync(join(FIXTURES_DIR, 'app-config.busy.md'), CONFIG_DOC);
   writeFileSync(join(FIXTURES_DIR, 'cycle-a.busy.md'), CYCLE_A_DOC);
   writeFileSync(join(FIXTURES_DIR, 'cycle-b.busy.md'), CYCLE_B_DOC);
+  writeFileSync(join(FIXTURES_DIR, 'self-cycle.busy.md'), SELF_CYCLE_DOC);
 }
 
 function cleanFixtures() {
@@ -97,8 +108,8 @@ describe('busy graph command helpers', () => {
     const graph = buildWorkspaceGraph(repo, FIXTURES_DIR);
 
     expect(graph.workspace).toBe('graph');
-    expect(graph.stats.documents).toBe(6);
-    expect(graph.stats.importEdges).toBe(4);
+    expect(graph.stats.documents).toBe(7);
+    expect(graph.stats.importEdges).toBe(5);
     expect(graph.stats.types.Model).toBe(1);
     expect(graph.stats.types.View).toBe(1);
     expect(graph.stats.types.Playbook).toBe(1);
@@ -115,11 +126,12 @@ describe('busy graph command helpers', () => {
     expect(graph.edges).toHaveLength(0);
   });
 
-  it('detects circular imports', async () => {
+  it('detects circular imports but ignores 1-node self-cycles', async () => {
     const repo = await loadRepo([join(FIXTURES_DIR, '*.busy.md')]);
     const graph = buildWorkspaceGraph(repo, FIXTURES_DIR);
 
     expect(graph.stats.circularImports).toContainEqual(['cycle-a', 'cycle-b']);
+    expect(graph.stats.circularImports).not.toContainEqual(['self-cycle']);
   });
 
   it('formats tree output', async () => {
@@ -127,7 +139,7 @@ describe('busy graph command helpers', () => {
     const graph = buildWorkspaceGraph(repo, FIXTURES_DIR);
     const output = formatGraph(graph, 'tree');
 
-    expect(output).toContain('graph (6 documents');
+    expect(output).toContain('graph (7 documents');
     expect(output).toContain('[Model] Prospect');
     expect(output).toContain('[View] Prospect Pipeline');
   });

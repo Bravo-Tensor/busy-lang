@@ -271,6 +271,14 @@ function findImportCycles(nodes: GraphNode[], importEdges: GraphEdge[]): string[
       if (active.has(next)) {
         const start = stack.indexOf(next);
         const cycle = stack.slice(start);
+
+        // Ignore 1-node self-references. BUSY canonical type docs often
+        // reference themselves structurally, and those should not be surfaced
+        // as circular import warnings in graph output.
+        if (cycle.length <= 1) {
+          continue;
+        }
+
         const canonical = canonicalizeCycle(cycle);
         cycles.set(canonical.join(' -> '), canonical);
       }
