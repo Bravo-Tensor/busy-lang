@@ -16,7 +16,11 @@ import {
   File,
 } from './types/schema.js';
 
-/** Union of all document kinds the loader produces */
+/**
+ * Union of all top-level document variants the loader produces.
+ * Note: BusyDocument covers the generic `document` kind, including plain
+ * Document/Model-style docs that don't get a more specific classifier.
+ */
 type AnyDocument = BusyDocument | Playbook | View | Config;
 import { parseFrontMatter } from './parsers/frontmatter.js';
 import { parseSections, getAllSections, findSection } from './parsers/sections.js';
