@@ -1,5 +1,6 @@
 // Main exports
 export { loadRepo } from './loader.js';
+export { compileLoreSite } from './compiler/lore.js';
 export { buildContext, writeContext, get, parentsOf, childrenOf, getConceptContext } from './builders/context.js';
 export { mergeRepos, extendRepo, loadRepoFromJSON } from './merge.js';
 
@@ -23,6 +24,17 @@ export type {
   ContextPayload,
   FrontMatter,
 } from './types/schema.js';
+
+export type {
+  LoreActionKind,
+  LoreDataSourceKind,
+  LoreCompilerConfig,
+  DataSourceIR,
+  ActionIR,
+  PageIR,
+  NavigationItemIR,
+  SiteManifest,
+} from './types/lore-compiler.js';
 
 export type { BuildOpts, ConceptContext } from './builders/context.js';
 
