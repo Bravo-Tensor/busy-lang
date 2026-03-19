@@ -50,7 +50,7 @@ Same as [Model] Rules — constraints that must hold. For configs, these are typ
 
 # [Operations](./document.busy.md#operations-section)
 
-## [initialize][./operation.busy.md]
+## [initialize](./operation.busy.md)
 
 Create the singleton config instance with defaults if it doesn't exist.
 
