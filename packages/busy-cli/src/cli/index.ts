@@ -15,6 +15,7 @@ import {
   listPackages,
   getPackageInfo,
 } from '../commands/package.js';
+import { loadWorkspaceGraph, formatGraph, type GraphFormat } from '../commands/graph.js';
 
 // Read version from package.json
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -199,6 +200,42 @@ program
       }
     } catch (err) {
       console.error('Error resolving imports:', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
+// Graph command - output workspace dependency graph
+program
+  .command('graph')
+  .description('Output the BUSY workspace dependency graph')
+  .argument('[directory]', 'Workspace directory', '.')
+  .option('--format <format>', 'Output format: json | tree | dot', 'json')
+  .option('--filter <type>', 'Filter nodes by type (e.g. Model, View, Playbook)')
+  .option('-o, --output <file>', 'Output file for graph content')
+  .action(async (directory: string, options) => {
+    try {
+      const workspaceRoot = resolve(directory);
+      const format = options.format as GraphFormat;
+
+      if (!['json', 'tree', 'dot'].includes(format)) {
+        console.error(`Error: Unsupported format: ${options.format}`);
+        process.exit(1);
+      }
+
+      const graph = await loadWorkspaceGraph(workspaceRoot, options.filter);
+      const output = formatGraph(graph, format);
+
+      if (options.output) {
+        await writeFile(options.output, output, 'utf-8');
+        console.log(`✓ Graph written to ${options.output}`);
+        console.log(`  Workspace: ${graph.workspace}`);
+        console.log(`  Documents: ${graph.stats.documents}`);
+        console.log(`  Edges: ${graph.stats.edges}`);
+      } else {
+        console.log(output);
+      }
+    } catch (err) {
+      console.error('Error building graph:', err instanceof Error ? err.message : err);
       process.exit(1);
     }
   });
