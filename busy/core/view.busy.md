@@ -9,6 +9,7 @@ Description: A presentation [Document] that composes and displays information fr
 [View]:./view.busy.md
 [Document]:./document.busy.md
 [Model]:./model.busy.md
+[Config]:./config.busy.md
 [Playbook]:./playbook.busy.md
 [Operation]:./operation.busy.md
 [Tool]:./tool.busy.md
@@ -32,11 +33,21 @@ Views follow a Model-View-Controller pattern:
 
 A [View] with a Display section is renderable — a LORE compiler can compile it into a navigable page. A [View] without a Display section is a data composition only.
 
+## Authoring Guidance
+
+- A renderable [View] is a **page**, not a runtime data source.
+- Imported [View]s should be treated as navigation or composition relationships unless a compiler/runtime explicitly defines another derived-data mechanism.
+- Runtime data loading should normally come from imported [Model]s, [Config]s, or other explicit persisted sources.
+- [Local Definitions] shape imported data into the page's view model; they do not by themselves imply routes or persistence.
+- Keep the [Display Section] readable as markdown on its own. Inline links may appear in the body without necessarily becoming promoted page actions.
+- Put meaningful user actions in [Operations]; do not assume every inline link will become an explicit runtime action affordance.
+- Links to non-renderable documents should be treated as references unless promoted by compiler/runtime rules.
+
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
 ## [Data Source]
 [Data Source]:./view.busy.md#data-source
-A reference to an imported [Model] or [Playbook] that provides data for this view. Each data source maps imported fields to the view model.
+A reference to an imported [Model], [Config], or other explicit persisted source that provides data for this view. Each data source maps imported fields to the view model. Imported renderable [View]s are page/composition references, not runtime data sources by default.
 
 ## [View Model Field]
 [View Model Field]:./view.busy.md#view-model-field
@@ -64,12 +75,13 @@ Compile and render this view using current data.
 - `filters`: Active [Filter] constraints (optional)
 
 ### [Steps][Steps Section]
-1. Load data from each [Data Source] via its [Model]'s persistence adapter
+1. Load data from each [Data Source] via the configured persistence adapter or runtime loader
 2. Apply any active [Filter]s to narrow the data set
 3. Map loaded data to [View Model Field]s defined in local definitions
-4. If [Display Section] exists, resolve placeholders against the view model
-5. If no [Display Section], generate a default layout from view model fields
-6. Return rendered output
+4. Resolve any page/reference relationships to other renderable [View]s separately from data loading
+5. If [Display Section] exists, resolve placeholders against the view model
+6. If no [Display Section], generate a default layout from view model fields
+7. Return rendered output
 
 ### [Output][Output Section]
 - Rendered view content (markdown, HTML, or text depending on compiler)
@@ -88,8 +100,9 @@ Reload data from sources and re-render.
 - `force`: Whether to bypass cache (optional, default false)
 
 ### [Steps][Steps Section]
-1. Reload all [Data Source]s from their persistence adapters
-2. Re-run renderView with fresh data
+1. Reload all [Data Source]s from their persistence adapters or runtime loaders
+2. Re-resolve any page/reference relationships needed for navigation
+3. Re-run renderView with fresh data
 
 ### [Output][Output Section]
 - Updated rendered view content
