@@ -217,14 +217,16 @@ export function resolveImports(
     // Resolve the import path
     const importPath = resolve(dirname(basePath), imp.path);
 
-    // Check for circular imports
+    // Check for circular imports — warn and skip instead of crashing
     if (visited.has(importPath)) {
-      throw new Error(`Circular import detected: ${importPath}`);
+      console.warn(`⚠ Circular import skipped: ${imp.path} (from ${basePath})`);
+      continue;
     }
 
-    // Check if file exists
+    // Check if file exists — warn and skip instead of crashing
     if (!existsSync(importPath)) {
-      throw new Error(`Import not found: ${imp.path} (resolved to ${importPath})`);
+      console.warn(`⚠ Import not found: ${imp.path} (resolved to ${importPath})`);
+      continue;
     }
 
     // Mark as visited
@@ -248,7 +250,7 @@ export function resolveImports(
         );
 
         if (!hasOperation && !hasDefinition) {
-          throw new Error(`Anchor '${imp.anchor}' not found in ${imp.path}`);
+          console.warn(`⚠ Anchor '${imp.anchor}' not found in ${imp.path}`);
         }
       }
 
@@ -258,10 +260,12 @@ export function resolveImports(
       // Recursively resolve imports in the imported document
       const nestedResolved = resolveImports(importedDoc, importPath, visited);
       Object.assign(resolved, nestedResolved);
-    } finally {
-      // Remove from visited after processing (allow same doc in different branches)
-      visited.delete(importPath);
+    } catch (e) {
+      // Don't crash on nested resolution failures
+      console.warn(`⚠ Failed to resolve nested imports in ${imp.path}: ${e}`);
     }
+    // NOTE: we intentionally keep importPath in `visited` — once resolved,
+    // don't re-resolve in other branches (prevents exponential recursion)
   }
 
   return resolved;

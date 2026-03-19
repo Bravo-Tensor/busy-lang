@@ -15,6 +15,13 @@ import {
   Section,
   File,
 } from './types/schema.js';
+
+/**
+ * Union of all top-level document variants the loader produces.
+ * Note: BusyDocument covers the generic `document` kind, including plain
+ * Document/Model-style docs that don't get a more specific classifier.
+ */
+type AnyDocument = BusyDocument | Playbook | View | Config;
 import { parseFrontMatter } from './parsers/frontmatter.js';
 import { parseSections, getAllSections, findSection } from './parsers/sections.js';
 import { extractLocalDefs } from './parsers/localdefs.js';
@@ -69,7 +76,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
 
   // Second pass: parse documents
   const files: File[] = []; // Lightweight file representations
-  const docs: (BusyDocument | Playbook | View | Config)[] = []; // Full concept definitions
+  const docs: AnyDocument[] = []; // Full concept definitions
   const allLocaldefs = new Map<string, LocalDef>();
   const allOperations = new Map<string, Operation>();
   const allImports: ImportDef[] = [];
@@ -267,7 +274,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
   }
 
   // Inherit operations from parent documents
-  inheritOperations(docs, allOperations);
+  inheritOperations(docs as (BusyDocument | Playbook)[], allOperations);
 
   // Build concepts array (includes all documents as ConceptBase)
   const concepts: ConceptBase[] = docs.map((doc) => ({
@@ -314,7 +321,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
   }
 
   // Build byFile index
-  const byFile: Record<string, { concept: BusyDocument | Playbook | View | Config; bySlug: Record<string, Section> }> = {};
+  const byFile: Record<string, { concept: AnyDocument; bySlug: Record<string, Section> }> = {};
 
   for (const doc of docs) {
     const bySlug: Record<string, Section> = {};
@@ -360,7 +367,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
  * 2. Documents in the 'types' array (implicit type-based inheritance)
  */
 function inheritOperations(
-  docs: (BusyDocument | Playbook | View | Config)[],
+  docs: AnyDocument[],
   allOperations: Map<string, Operation>
 ): void {
   // Build doc lookup by name
@@ -424,7 +431,7 @@ function resolveSymbol(
   nameOrLabel: string,
   currentDocId: string,
   localdefs: Map<string, LocalDef>,
-  docs: (BusyDocument | Playbook)[],
+  docs: AnyDocument[],
   symbols: Record<string, { docId?: string; slug?: string }>
 ): string | undefined {
   // 1. Check for LocalDef in same doc
