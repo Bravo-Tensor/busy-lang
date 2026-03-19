@@ -50,7 +50,7 @@ Same as [Model] Rules — constraints that must hold. For configs, these are typ
 
 # [Operations](./document.busy.md#operations-section)
 
-## initialize
+## [initialize][./operation.busy.md]
 
 Create the singleton config instance with defaults if it doesn't exist.
 
@@ -73,7 +73,7 @@ Create the singleton config instance with defaults if it doesn't exist.
 - Overrides validated against rules
 - Instance persisted
 
-## getConfig
+## [getConfig](./operation.busy.md)
 
 Retrieve the current config values.
 
@@ -84,7 +84,7 @@ Retrieve the current config values.
 ### [Output][Output Section]
 - The current config instance
 
-## updateConfig
+## [updateConfig](./operation.busy.md)
 
 Modify configuration values.
 
