@@ -229,6 +229,15 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
     const isView = typesLower.includes('view');
     const isConfig = typesLower.includes('config');
 
+    // Collect extra frontmatter fields as meta for downstream consumers
+    const KNOWN_FRONTMATTER_KEYS = new Set(['Name', 'Type', 'Extends', 'Description', 'Tags']);
+    const meta: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(parts.frontmatter)) {
+      if (!KNOWN_FRONTMATTER_KEYS.has(key)) {
+        meta[key] = value;
+      }
+    }
+
     // Base fields shared across all document kinds
     const baseFields = {
       id: parts.docId,
@@ -243,6 +252,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
       localdefs: parts.localdefs,
       setup: parts.setup!,
       operations: parts.operations,
+      ...(Object.keys(meta).length > 0 ? { meta } : {}),
     };
 
     if (isPlaybook) {

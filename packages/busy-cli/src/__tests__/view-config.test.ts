@@ -91,6 +91,30 @@ Description: A view without an explicit display section
 Reload data.
 `;
 
+const VIEW_WITH_LORE = `---
+Name: Listing Detail
+Type: [View]
+Description: Competitive context for a specific listing
+Lore:
+  Route: /market-monitoring/listing/:listingId
+  Permission: premium
+---
+
+# Imports
+[Prospect]:./prospect.busy.md
+
+# Local Definitions
+
+## ListingFields
+- \`address\` — Street address
+- \`dom\` — Days on market
+
+# Display
+
+## Listing: {{address}}
+Days on market: {{dom}}
+`;
+
 const CONFIG_DOC = `---
 Name: Canon SDLC
 Type: [Config]
@@ -125,6 +149,7 @@ function setupFixtures() {
   writeFileSync(join(FIXTURES_DIR, 'prospect.busy.md'), MODEL_DOC);
   writeFileSync(join(FIXTURES_DIR, 'prospect-pipeline.busy.md'), VIEW_DOC);
   writeFileSync(join(FIXTURES_DIR, 'simple-view.busy.md'), VIEW_NO_TEMPLATE);
+  writeFileSync(join(FIXTURES_DIR, 'listing-detail.busy.md'), VIEW_WITH_LORE);
   writeFileSync(join(FIXTURES_DIR, 'canon-sdlc.busy.md'), CONFIG_DOC);
 }
 
@@ -147,8 +172,8 @@ describe('View and Config Types', () => {
   });
 
   describe('Loading', () => {
-    it('loads all 4 fixture documents', () => {
-      expect(repo.concepts.length).toBe(4);
+    it('loads all 5 fixture documents', () => {
+      expect(repo.concepts.length).toBe(5);
     });
 
     it('classifies Model as document', () => {
@@ -230,6 +255,26 @@ describe('View and Config Types', () => {
         e => e.from === viewDocId && e.role === 'imports'
       );
       expect(importEdges.length).toBeGreaterThan(0);
+    });
+
+    it('has no meta when no extra frontmatter is present', () => {
+      const viewDocId = Object.keys(repo.byFile).find(id =>
+        repo.byFile[id].concept.name === 'Prospect Pipeline'
+      )!;
+      const viewDoc = repo.byFile[viewDocId].concept;
+      expect(viewDoc.meta).toBeUndefined();
+    });
+
+    it('carries extra frontmatter through as meta (generic passthrough)', () => {
+      const viewDocId = Object.keys(repo.byFile).find(id =>
+        repo.byFile[id].concept.name === 'Listing Detail'
+      )!;
+      const viewDoc = repo.byFile[viewDocId].concept;
+      expect(viewDoc.meta).toBeDefined();
+      expect((viewDoc.meta as any).Lore).toEqual({
+        Route: '/market-monitoring/listing/:listingId',
+        Permission: 'premium',
+      });
     });
   });
 

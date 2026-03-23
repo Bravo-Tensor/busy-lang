@@ -203,6 +203,7 @@ const ConceptBaseSchemaObject = z.object({
   types: z.array(ConceptIdSchema),
   extends: z.array(ConceptIdSchema),
   sectionRef: SectionIdSchema,
+  meta: z.record(z.unknown()).optional(),  // Extra frontmatter for downstream consumers
 });
 
 export const ConceptBaseSchema: z.ZodType<ConceptBase> = z.lazy(() =>
@@ -265,7 +266,7 @@ export const PlaybookSchema = LegacyBusyDocumentSchema.extend({
 // Views follow MVC: imports=Model, localDefs=ViewModel, template=View, operations=Controller
 export const ViewSchema = LegacyBusyDocumentSchema.extend({
     kind: z.literal('view'),
-    display: z.string().optional(), // Markdown template (optional — LORE can generate)
+    display: z.string().optional(),           // Markdown template (optional — LORE can generate)
   })
 
 // Config schema - extends LegacyBusyDocument, semantically a singleton Model
@@ -378,6 +379,6 @@ export const FrontMatterSchema = z.object({
       if (typeof val === 'string') return [val];
       return val;
     }),
-});
+}).passthrough();  // Preserve unknown fields for downstream consumers (Lore, Knit, etc.)
 
 export type FrontMatter = z.infer<typeof FrontMatterSchema>;
