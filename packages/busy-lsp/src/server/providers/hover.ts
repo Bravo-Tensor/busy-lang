@@ -126,14 +126,19 @@ export class HoverProvider {
     // Check common BUSY terms
     const busyTerms: Record<string, string> = {
       Document: 'A BUSY document that defines concepts, operations, and structure.',
-      Operation: 'An executable unit with inputs, outputs, steps, and checklist.',
       Concept: 'A named definition that can be referenced throughout BUSY documents.',
-      Tool: 'An external capability wrapper with provider mappings.',
+      Model: 'A domain entity with identity, fields, lifecycle, rules, and persistence.',
+      Config: 'A singleton model for workspace settings and configuration.',
+      View: 'A presentation document used for route-bound pages or embeddable component views.',
       Playbook: 'A document with an ordered sequence of operations.',
+      Tool: 'An external capability wrapper with provider mappings.',
+      Prompt: 'An LLM entry-point document with prompt text and orchestration.',
+      Role: 'A persona document defining traits, principles, and skillset.',
+      Checklist: 'Verification items to confirm operation success.',
+      Operation: 'An executable unit with inputs, outputs, steps, and checklist.',
       Input: 'Input parameters for an operation.',
       Output: 'Output values produced by an operation.',
       Steps: 'Sequential instructions that make up an operation.',
-      Checklist: 'Verification items to confirm operation success.',
       Triggers: 'Time-based (alarm) or event-based automation declarations.',
     };
 
@@ -228,6 +233,7 @@ export class HoverProvider {
         Imports: 'Reference-style link definitions for external concepts.',
         Setup: 'Instructions executed before operations.',
         'Local Definitions': 'Reusable definitions scoped to this document.',
+        Display: 'Markdown presentation layout for a view, with Handlebars-style placeholders and conditionals.',
         Operations: 'Executable units with inputs, outputs, and steps.',
         Triggers: 'Automation declarations (alarms and events).',
         Tools: 'External capability wrappers with provider mappings.',
