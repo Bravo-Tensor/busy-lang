@@ -39,14 +39,14 @@ export class CompletionProvider {
       return this.getPathCompletions(document);
     }
 
-    // Anchor completions after #
-    if (linePrefix.includes('#')) {
-      return this.getAnchorCompletions(linePrefix, parsed, document);
-    }
-
     // Section heading completions
     if (linePrefix.match(/^#+\s*$/)) {
       return this.getSectionCompletions(position.line, parsed);
+    }
+
+    // Anchor completions after #
+    if (linePrefix.includes('#')) {
+      return this.getAnchorCompletions(linePrefix, parsed, document);
     }
 
     return items;
@@ -81,6 +81,7 @@ export class CompletionProvider {
         { name: 'Extends', detail: 'Parent document to extend' },
         { name: 'Tags', detail: 'Comma-separated tags' },
         { name: 'Provider', detail: 'Provider for tool documents' },
+        { name: 'Params', detail: 'View params for component views' },
       ];
 
       for (const field of fields) {
@@ -96,7 +97,19 @@ export class CompletionProvider {
 
     // Type value completions
     if (linePrefix.match(/^Type:\s*$/)) {
-      const types = ['Document', 'Operation', 'Tool', 'Playbook', 'Concept', 'Role'];
+      const types = [
+        'Document',
+        'Concept',
+        'Model',
+        'Config',
+        'View',
+        'Playbook',
+        'Tool',
+        'Prompt',
+        'Role',
+        'Checklist',
+        'Operation',
+      ];
       for (const type of types) {
         items.push({
           label: `[${type}]`,
@@ -285,6 +298,7 @@ export class CompletionProvider {
       { name: 'Imports', snippet: '[Imports](#imports-section)' },
       { name: 'Setup', snippet: '[Setup](#setup-section)' },
       { name: 'Local Definitions', snippet: '[Local Definitions](#local-definitions-section)' },
+      { name: 'Display', snippet: '[Display](#display-section)' },
       { name: 'Operations', snippet: '[Operations](#operations-section)' },
       { name: 'Triggers', snippet: '[Triggers](#triggers-section)' },
       { name: 'Tools', snippet: '[Tools](#tools-section)' },

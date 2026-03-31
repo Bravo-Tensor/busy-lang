@@ -268,10 +268,15 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
         // Reconstruct full template from section + children content
         displayContent = getSectionFullContent(displaySection);
       }
+      // Parse Params from frontmatter meta (falls through KNOWN_FRONTMATTER_KEYS)
+      const params = parseViewParams(meta.Params);
+      // Remove Params from meta since it's now a first-class field
+      delete meta.Params;
       const doc: View = {
         ...baseFields,
         kind: 'view',
         display: displayContent,
+        ...(params.length > 0 ? { params } : {}),
       };
       docs.push(doc);
     } else if (isConfig) {
@@ -476,6 +481,56 @@ function getSectionFullContent(section: Section): string {
     content += `\n${prefix} ${child.title}\n${getSectionFullContent(child)}`;
   }
   return content.trim();
+}
+
+/**
+ * Parse Params frontmatter value into typed ViewParam array.
+ *
+ * Accepts YAML-parsed arrays like:
+ *   Params:
+ *     - prospect: object (required)
+ *     - show_hook: boolean
+ *
+ * Each entry can be:
+ *   - A string like "name: type (required)" or "name: type"
+ *   - An object like { name: "prospect", type: "object", required: true }
+ */
+function parseViewParams(raw: unknown): { name: string; type: string; required: boolean }[] {
+  if (!Array.isArray(raw)) return [];
+
+  const params: { name: string; type: string; required: boolean }[] = [];
+
+  for (const entry of raw) {
+    if (typeof entry === 'string') {
+      // Parse "name: type (required)" or "name: type" or just "name"
+      const match = entry.match(/^\s*([\w-]+)\s*(?::\s*(\w+))?\s*(?:\(([^)]*)\))?\s*$/);
+      if (match) {
+        const name = match[1];
+        const type = match[2] ?? 'string';
+        const modifiers = (match[3] ?? '').toLowerCase();
+        params.push({ name, type, required: modifiers.includes('required') });
+      }
+    } else if (entry && typeof entry === 'object') {
+      // YAML parsed as object — e.g. { prospect: "object (required)" }
+      for (const [key, value] of Object.entries(entry as Record<string, unknown>)) {
+        if (typeof value === 'string') {
+          const match = value.match(/^\s*(\w+)?\s*(?:\(([^)]*)\))?\s*$/);
+          const type = match?.[1] ?? 'string';
+          const modifiers = (match?.[2] ?? '').toLowerCase();
+          params.push({ name: key, type, required: modifiers.includes('required') });
+        } else if (typeof value === 'object' && value !== null) {
+          const v = value as Record<string, unknown>;
+          params.push({
+            name: v.name as string ?? key,
+            type: (v.type as string) ?? 'string',
+            required: (v.required as boolean) ?? false,
+          });
+        }
+      }
+    }
+  }
+
+  return params;
 }
 
 /**

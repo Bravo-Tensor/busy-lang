@@ -135,6 +135,32 @@ Type: [View]
 
 **When to use:** For dashboards, overviews, documentation pages — anything that presents information.
 
+#### Page Views vs Component Views
+
+Views come in two flavors:
+
+**Page views** are route-bound — they own data queries, compose components, and handle layout with conditional sections via Handlebars. They have a `# Data` section that queries Models.
+
+**Component views** are embeddable — they receive data as params from a parent page view and render a focused slice. They declare `Params` in frontmatter and have no data-fetching logic. Page views embed them using query strings on import links:
+
+```markdown
+[Component]:../components/status-card.busy.md?prospect={{prospect}}
+```
+
+Component views declare their expected params:
+
+```yaml
+---
+Name: Status Card
+Type: [View]
+Params:
+  - prospect: object (required)
+  - show_details: boolean
+---
+```
+
+This keeps data ownership at the page level and components composable across pages.
+
 ### Playbook
 
 An orchestration document that sequences operations, prompts, tools, or roles with optional branching.

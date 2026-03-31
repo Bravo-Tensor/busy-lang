@@ -43,6 +43,29 @@ A [View] with a Display section is renderable — a LORE compiler can compile it
 - Put meaningful user actions in [Operations]; do not assume every inline link will become an explicit runtime action affordance.
 - Links to non-renderable documents should be treated as references unless promoted by compiler/runtime rules.
 
+### Page Views and Component Views
+
+A [View] may be authored as either a **page view** or a **component view**.
+
+- **Page view** — route-bound, owns data loading and page composition. It imports [Model]s and [Config]s as data sources and may embed component views inside its [Display Section].
+- **Component view** — embeddable and presentational. It receives data from a parent page view as params and should avoid doing its own data loading.
+
+Component views declare expected params in frontmatter:
+
+```yaml
+Params:
+  - prospect: object (required)
+  - show_pricing: boolean
+```
+
+A page view may embed a component view using an import link with query-string params:
+
+```markdown
+[Status Card]:../components/status-card.busy.md?prospect={{prospect}}
+```
+
+This keeps data ownership at the page level while allowing reusable display fragments.
+
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
 ## [Data Source]
