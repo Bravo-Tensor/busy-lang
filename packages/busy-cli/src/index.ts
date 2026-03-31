@@ -12,6 +12,7 @@ export type {
   BusyDocument,
   Playbook,
   View,
+  ViewParam,
   Config,
   LocalDef,
   Operation,

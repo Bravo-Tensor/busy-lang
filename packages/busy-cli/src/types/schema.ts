@@ -262,11 +262,21 @@ export const PlaybookSchema = LegacyBusyDocumentSchema.extend({
     sequence: z.array(ConceptIdSchema), // Ordered array of operation references
   })
 
+// View param schema — typed parameters for component views
+export const ViewParamSchema = z.object({
+    name: z.string(),
+    type: z.string().default('string'),  // object, string, boolean, array, etc.
+    required: z.boolean().default(false),
+  })
+
+export type ViewParam = z.infer<typeof ViewParamSchema>;
+
 // View schema - extends LegacyBusyDocument with display section
 // Views follow MVC: imports=Model, localDefs=ViewModel, template=View, operations=Controller
 export const ViewSchema = LegacyBusyDocumentSchema.extend({
     kind: z.literal('view'),
     display: z.string().optional(),           // Markdown template (optional — LORE can generate)
+    params: z.array(ViewParamSchema).optional(), // Typed params for component views
   })
 
 // Config schema - extends LegacyBusyDocument, semantically a singleton Model

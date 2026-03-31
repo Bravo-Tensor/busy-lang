@@ -142,6 +142,38 @@ The Canon SDLC defines a 6-phase software development lifecycle.
 Phases: Intake, Shape, Spec, Implement, Review, Ship.
 `;
 
+const VIEW_WITH_PARAMS = `---
+Name: Prospect Status Card
+Type: [View]
+Description: Reusable component that renders prospect status
+Params:
+  - prospect: object (required)
+  - show_hook: boolean
+---
+
+# Display
+
+**{{prospect.agent_name}}** — {{prospect.lifecycle_state}}
+
+{{#if show_hook}}
+Hook delivered: {{prospect.hook_type}}
+{{/if}}
+`;
+
+const VIEW_WITH_PARAMS_OBJECT_STYLE = `---
+Name: Pricing Card
+Type: [View]
+Description: Pricing component
+Params:
+  - prospect: object (required)
+  - hooks: array
+---
+
+# Display
+
+Pricing for **{{prospect.agent_name}}**
+`;
+
 // ── Setup / Teardown ────────────────────────────────────────────────
 
 function setupFixtures() {
@@ -151,6 +183,8 @@ function setupFixtures() {
   writeFileSync(join(FIXTURES_DIR, 'simple-view.busy.md'), VIEW_NO_TEMPLATE);
   writeFileSync(join(FIXTURES_DIR, 'listing-detail.busy.md'), VIEW_WITH_LORE);
   writeFileSync(join(FIXTURES_DIR, 'canon-sdlc.busy.md'), CONFIG_DOC);
+  writeFileSync(join(FIXTURES_DIR, 'prospect-status-card.busy.md'), VIEW_WITH_PARAMS);
+  writeFileSync(join(FIXTURES_DIR, 'pricing-card.busy.md'), VIEW_WITH_PARAMS_OBJECT_STYLE);
 }
 
 function cleanFixtures() {
@@ -172,8 +206,8 @@ describe('View and Config Types', () => {
   });
 
   describe('Loading', () => {
-    it('loads all 5 fixture documents', () => {
-      expect(repo.concepts.length).toBe(5);
+    it('loads all 7 fixture documents', () => {
+      expect(repo.concepts.length).toBe(7);
     });
 
     it('classifies Model as document', () => {
@@ -275,6 +309,53 @@ describe('View and Config Types', () => {
         Route: '/market-monitoring/listing/:listingId',
         Permission: 'premium',
       });
+    });
+
+    it('parses Params from frontmatter into typed params array', () => {
+      const viewDocId = Object.keys(repo.byFile).find(id =>
+        repo.byFile[id].concept.name === 'Prospect Status Card'
+      )!;
+      const viewDoc = repo.byFile[viewDocId].concept;
+      expect(viewDoc.kind).toBe('view');
+      if (viewDoc.kind === 'view') {
+        expect(viewDoc.params).toBeDefined();
+        expect(viewDoc.params).toHaveLength(2);
+        expect(viewDoc.params![0]).toEqual({ name: 'prospect', type: 'object', required: true });
+        expect(viewDoc.params![1]).toEqual({ name: 'show_hook', type: 'boolean', required: false });
+      }
+    });
+
+    it('does not include Params in meta when params are parsed', () => {
+      const viewDocId = Object.keys(repo.byFile).find(id =>
+        repo.byFile[id].concept.name === 'Prospect Status Card'
+      )!;
+      const viewDoc = repo.byFile[viewDocId].concept;
+      expect(viewDoc.meta?.Params).toBeUndefined();
+    });
+
+    it('parses Params with multiple required/optional params', () => {
+      const viewDocId = Object.keys(repo.byFile).find(id =>
+        repo.byFile[id].concept.name === 'Pricing Card'
+      )!;
+      const viewDoc = repo.byFile[viewDocId].concept;
+      expect(viewDoc.kind).toBe('view');
+      if (viewDoc.kind === 'view') {
+        expect(viewDoc.params).toBeDefined();
+        expect(viewDoc.params).toHaveLength(2);
+        expect(viewDoc.params![0]).toEqual({ name: 'prospect', type: 'object', required: true });
+        expect(viewDoc.params![1]).toEqual({ name: 'hooks', type: 'array', required: false });
+      }
+    });
+
+    it('has no params when Params frontmatter is absent', () => {
+      const viewDocId = Object.keys(repo.byFile).find(id =>
+        repo.byFile[id].concept.name === 'Prospect Pipeline'
+      )!;
+      const viewDoc = repo.byFile[viewDocId].concept;
+      expect(viewDoc.kind).toBe('view');
+      if (viewDoc.kind === 'view') {
+        expect(viewDoc.params).toBeUndefined();
+      }
     });
   });
 
