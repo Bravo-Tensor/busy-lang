@@ -1,5 +1,7 @@
 // Main exports
 export { loadRepo } from './loader.js';
+export { parseDocument, resolveImports } from './parser.js';
+export { loadWorkspaceAutomationIR } from './commands/automation-ir.js';
 export { buildContext, writeContext, get, parentsOf, childrenOf, getConceptContext } from './builders/context.js';
 export { mergeRepos, extendRepo, loadRepoFromJSON } from './merge.js';
 
@@ -23,7 +25,20 @@ export type {
   Repo,
   ContextPayload,
   FrontMatter,
+  Metadata,
+  Import,
+  Trigger,
+  NewOperation,
+  Tool,
+  ToolDocument,
 } from './types/schema.js';
+
+export type {
+  WorkspaceAutomationDocument,
+  WorkspaceAutomationStats,
+  WorkspaceAutomationIR,
+  LoadWorkspaceAutomationIROptions,
+} from './commands/automation-ir.js';
 
 export type { BuildOpts, ConceptContext } from './builders/context.js';
 

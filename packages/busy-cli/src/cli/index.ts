@@ -16,6 +16,7 @@ import {
   getPackageInfo,
 } from '../commands/package.js';
 import { loadWorkspaceGraph, formatGraph, type GraphFormat } from '../commands/graph.js';
+import { loadWorkspaceAutomationIR } from '../commands/automation-ir.js';
 
 // Read version from package.json
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -236,6 +237,40 @@ program
       }
     } catch (err) {
       console.error('Error building graph:', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
+// Automation IR command - output workspace automation/runtime IR
+program
+  .command('automation-ir')
+  .description('Output machine-consumable BUSY workspace automation IR')
+  .argument('[directory]', 'Workspace directory', '.')
+  .option('--include-graph', 'Include dependency graph summary in the exported IR')
+  .option('--compact', 'Emit compact JSON instead of pretty-printed output')
+  .option('-o, --output <file>', 'Output file for IR content')
+  .action(async (directory: string, options) => {
+    try {
+      const workspaceRoot = resolve(directory);
+      const ir = await loadWorkspaceAutomationIR(workspaceRoot, {
+        includeGraph: options.includeGraph,
+      });
+      const output = options.compact
+        ? JSON.stringify(ir)
+        : JSON.stringify(ir, null, 2);
+
+      if (options.output) {
+        await writeFile(options.output, output, 'utf-8');
+        console.log(`✓ Automation IR written to ${options.output}`);
+        console.log(`  Workspace: ${ir.workspace}`);
+        console.log(`  Documents: ${ir.stats.documents}`);
+        console.log(`  Operations: ${ir.stats.operations}`);
+        console.log(`  Triggers: ${ir.stats.triggers}`);
+      } else {
+        console.log(output);
+      }
+    } catch (err) {
+      console.error('Error building automation IR:', err instanceof Error ? err.message : err);
       process.exit(1);
     }
   });

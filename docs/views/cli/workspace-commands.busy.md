@@ -1,7 +1,7 @@
 ---
 Name: Workspace Commands
 Type: [View]
-Description: How to use busy init, busy check, and busy package commands to manage workspaces and dependencies.
+Description: How to use busy init, busy check, busy automation-ir, and busy package commands to manage workspaces and dependencies.
 ---
 
 # Imports
@@ -14,7 +14,7 @@ Description: How to use busy init, busy check, and busy package commands to mana
 
 # Setup
 
-This view covers the workspace-level CLI commands: `busy init`, `busy check`, and the `busy package` subcommands.
+This view covers the workspace-level CLI commands: `busy init`, `busy check`, `busy automation-ir`, and the `busy package` subcommands.
 
 # Display
 
@@ -79,6 +79,24 @@ Errors:
 
 ✗ Workspace has errors
 ```
+
+### busy automation-ir
+
+Export machine-consumable workspace automation IR built from the richer BUSY document parser:
+
+```bash
+busy automation-ir
+busy automation-ir --include-graph
+busy automation-ir -o workspace-ir.json
+```
+
+**What it includes:**
+- workspace root/name and summary stats
+- every parsed BUSY document in the workspace
+- per-document metadata, imports, operations, triggers, and tools/provider mappings when present
+- optional dependency graph summary when `--include-graph` is passed
+
+Use this when runtime consumers need a stable automation-oriented view of the workspace rather than the dependency-only output from `busy graph`.
 
 ### busy package add
 
@@ -185,5 +203,6 @@ Package: busy-v2
 2. **Add dependencies:** `busy package add` for external packages you need
 3. **Author documents:** Create `.busy.md` files that import from `.libraries/`
 4. **Check integrity:** `busy check` to verify nothing is broken
-5. **Inspect structure:** `busy graph --format tree` to see the full graph
-6. **Keep updated:** `busy package upgrade --all` periodically
+5. **Inspect structure:** `busy graph --format tree` to see the dependency graph
+6. **Export runtime IR when needed:** `busy automation-ir -o workspace-ir.json`
+7. **Keep updated:** `busy package upgrade --all` periodically
