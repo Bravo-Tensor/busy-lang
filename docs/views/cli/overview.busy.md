@@ -1,7 +1,7 @@
 ---
 Name: CLI Overview
 Type: [View]
-Description: Overview of all available busy CLI commands — parse, validate, resolve, graph, init, check, and package management.
+Description: Overview of all available busy CLI commands — parse, validate, resolve, automation IR export, graph, init, check, and package management.
 ---
 
 # Imports
@@ -35,6 +35,7 @@ npm install -g @busy/parser
 | `busy validate <file>` | Validate a document's frontmatter, structure, and imports |
 | `busy resolve <file>` | Resolve all imports in a document recursively |
 | `busy graph [directory]` | Output the workspace dependency graph |
+| `busy automation-ir [directory]` | Output machine-consumable workspace automation IR |
 | `busy info <file>` | Show quick document information |
 | `busy init` | Initialize a new workspace with `package.busy.md` |
 | `busy check` | Validate workspace coherence (packages, links, integrity) |
@@ -93,11 +94,18 @@ busy check
 busy check -d ./my-workspace
 ```
 
-**Graph** — Visualize the full workspace:
+**Graph** — Visualize the full workspace dependency topology:
 ```bash
 busy graph --format tree
 busy graph --format dot > workspace.dot
 busy graph --filter Model
+```
+
+**Automation IR** — Export runtime-oriented workspace data for consumers like LORE or pi-bus:
+```bash
+busy automation-ir
+busy automation-ir --include-graph
+busy automation-ir -o workspace-ir.json
 ```
 
 For detailed usage, see [Workspace Commands](./workspace-commands.busy.md).
