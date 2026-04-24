@@ -110,6 +110,64 @@ Builder/Architect agents discover triggers by reading Operation definitions with
 | Declaration | This document | Operations declare trigger requirements in their `### [Triggers]` section |
 | Configuration | Workspace .workspace file | Workspace configures runtime event-to-operation routing based on declarations |
 
+## [Emit]
+[Emit]:./operation.busy.md#emit
+A declaration that an [Operation] publishes a specific [Event] as part of its execution. [Emit]s are the outbound counterpart to [Trigger]s: where [Trigger]s say which events cause an [Operation] to run, [Emit]s say which events the [Operation] publishes and under what conditions.
+
+## [Emits Section]
+[Emits Section]:./operation.busy.md#emits-section
+The section header (`### [Emits]`) where [Emit]s are declared within an [Operation]. Lists every [Event] this [Operation] may publish and when.
+
+Operations declare emits alongside [Triggers] so that both the inbound and outbound event surface of the [Operation] is visible without reading the [Steps]. Emits may reference [Event]s documented in a [Tool]'s [Events] section, events listed in a [Document] contract (for example the outputs of a domain's boundary contract), or named events defined locally in the current [Document].
+
+The architecture follows this flow: [Operation]s declare [Trigger]s for inbound events and [Emit]s for outbound events; the runtime wires publication and consumption based on those declarations.
+
+### Emit Declaration
+
+Operations declare emits using a `### [Emits]` section within the Operation definition (alongside `### [Triggers]`, `### [Input]`, `### [Steps]`, etc.):
+
+    ## AssessIncomingEmail[Operation]
+
+    ### [Triggers]
+    event_type: transaction_email_received
+
+    ### [Emits]
+    - event_type: TransactionUnderstandingProposed
+      when: a material proposed update is created against an existing case
+    - event_type: TransactionConflictDetected
+      when: competing candidate values are recorded against a confirmed fact
+    - event_type: SignalParsingFailed
+      when: email or attachment parsing failed
+
+    ### [Input]
+    message_id: The email message identifier
+
+    ### [Steps]
+    1. Retrieve the full message content
+    2. Assess the email...
+
+The emit declaration supports the following fields:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `event_type` | Yes | Event identifier this [Operation] publishes (from a [Tool]'s [Events] section, a contract output, or a locally-defined event) |
+| `when` | No | Human-readable condition describing when the event is published |
+| `payload` | No | Notes describing payload fields or their origin when helpful |
+| `correlation` | No | How the emitted event should be correlated with prior triggers or threads when the runtime needs that mapping |
+
+Operations can declare multiple emits to reflect every event the operation may publish. An [Operation] with no declared emits is treated as having no outbound event surface.
+
+### Emit Discovery
+
+Builder/Architect agents discover emits by reading Operation definitions within Documents and tracing each `event_type` back to the [Tool] [Events] section, contract output, or locally-defined event that describes it. This, together with [Triggers], makes the full event surface of an [Operation] explicit.
+
+### Declaration vs Configuration
+
+| Aspect | Location | Purpose |
+|--------|----------|---------|
+| Declaration | This document | Operations declare publication requirements in their `### [Emits]` section |
+| Configuration | Workspace .workspace file | Workspace configures runtime event publication and routing based on declarations |
+
 # Core Operations
 
 ## ExecuteOperation
