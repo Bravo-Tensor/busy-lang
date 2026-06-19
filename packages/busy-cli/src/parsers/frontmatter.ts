@@ -1,7 +1,7 @@
-import matter from 'gray-matter';
 import { FrontMatter, FrontMatterSchema, ConceptBase } from '../types/schema.js';
 import { normalizeDocId, getBasename } from '../utils/slugify.js';
 import { debug, warn } from '../utils/logger.js';
+import { extractYamlFrontmatter } from './yaml-frontmatter.js';
 
 export interface ParsedFrontMatter {
   frontmatter: FrontMatter;
@@ -24,19 +24,17 @@ export function parseFrontMatter(
 
   // Extract only the first frontmatter block to avoid "multiple documents" error
   // when the body contains --- horizontal rules
-  const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
-  if (frontmatterMatch) {
-    try {
-      const parsed = matter(frontmatterMatch[0]);
+  try {
+    const parsed = extractYamlFrontmatter(fileContent);
+    if (parsed) {
       data = parsed.data;
-      content = fileContent.slice(frontmatterMatch[0].length);
-    } catch (err) {
-      warn(`Failed to parse YAML frontmatter in ${filePath}: ${err}`, { file: filePath });
+      content = parsed.content;
+    } else {
       data = {};
       content = fileContent;
     }
-  } else {
-    // No frontmatter found
+  } catch (err) {
+    warn(`Failed to parse YAML frontmatter in ${filePath}: ${err}`, { file: filePath });
     data = {};
     content = fileContent;
   }

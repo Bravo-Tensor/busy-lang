@@ -7,7 +7,6 @@
 
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
-import matter from 'gray-matter';
 import { CacheManager, calculateIntegrity } from '../cache/index.js';
 import { PackageRegistry, PackageEntry } from '../registry/index.js';
 import { providerRegistry } from '../providers/index.js';
@@ -17,6 +16,7 @@ import '../providers/local.js';
 import '../providers/github.js';
 import '../providers/gitlab.js';
 import '../providers/url.js';
+import { extractYamlFrontmatter } from '../parsers/yaml-frontmatter.js';
 
 /**
  * A document listed in a package manifest
@@ -103,13 +103,12 @@ function parseFieldValueTable(tableContent: string): Record<string, string> {
  */
 export function parsePackageManifest(content: string): PackageManifest {
   // Extract only first frontmatter block to avoid "multiple documents" error
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const parsedFrontmatter = extractYamlFrontmatter(content);
   let frontmatter: Record<string, any> = {};
   let body = content;
-  if (frontmatterMatch) {
-    const { data } = matter(frontmatterMatch[0]);
-    frontmatter = data;
-    body = content.slice(frontmatterMatch[0].length);
+  if (parsedFrontmatter) {
+    frontmatter = parsedFrontmatter.data;
+    body = parsedFrontmatter.content;
   }
 
   const manifest: PackageManifest = {
