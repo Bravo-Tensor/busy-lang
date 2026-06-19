@@ -6,7 +6,7 @@
 
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
-import matter from 'gray-matter';
+import { extractYamlFrontmatter } from '../parsers/yaml-frontmatter.js';
 
 /**
  * Package entry in the registry
@@ -123,13 +123,12 @@ function parseFieldTable(content: string): Record<string, string> {
  */
 export function parsePackageRegistry(content: string): ParsedRegistry {
   // Extract only first frontmatter block to avoid "multiple documents" error
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const parsedFrontmatter = extractYamlFrontmatter(content);
   let frontmatter: Record<string, any> = {};
   let body = content;
-  if (frontmatterMatch) {
-    const { data } = matter(frontmatterMatch[0]);
-    frontmatter = data;
-    body = content.slice(frontmatterMatch[0].length);
+  if (parsedFrontmatter) {
+    frontmatter = parsedFrontmatter.data;
+    body = parsedFrontmatter.content;
   }
 
   const metadata: RegistryMetadata = {

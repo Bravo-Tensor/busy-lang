@@ -6,7 +6,6 @@
  * - resolveImports: Resolve import references in a document
  */
 
-import matter from 'gray-matter';
 import { resolve, dirname } from 'path';
 import { readFileSync, existsSync } from 'fs';
 import {
@@ -19,6 +18,7 @@ import { parseImports } from './parsers/imports.js';
 import { parseOperations } from './parsers/operations.js';
 import { parseTriggers } from './parsers/triggers.js';
 import { parseTools } from './parsers/tools.js';
+import { parseYamlFrontmatterBlock } from './parsers/yaml-frontmatter.js';
 
 /**
  * Parse local definitions from markdown content
@@ -131,7 +131,7 @@ function parseMetadata(data: Record<string, any>): Metadata {
  * @throws Error if frontmatter is missing or invalid
  */
 export function parseDocument(content: string): BusyDocument | ToolDocument {
-  // Trim leading whitespace for gray-matter
+  // Trim leading whitespace before the opening frontmatter delimiter
   const trimmedContent = content.trimStart();
 
   // Extract frontmatter - only parse the first block to avoid "multiple documents" error
@@ -141,7 +141,7 @@ export function parseDocument(content: string): BusyDocument | ToolDocument {
     throw new Error('Missing or empty frontmatter');
   }
   const frontmatterOnly = frontmatterMatch[0];
-  const { data } = matter(frontmatterOnly);
+  const data = parseYamlFrontmatterBlock(frontmatterOnly);
 
   if (!data || Object.keys(data).length === 0) {
     throw new Error('Missing or empty frontmatter');

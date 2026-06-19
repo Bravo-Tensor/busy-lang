@@ -11,7 +11,7 @@
  */
 
 import { Trigger } from '../types/schema.js';
-import matter from 'gray-matter';
+import { extractYamlFrontmatter } from './yaml-frontmatter.js';
 
 // Weekday mapping
 const WEEKDAYS: Record<string, number> = {
@@ -207,17 +207,14 @@ export function parseTriggers(content: string): Trigger[] {
 
   // Extract only first frontmatter block to avoid "multiple documents" error
   const trimmedContent = content.trimStart();
-  const frontmatterMatch = trimmedContent.match(/^---\n([\s\S]*?)\n---/);
-  if (frontmatterMatch) {
-    try {
-      const { data } = matter(frontmatterMatch[0]);
-      if (data && typeof data === 'object') {
-        const frontmatterTriggers = parseFrontmatterTriggers(data);
-        triggers.push(...frontmatterTriggers);
-      }
-    } catch (e) {
-      // Frontmatter parsing error, continue without frontmatter triggers
+  try {
+    const parsedFrontmatter = extractYamlFrontmatter(trimmedContent);
+    if (parsedFrontmatter) {
+      const frontmatterTriggers = parseFrontmatterTriggers(parsedFrontmatter.data);
+      triggers.push(...frontmatterTriggers);
     }
+  } catch (e) {
+    // Frontmatter parsing error, continue without frontmatter triggers
   }
 
   // Find Triggers section
