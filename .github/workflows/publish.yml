@@ -69,8 +69,6 @@ jobs:
         run: npm test
 
       - name: Publish to npm with provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --provenance
 
   publish-lsp:
