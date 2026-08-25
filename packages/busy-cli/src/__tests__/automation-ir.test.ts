@@ -7,89 +7,106 @@ import { loadWorkspaceAutomationIR } from '../commands/automation-ir.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = join(__dirname, '__fixtures__', 'automation-ir');
 
-const GENERIC_DOC = `---
-Name: Lead Intake
-Type: [Document]
-Description: Processes inbound lead events.
-Triggers:
-  - event_type: gmail.message.received
-    operation: ProcessIncomingLead
+const MODEL_DOC = `---
+Name: Story State
+Type: [Model]
+Description: Durable development-story state.
 ---
 
-# Operations
+# Fields
 
-## ProcessIncomingLead
+| Field | Type | Meaning |
+|---|---|---|
+| story_id | string | Stable issue identifier |
+| phase | string | Current development phase |
 
-### Inputs
-- message
+# Lifecycle
 
-### Steps
-1. Validate [LeadRecord]
-2. Queue [RespondToLead]
-`;
-
-const TOOL_DOC = `---
-Name: Gmail Tool
-Type: [Tool]
-Description: Gmail helper tool definitions.
-Provider: composio
-Triggers:
-  - event_type: gmail.message.received
-    operation: RouteInboundMessage
----
-
-# Operations
-
-## RouteInboundMessage
-
-### Steps
-1. Call [send_email]
-
-# Tools
-
-## send_email
-Send an email.
-
-### Inputs
-- to
-- subject
-
-### Outputs
-- message_id
-
-### Providers
-#### composio
-Action: GMAIL_SEND_EMAIL
-Parameters:
-  to: to
-  subject: subject
+design -> execute -> fit -> complete
 `;
 
 const PLAYBOOK_DOC = `---
-Name: Daily Digest
+Name: Story Delivery
 Type: [Playbook]
-Description: Sends a daily digest.
+Description: Evidence-gated development delivery.
+audience: operators
 Triggers:
   - schedule: "0 6 * * *"
-    operation: DailyReport
+    operation: ExecuteStory
 ---
 
-# Imports
-[Lead Intake]:./lead-intake.busy.md
+# [Imports]
+
+[Story State]:./story-state.busy.md#fields
+
+# [Operations]
+
+## ExecuteStory
+
+Deliver one approved story without skipping proof.
+
+### [Input][Input Section]
+- \`story_id\` — issue to deliver
+- \`approval\` (optional) — current human approval evidence
+
+### [Triggers]
+event_type: linear.issue.approved
+queue_when_paused: true
+
+### [Emits]
+- event_type: StoryImplemented
+  when: implementation and focused checks complete
+- event_type: StoryBlocked
+  when: required evidence is unavailable
+
+### [Steps][Steps Section]
+
+#### Step 1: Inspect current state
+- **[Condition]:** Story is not already complete.
+- **[Role Context]:** [Implementer]
+- Invoke [LoadStory] and inspect the repository.
+
+#### Step 2: Implement and prove
+- Invoke [RunFocusedChecks].
+
+##### Step 2a: Recover from failure
+- **[Condition]:** Focused checks fail.
+- Invoke [DiagnoseFailure].
+
+### [Output][Output Section]
+- \`result\` — implementation result and evidence
+
+### [Checklist][Checklist Section]
+- [ ] Required approval was present
+- [ ] Focused checks produced observable evidence
+`;
+
+const TOOL_DOC = `---
+Name: Development Tool
+Type: [Tool]
+Description: Boundary operations used by development playbooks.
+Provider: local
+---
 
 # Operations
 
-## DailyReport
+## RunFocusedChecks
+
+### Input
+- \`command\` — command to run
 
 ### Steps
-1. Summarize yesterday
+1. Run the command and capture stdout, stderr, and exit status.
+
+### Output
+- \`exit_code\` — process exit status
 `;
 
 function setupFixtures() {
   mkdirSync(FIXTURES_DIR, { recursive: true });
-  writeFileSync(join(FIXTURES_DIR, 'lead-intake.busy.md'), GENERIC_DOC);
-  writeFileSync(join(FIXTURES_DIR, 'gmail-tool.busy.md'), TOOL_DOC);
-  writeFileSync(join(FIXTURES_DIR, 'daily-digest.busy.md'), PLAYBOOK_DOC);
+  writeFileSync(join(FIXTURES_DIR, 'story-state.busy.md'), MODEL_DOC);
+  writeFileSync(join(FIXTURES_DIR, 'story-delivery.busy.md'), PLAYBOOK_DOC);
+  writeFileSync(join(FIXTURES_DIR, 'development-tool.busy.md'), TOOL_DOC);
 }
 
 function cleanFixtures() {
@@ -97,47 +114,71 @@ function cleanFixtures() {
 }
 
 describe('loadWorkspaceAutomationIR', () => {
-  beforeAll(() => {
-    setupFixtures();
-  });
+  beforeAll(setupFixtures);
+  afterAll(cleanFixtures);
 
-  afterAll(() => {
-    cleanFixtures();
-  });
+  it('compiles the semantic structure used by real BUSY playbooks', async () => {
+    const ir = await loadWorkspaceAutomationIR(FIXTURES_DIR, { strict: true });
 
-  it('exports all documents with operations, triggers, and tools', async () => {
-    const ir = await loadWorkspaceAutomationIR(FIXTURES_DIR);
-
+    expect(ir.schema).toBe('busy.semantic-ir/v1');
     expect(ir.workspace).toBe('automation-ir');
     expect(ir.stats.documents).toBe(3);
-    expect(ir.stats.operations).toBe(3);
-    expect(ir.stats.triggers).toBe(3);
-    expect(ir.stats.tools).toBe(1);
+    expect(ir.stats.operations).toBe(2);
+    expect(ir.stats.steps).toBe(4);
+    expect(ir.stats.triggers).toBe(2);
+    expect(ir.stats.emits).toBe(2);
+    expect(ir.stats.checklistItems).toBe(2);
     expect(ir.stats.documentsByKind).toEqual({
-      document: 1,
-      playbook: 1,
       tool: 1,
+      playbook: 1,
+      model: 1,
     });
 
-    const genericDoc = ir.documents.find((document) => document.name === 'Lead Intake');
-    expect(genericDoc?.kind).toBe('document');
-    expect(genericDoc?.triggers[0]?.eventType).toBe('gmail.message.received');
-    expect(genericDoc?.operations[0]?.name).toBe('ProcessIncomingLead');
+    const playbook = ir.documents.find((document) => document.kind === 'playbook')!;
+    expect(playbook.metadata.attributes.audience).toBe('operators');
+    expect(playbook.imports[0]?.resolvedDocumentId).toBe('story-state');
+    expect(playbook.operations[0]?.inputs.map((field) => field.name)).toEqual([
+      'story_id',
+      'approval',
+    ]);
+    expect(playbook.operations[0]?.inputs[1]?.required).toBe(false);
+    expect(playbook.operations[0]?.outputs[0]?.name).toBe('result');
+    expect(playbook.operations[0]?.triggers[0]?.eventType).toBe('linear.issue.approved');
+    expect(playbook.operations[0]?.emits.map((emit) => emit.eventType)).toEqual([
+      'StoryImplemented',
+      'StoryBlocked',
+    ]);
+    expect(playbook.operations[0]?.steps[0]?.conditions[0]?.expression).toBe(
+      'Story is not already complete.',
+    );
+    expect(playbook.operations[0]?.steps[0]?.roleContexts[0]?.role).toContain('Implementer');
+    expect(playbook.operations[0]?.steps[1]?.children[0]?.ordinal).toBe('2a');
+    expect(playbook.operations[0]?.checklist[0]?.span.startLine).toBeGreaterThan(1);
 
-    const toolDoc = ir.documents.find((document) => document.name === 'Gmail Tool');
-    expect(toolDoc?.kind).toBe('tool');
-    expect(toolDoc?.metadata.provider).toBe('composio');
-    expect(toolDoc?.tools?.[0]?.providers?.composio?.action).toBe('GMAIL_SEND_EMAIL');
-
-    const playbookDoc = ir.documents.find((document) => document.name === 'Daily Digest');
-    expect(playbookDoc?.kind).toBe('playbook');
-    expect(playbookDoc?.triggers[0]?.schedule).toBe('0 6 * * *');
+    const model = ir.documents.find((document) => document.kind === 'model')!;
+    expect(model.model?.fields.map((field) => field.name)).toEqual(['story_id', 'phase']);
+    expect(model.model?.lifecycle?.content).toContain('design -> execute');
   });
 
-  it('optionally includes the dependency graph summary', async () => {
+  it('optionally includes the legacy dependency graph during migration', async () => {
     const ir = await loadWorkspaceAutomationIR(FIXTURES_DIR, { includeGraph: true });
-
     expect(ir.dependencyGraph?.stats.documents).toBe(3);
-    expect(ir.dependencyGraph?.edges.some((edge) => edge.from === 'daily-digest' && edge.to === 'lead-intake')).toBe(true);
+    expect(ir.dependencyGraph?.edges.some((edge) =>
+      edge.from === 'story-delivery' && edge.to === 'story-state'
+    )).toBe(true);
+  });
+
+  it('rejects unresolved imports in strict mode', async () => {
+    writeFileSync(join(FIXTURES_DIR, 'broken.busy.md'), `---
+Name: Broken
+Type: [Document]
+Description: Broken import fixture.
+---
+# Imports
+[Missing]:./missing.busy.md
+`);
+    await expect(loadWorkspaceAutomationIR(FIXTURES_DIR, { strict: true }))
+      .rejects.toThrow('does not resolve');
+    rmSync(join(FIXTURES_DIR, 'broken.busy.md'));
   });
 });

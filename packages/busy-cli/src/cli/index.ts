@@ -247,6 +247,7 @@ program
   .description('Output machine-consumable BUSY workspace automation IR')
   .argument('[directory]', 'Workspace directory', '.')
   .option('--include-graph', 'Include dependency graph summary in the exported IR')
+  .option('--strict', 'Fail when semantic compilation reports an error')
   .option('--compact', 'Emit compact JSON instead of pretty-printed output')
   .option('-o, --output <file>', 'Output file for IR content')
   .action(async (directory: string, options) => {
@@ -254,6 +255,7 @@ program
       const workspaceRoot = resolve(directory);
       const ir = await loadWorkspaceAutomationIR(workspaceRoot, {
         includeGraph: options.includeGraph,
+        strict: options.strict,
       });
       const output = options.compact
         ? JSON.stringify(ir)
@@ -266,6 +268,8 @@ program
         console.log(`  Documents: ${ir.stats.documents}`);
         console.log(`  Operations: ${ir.stats.operations}`);
         console.log(`  Triggers: ${ir.stats.triggers}`);
+        console.log(`  Emits: ${ir.stats.emits}`);
+        console.log(`  Diagnostics: ${ir.diagnostics.length}`);
       } else {
         console.log(output);
       }
