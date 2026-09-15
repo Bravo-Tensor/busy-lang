@@ -26,6 +26,39 @@ When documenting events, list all events the tool can generate in an Events sect
 
 When defining provider mappings, include a Providers subsection under each tool action that maps the abstract BUSY action to provider-specific implementations. Specify the provider action name and parameter mappings to enable the Tool Agent to execute the action via the appropriate provider SDK.
 
+## Tool action document structure
+
+A Tool action is an invocation contract for an external capability, not a Playbook Operation. For concrete Tool documents, use `# [Tools]` with bare level-2 action identifiers, followed by `### [Inputs]`, `### [Outputs]`, and `### [Providers]`. `### [Examples]` is optional. Inputs and Outputs are deliberately plural in this schema. Keep the Tools heading and action identifiers literal so the CLI can discover them.
+
+Tool actions do not require numbered Steps, an Operation heading link, a Checklist, or an Operations section merely because they are callable. Their provider mapping supplies the execution binding. Workflow sequencing, decisions, and review gates belong in a calling Playbook. A Tool may separately define genuine Operations; those follow the normal Operation rules.
+
+This type-specific structure takes precedence over the generic heading-link and callable-work rules in Busy Formatting Rules. Ordinary document sections outside the action schema still follow the Document conventions. State required connections, environment variable names, and failure behavior in Setup or the Invocation Contract. Do not invent a provider binding: identify an unbound action as unavailable rather than claiming it is executable.
+
+The `invokeTool` and `describeCapability` Operations below describe how to interpret a Tool document; they are not templates that every provider action must duplicate.
+
+Minimal action shape (illustrative provider and parameter names):
+
+```markdown
+# [Tools]
+
+## fetch_record
+
+Read one record from the configured provider.
+
+### [Inputs]
+- record_id: Stable record identifier.
+
+### [Outputs]
+- record: Provider record.
+
+### [Providers]
+
+#### example
+Action: records.get
+Parameters:
+  record_id: id
+```
+
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
 ## [Capability]

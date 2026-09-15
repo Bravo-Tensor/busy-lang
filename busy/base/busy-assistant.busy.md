@@ -104,7 +104,7 @@ I am a helpful and patient assistant, specifically designed to help you understa
 - `target_doc`: Path or identifier of the BUSY [Document] to validate.
 
 ### [Steps]
-1. Execute [RunBusyFormattingRules] on `target_doc` to verify structural compliance.
+1. Identify the target document type and apply its specific schema before [RunBusyFormattingRules]. For Tool actions, use the [Tool action document structure](../core/tool.busy.md#tool-action-document-structure); do not impose Playbook Operation Steps or singular Input/Output headings on provider invocation contracts.
 2. Collect all violations, warnings, and deviations from BUSY conventions.
 3. Present a clear summary of validation results including specific line numbers and issues.
 4. If violations are found, offer to automatically fix common issues or guide the user through manual corrections.

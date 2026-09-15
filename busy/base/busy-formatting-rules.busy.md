@@ -17,6 +17,8 @@ Description: Verification checklist to ensure any BUSY [Document] follows requir
 # [Setup](../core/checklist.busy.md#setup)
 Use this [Checklist] whenever you draft or revise a BUSY [Document]. It focuses on structural, linking, and ordering requirements expected by [EvaluateDocument]. If a [Document] intentionally diverges, record that exception in its [Setup](../core/document.busy.md#setup-section) or companion guidance.
 
+Apply the target's type-specific schema before the generic checks below. In particular, [Tool action documents](../core/tool.busy.md#tool-action-document-structure) use a literal `# [Tools]` section, bare action identifiers, plural Inputs/Outputs, and provider mappings. These action-schema headings are exceptions to the generic heading-link rules. A callable Tool action is not automatically an Operation and does not require Steps, a Checklist, or an Operations section. Apply Operation requirements only to actual Operations, including any separately defined in a Tool. Report a genuine conflict between source definitions as uncertainty, not as a definite violation.
+
 # [Operations](../core/checklist.busy.md#operations)
 
 ## runBusyFormattingRules
@@ -48,7 +50,7 @@ Use this [Checklist] whenever you draft or revise a BUSY [Document]. It focuses 
    5. Confirm section links do not point back to the same heading (no self-referential anchors); they must reference a canonical concept definition or imported/local definition anchor.
 3. Sections and Operations
    1. Confirm a `# [Setup](../core/document.busy.md#setup-section)` section is present and either establishes required context or explicitly states when no setup actions are needed.
-   2. When the [Document] defines callable work, confirm a `# [Operations](../core/document.busy.md#operations-section)` section exists.
+   2. When the [Document] defines Operations, confirm a `# [Operations](../core/document.busy.md#operations-section)` section exists. Provider-backed Tool actions alone do not trigger this requirement.
    3. Confirm every [Operation] uses a level-2 heading (`##`) that links to its defining concept, states its intent, and lists numbered, imperative steps.
    4. Verify [Operation]s reference other BUSY assets through the defined imports instead of inline paths or unresolved links.
    5. Confirm [Operation]s that require verification conclude with a `### [Checklist](../core/checklist.busy.md#checklist)` of actionable, observable items.
