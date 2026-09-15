@@ -101,3 +101,9 @@ The validate command checks these aspects of a document:
 - **Use `--resolve-imports` before committing** — ensures no broken links
 - **Combine with `busy check`** — validate checks one file, check validates the whole workspace
 - **Pipe to CI** — `busy validate` exits with code 1 on failure, making it CI-friendly
+
+## Heading links and semantic review
+
+`busy validate` rejects headings that link to their own anchor. It parses Markdown links and reference definitions, ignores fenced examples, and allows body references to local operations.
+
+For semantic review, run `ReviewDocuments` in `busy/base/review-document.busy.md`. The optional `scripts/validate-busy.py` wrapper runs the built CLI and invokes that operation with Codex, writing a combined report. It requires Python 3.9+, Node, an authenticated Codex CLI, and a built BUSY checkout. Pass `--busy-repo` to select the checkout, `--workspace` for the target directory, and `--report` for the report path. The wrapper contains no BUSY validation rules.

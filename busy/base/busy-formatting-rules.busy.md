@@ -47,7 +47,7 @@ Apply the target's type-specific schema before the generic checks below. In part
    2. Confirm any local concepts are grouped under `# Local Definitions` using level-2 headings (`## ConceptName`) with canonical names so they can be referenced internally or externally.
    3. Verify new concepts are introduced only under `# Local Definitions`, and any later references link back to that definition or an import.
    4. Confirm concept references in prose are linked to their defining [Document]s (e.g., `[Operation]`, `[Checklist]`), or establish them under `# Local Definitions` before reuse.
-   5. Confirm section links do not point back to the same heading (no self-referential anchors); they must reference a canonical concept definition or imported/local definition anchor.
+   5. Confirm section links do not point back to the same heading (no self-referential anchors); they must reference a canonical concept definition or imported/local definition anchor. This restriction applies to a link in the heading itself, not a body reference that invokes a local operation. Resolve shortcut, collapsed, and full reference-style links through their definitions before judging them; a resolved `[Imports]` heading is linked just as an inline link is.
 3. Sections and Operations
    1. Confirm a `# [Setup](../core/document.busy.md#setup-section)` section is present and either establishes required context or explicitly states when no setup actions are needed.
    2. When the [Document] defines Operations, confirm a `# [Operations](../core/document.busy.md#operations-section)` section exists. Provider-backed Tool actions alone do not trigger this requirement.
