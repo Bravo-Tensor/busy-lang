@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { validateHeadingLinks } from '../validation/heading-links.js';
 
 import { Command } from 'commander';
 import { parseDocument, resolveImports } from '../parser.js';
@@ -100,7 +101,7 @@ program
 
       // Check for common issues
       const warnings: string[] = [];
-      const errors: string[] = [];
+      const errors: string[] = validateHeadingLinks(content, filePath);
 
       // Check if operations have steps
       for (const op of doc.operations) {
