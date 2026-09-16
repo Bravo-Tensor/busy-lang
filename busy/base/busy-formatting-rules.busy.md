@@ -54,9 +54,8 @@ Structural heading and concept-definition requirements apply to the enclosing BU
    1. Confirm a `# [Setup](../core/document.busy.md#setup-section)` section is present and either establishes required context or explicitly states when no setup actions are needed.
    2. When the [Document] defines Operations, confirm a `# [Operations](../core/document.busy.md#operations-section)` section exists. Provider-backed Tool actions alone do not trigger this requirement.
    3. Confirm every [Operation] uses a level-2 heading (`##`) that links to its defining concept, states its intent, and lists numbered, imperative steps.
-   4. Confirm Operation identifiers use lower camelCase: begin with a lowercase ASCII letter, use only letters and digits, and capitalize subsequent words. Apply to actual Operation declarations and references, not Tool action identifiers or code examples.
-   5. Verify [Operation]s reference other BUSY assets through the defined imports instead of inline paths or unresolved links.
-   6. Confirm [Operation]s that require verification conclude with a `### [Checklist](../core/checklist.busy.md#checklist)` of actionable, observable items.
+   4. Verify [Operation]s reference other BUSY assets through the defined imports instead of inline paths or unresolved links.
+   5. Confirm [Operation]s that require verification conclude with a `### [Checklist](../core/checklist.busy.md#checklist)` of actionable, observable items.
 4. Execution Order and Persistence
    1. Confirm instructions that persist files or state identify destinations (e.g., memory files, workspace paths) per BUSY conventions.
    2. Verify the [Document] respects the [EvaluateDocument] order overall: frontmatter → imports → [Setup](../core/document.busy.md#setup-section) → [Operations](../core/document.busy.md#operations-section) (plus optional locals/teardown as needed), with no stray directives outside that flow.
