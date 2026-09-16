@@ -1,6 +1,9 @@
+export { validateDocument } from './validation/index.js';
+export type { ValidationFinding, ValidationResult } from './validation/index.js';
 // Main exports
 export { loadRepo } from './loader.js';
-export { parseDocument, resolveImports } from './parser.js';
+export { parseDocument, parseSource, resolveImports } from './parser.js';
+export type { ParsedSource } from './parser.js';
 export { loadWorkspaceAutomationIR } from './commands/automation-ir.js';
 export { buildContext, writeContext, get, parentsOf, childrenOf, getConceptContext } from './builders/context.js';
 export { mergeRepos, extendRepo, loadRepoFromJSON } from './merge.js';
@@ -26,9 +29,8 @@ export type {
   ContextPayload,
   FrontMatter,
   Metadata,
-  Import,
   Trigger,
-  NewOperation,
+  ParsedDocument,
   Tool,
   ToolDocument,
 } from './types/schema.js';

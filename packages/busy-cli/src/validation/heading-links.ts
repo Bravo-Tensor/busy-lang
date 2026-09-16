@@ -1,30 +1,16 @@
+import { asMarkdown, type MarkdownSource } from '../parsers/markdown.js';
 import { dirname, resolve } from 'node:path';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkFrontmatter from 'remark-frontmatter';
 import { visit } from 'unist-util-visit';
-import GithubSlugger from 'github-slugger';
-import type { Root, Heading, Definition, Link, LinkReference } from 'mdast';
-
-function headingText(node: any): string {
-  if (node.type === 'html') return '';
-  if (typeof node.value === 'string') return node.value;
-  if (node.type === 'image') return node.alt || '';
-  return (node.children || []).map(headingText).join('');
-}
+import type { Heading, Link, LinkReference } from 'mdast';
 
 /** Inspect links in actual heading nodes, never body references or code examples. */
-export function validateHeadingLinks(content: string, filePath: string): string[] {
-  const tree = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']).parse(content) as Root;
-  const definitions = new Map<string, string>();
-  visit(tree, 'definition', (node: Definition) => {
-    const key = node.identifier.toUpperCase();
-    if (!definitions.has(key)) definitions.set(key, node.url);
-  });
-  const slugger = new GithubSlugger();
+export function validateHeadingLinks(content: string | MarkdownSource, filePath: string): string[] {
+  const source = asMarkdown(content);
+  const tree = source.tree;
+  const definitions = source.definitions;
   const errors: string[] = [];
   visit(tree, 'heading', (heading: Heading) => {
-    const anchor = slugger.slug(headingText(heading));
+    const anchor = source.headings.get(heading);
     visit(heading, (node) => {
       let url: string | undefined;
       if (node.type === 'link') url = (node as Link).url;

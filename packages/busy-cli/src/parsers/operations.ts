@@ -1,15 +1,7 @@
-import { Section, LegacyOperation, DocId, Step, Checklist, NewOperation } from '../types/schema.js';
-import { getAllSections, findSection, getSectionExtends } from './sections.js';
+import { asMarkdown, type MarkdownSource } from './markdown.js';
+import { Section, Operation, DocId, Step, Checklist } from '../types/schema.js';
+import { getAllSections, getSectionExtends, parseSections } from './sections.js';
 import { debug } from '../utils/logger.js';
-
-const OPERATIONS_SECTION_ALIASES = [
-  'operations',
-  'operations-section',
-];
-
-// =============================================================================
-// NEW PARSER FUNCTIONS - busy-python compatible
-// =============================================================================
 
 /**
  * Parse numbered steps from markdown content
@@ -165,72 +157,27 @@ function parseInputsOutputs(content: string, sectionName: string): string[] {
 
 /**
  * Parse operations from markdown content
- * Returns array of Operation objects matching busy-python format
  *
  * @param content - Full markdown document content
  * @returns Array of NewOperation objects
  */
-export function parseOperations(content: string): NewOperation[] {
-  const operations: NewOperation[] = [];
-
-  // Find Operations section - handle both with and without brackets
-  // Match # Operations or # [Operations]
-  const operationsMatch = content.match(
-    /^#\s*\[?Operations\]?\s*$/im
-  );
-
-  if (!operationsMatch) {
-    return [];
-  }
-
-  // Get content after Operations heading until next top-level section or end
-  const startIndex = operationsMatch.index! + operationsMatch[0].length;
-  const restContent = content.slice(startIndex);
-
-  // Find next top-level heading (# not ##)
-  const nextH1Match = restContent.match(/\n#\s+[^\#]/);
-  const operationsContent = nextH1Match
-    ? restContent.slice(0, nextH1Match.index)
-    : restContent;
-
-  // Split by ## headings to find individual operations
-  // Use a simpler approach: split by ## and process each part
-  const parts = operationsContent.split(/\n(?=##\s+)/);
-
-  for (const part of parts) {
-    if (!part.trim()) continue;
-
-    // Match operation heading: ## OperationName or ## [OperationName][Type]
-    const headingMatch = part.match(/^##\s+(?:\[([^\]]+)\](?:\[[^\]]*\])?|([^\n]+))\s*\n?([\s\S]*)$/);
-
-    if (headingMatch) {
-      const name = (headingMatch[1] || headingMatch[2]).trim();
-      const opContent = headingMatch[3] || '';
-
-      const steps = parseSteps(opContent);
-      const checklist = parseChecklist(opContent);
-      const inputs = parseInputsOutputs(opContent, 'Inputs');
-      const outputs = parseInputsOutputs(opContent, 'Outputs');
-
-      operations.push({
-        name,
-        inputs,
-        outputs,
-        steps,
-        checklist: checklist || undefined,
-      });
+export function operationSections(sections: Section[]): Section[] {
+  const declared = new Set<Section>();
+  for (const section of sections) {
+    if (section.depth === 1 && /^(?:core )?operations(?: section)?$/i.test(section.title.replace(/^\[|\]$/g, ''))) {
+      for (const child of section.children) if (child.depth === 2) declared.add(child);
     }
   }
-
-  return operations;
+  for (const section of getAllSections(sections)) {
+    if (section.depth === 2 && getSectionExtends(section.id).some(type => type.toLowerCase() === 'operation')) declared.add(section);
+  }
+  return [...declared];
 }
 
-// =============================================================================
-// LEGACY FUNCTIONS - kept for backward compatibility
-// =============================================================================
-
-// Type alias for backward compatibility
-type Operation = LegacyOperation;
+export function parseOperations(content: string, source?: MarkdownSource, suppliedSections?: Section[]): Operation[] {
+  const markdown = source ?? asMarkdown(content);
+  return extractOperations(suppliedSections ?? parseSections(content, 'document', '', markdown), 'document', '');
+}
 
 /**
  * Extract Operations from sections
@@ -242,31 +189,9 @@ export function extractOperations(
 ): Operation[] {
   debug.localdefs('Extracting operations for %s', docId);
 
-  // Find the Operations section
-  const operationsSection = findOperationsSection(sections);
-
-  if (!operationsSection) {
-    debug.localdefs('No Operations section found');
-    return [];
-  }
-
-  debug.localdefs('Found Operations section: %s', operationsSection.title);
-
-  // Extract all direct children as Operations
   const operations: Operation[] = [];
-
-  for (const child of operationsSection.children) {
+  for (const child of operationSections(sections)) {
     const operation = createOperation(child, docId, filePath);
-
-    // Skip empty operations (just reference headers with no content)
-    // These are placeholders that should be inherited from parent documents
-    if (operation.content.trim().length === 0 &&
-        operation.steps.length === 0 &&
-        operation.checklist.length === 0 &&
-        child.children.length === 0) {
-      debug.localdefs('Skipping empty operation: %s (likely a reference header)', operation.name);
-      continue;
-    }
 
     operations.push(operation);
   }
@@ -274,19 +199,6 @@ export function extractOperations(
   debug.localdefs('Extracted %d operations', operations.length);
 
   return operations;
-}
-
-/**
- * Find the Operations section (case-insensitive)
- */
-function findOperationsSection(sections: Section[]): Section | undefined {
-  for (const alias of OPERATIONS_SECTION_ALIASES) {
-    const section = findSection(sections, alias);
-    if (section) {
-      return section;
-    }
-  }
-  return undefined;
 }
 
 /**
@@ -300,8 +212,15 @@ function createOperation(
   const slug = section.slug;
   const id = `${docId}::${slug}`; // Use :: for concept IDs
 
-  // Parse steps and checklist from content
-  const { steps, checklist } = parseOperationContent(section);
+  const child = (names: string[]) => section.children.find(c => names.includes(c.title.replace(/^\[|\]$/g, '').toLowerCase()));
+  const stepSection = child(['steps']);
+  const checklistSection = child(['checklist']);
+  const inputSection = child(['input', 'inputs']);
+  const outputSection = child(['output', 'outputs']);
+  const steps = parseSteps(stepSection?.content ?? section.content);
+  const checklist = checklistSection ? parseChecklist('### Checklist\n' + checklistSection.content) ?? undefined : undefined;
+  const inputs = inputSection ? parseInputsOutputs('### Inputs\n' + inputSection.content, 'Inputs') : [];
+  const outputs = outputSection ? parseInputsOutputs('### Outputs\n' + outputSection.content, 'Outputs') : [];
 
   // Get extends from section heading (e.g., ## [ValidateInput][SomeType])
   const extends_ = getSectionExtends(section.id);
@@ -311,94 +230,14 @@ function createOperation(
     id,
     docId,
     slug,
-    name: section.title,
+    name: section.title.replace(/^\[([^\]]+)\]$/, '$1'),
     content: section.content,
     types: [],
     extends: extends_,
     sectionRef: section.id, // sectionRef uses # for section references
+    inputs,
+    outputs,
     steps,
     checklist,
   };
-}
-
-/**
- * Parse operation content for steps and checklist
- */
-function parseOperationContent(section: Section): {
-  steps: string[];
-  checklist: string[];
-} {
-  const steps: string[] = [];
-  const checklist: string[] = [];
-
-  // Look for Steps subsection
-  const stepsSection = section.children.find(
-    (child) => child.title.toLowerCase() === 'steps'
-  );
-
-  if (stepsSection) {
-    steps.push(...extractListItems(stepsSection.content));
-  } else {
-    // Try to find numbered lists in main content
-    steps.push(...extractListItems(section.content));
-  }
-
-  // Look for Checklist subsection
-  const checklistSection = section.children.find(
-    (child) => child.title.toLowerCase() === 'checklist'
-  );
-
-  if (checklistSection) {
-    checklist.push(...extractListItems(checklistSection.content));
-  }
-
-  return { steps, checklist };
-}
-
-/**
- * Extract list items from markdown content
- * Handles both ordered (1. 2. 3.) and unordered (- *) lists
- */
-function extractListItems(content: string): string[] {
-  const items: string[] = [];
-  const lines = content.split('\n');
-
-  let inList = false;
-  let currentItem = '';
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    // Check if this is a list item
-    const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
-    const unorderedMatch = trimmed.match(/^[-*]\s+(.+)$/);
-
-    if (orderedMatch || unorderedMatch) {
-      // Save previous item if any
-      if (currentItem) {
-        items.push(currentItem.trim());
-      }
-
-      // Start new item
-      currentItem = (orderedMatch?.[1] || unorderedMatch?.[1] || '').trim();
-      inList = true;
-    } else if (inList && trimmed && !trimmed.startsWith('#')) {
-      // Continuation of current item
-      currentItem += ' ' + trimmed;
-    } else if (inList && !trimmed) {
-      // Empty line might end the list
-      if (currentItem) {
-        items.push(currentItem.trim());
-        currentItem = '';
-      }
-      inList = false;
-    }
-  }
-
-  // Add final item
-  if (currentItem) {
-    items.push(currentItem.trim());
-  }
-
-  return items;
 }

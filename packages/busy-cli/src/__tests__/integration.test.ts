@@ -1,8 +1,8 @@
 /**
- * Integration Tests - Full document parsing matching busy-python behavior
+ * Integration Tests - Full document parsing matching BUSY behavior
  *
  * These tests verify the complete parsing pipeline produces
- * output matching busy-python's parse_document() function.
+ * output matching BUSY's parse_document() function.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -23,9 +23,9 @@ describe('parseDocument', () => {
       const content = loadFixture('document.busy.md');
       const doc = parseDocument(content);
 
-      expect(doc.metadata.name).toBe('Document');
-      expect(doc.metadata.type).toBe('[Document]');
-      expect(doc.metadata.description).toBe('Base document type for all BUSY documents.');
+      expect(doc.name).toBe('Document');
+      expect(`[${doc.types.join(', ')}]`).toBe('[Document]');
+      expect(doc.description).toBe('Base document type for all BUSY documents.');
     });
 
     it('should parse imports with concept names and paths', () => {
@@ -33,16 +33,16 @@ describe('parseDocument', () => {
       const doc = parseDocument(content);
 
       expect(doc.imports).toHaveLength(1);
-      expect(doc.imports[0].conceptName).toBe('Concept');
-      expect(doc.imports[0].path).toBe('./concept.busy.md');
+      expect(doc.imports[0].label).toBe('Concept');
+      expect(doc.imports[0].target).toBe('./concept.busy.md');
     });
 
     it('should parse local definitions', () => {
       const content = loadFixture('document.busy.md');
       const doc = parseDocument(content);
 
-      expect(doc.definitions.length).toBeGreaterThan(0);
-      const importsDef = doc.definitions.find((d) => d.name === 'Imports Section');
+      expect(doc.localdefs.length).toBeGreaterThan(0);
+      const importsDef = doc.localdefs.find((d) => d.name === 'Imports Section');
       expect(importsDef).toBeDefined();
       expect(importsDef?.content).toContain('external document references');
     });
@@ -52,7 +52,7 @@ describe('parseDocument', () => {
       const doc = parseDocument(content);
 
       expect(doc.setup).toBeDefined();
-      expect(doc.setup).toContain('evaluated before any operations');
+      expect(doc.setup?.content).toContain('evaluated before any operations');
     });
 
     it('should parse operations with structured steps', () => {
@@ -144,7 +144,7 @@ describe('parseDocument', () => {
       const content = loadFixture('tool.busy.md');
       const doc = parseDocument(content);
 
-      expect(doc.metadata.provider).toBe('composio');
+      expect(doc.meta?.Provider).toBe('composio');
     });
 
     it('should parse tools with providers', () => {
@@ -258,9 +258,9 @@ Description: Empty document
 `;
 
       const doc = parseDocument(content);
-      expect(doc.metadata.name).toBe('Empty');
+      expect(doc.name).toBe('Empty');
       expect(doc.imports).toHaveLength(0);
-      expect(doc.definitions).toHaveLength(0);
+      expect(doc.localdefs).toHaveLength(0);
       expect(doc.operations).toHaveLength(0);
       expect(doc.triggers).toHaveLength(0);
     });
@@ -337,28 +337,29 @@ Description: B
   });
 });
 
-describe('Output Format Compatibility', () => {
-  it('should produce output matching busy-python structure', () => {
+describe('Canonical BUSY model', () => {
+  it('should produce the canonical graph-ready document structure', () => {
     const content = loadFixture('document.busy.md');
     const doc = parseDocument(content);
 
-    // Verify structure matches busy-python BusyDocument
-    expect(doc).toHaveProperty('metadata');
+    // Verify structure matches BUSY BusyDocument
+    expect(doc).toHaveProperty('id');
+    expect(doc).toHaveProperty('kind');
     expect(doc).toHaveProperty('imports');
-    expect(doc).toHaveProperty('definitions');
+    expect(doc).toHaveProperty('localdefs');
     expect(doc).toHaveProperty('setup');
     expect(doc).toHaveProperty('operations');
     expect(doc).toHaveProperty('triggers');
 
     // Metadata structure
-    expect(doc.metadata).toHaveProperty('name');
-    expect(doc.metadata).toHaveProperty('type');
-    expect(doc.metadata).toHaveProperty('description');
+    expect(doc).toHaveProperty('name');
+    expect(doc).toHaveProperty('types');
+    expect(doc).toHaveProperty('description');
 
     // Import structure
     if (doc.imports.length > 0) {
-      expect(doc.imports[0]).toHaveProperty('conceptName');
-      expect(doc.imports[0]).toHaveProperty('path');
+      expect(doc.imports[0]).toHaveProperty('label');
+      expect(doc.imports[0]).toHaveProperty('target');
     }
 
     // Operation structure
@@ -376,7 +377,7 @@ describe('Output Format Compatibility', () => {
     }
   });
 
-  it('should serialize to JSON matching busy-python output', () => {
+  it('should serialize the canonical model to JSON', () => {
     const content = loadFixture('document.busy.md');
     const doc = parseDocument(content);
 
@@ -384,7 +385,7 @@ describe('Output Format Compatibility', () => {
     const json = JSON.stringify(doc);
     const parsed = JSON.parse(json);
 
-    expect(parsed.metadata.name).toBe(doc.metadata.name);
+    expect(parsed.name).toBe(doc.name);
     expect(parsed.imports).toEqual(doc.imports);
     expect(parsed.operations.length).toBe(doc.operations.length);
   });
@@ -401,10 +402,10 @@ Description: Test
 `;
 
     const doc = parseDocument(content);
-    expect(doc.metadata.type).toBe('[Document]');
+    expect(`[${doc.types.join(', ')}]`).toBe('[Document]');
   });
 
-  it('should NOT include Extends or Tags (busy-python removed these)', () => {
+  it('should preserve explicit inheritance', () => {
     const content = `
 ---
 Name: Test
@@ -419,14 +420,13 @@ Tags:
 `;
 
     const doc = parseDocument(content);
-    expect(doc.metadata).not.toHaveProperty('extends');
-    expect(doc.metadata).not.toHaveProperty('tags');
+    expect(doc.extends).toContain('Parent');
   });
 
   it('should include Provider for tool documents', () => {
     const content = loadFixture('tool.busy.md');
     const doc = parseDocument(content);
 
-    expect(doc.metadata.provider).toBe('composio');
+    expect(doc.meta?.Provider).toBe('composio');
   });
 });

@@ -5,9 +5,9 @@ import fg from 'fast-glob';
 import { parseDocument } from '../parser.js';
 import { loadWorkspaceGraph, type WorkspaceGraph } from './graph.js';
 import type {
-  Import,
+  ImportDef,
   Metadata,
-  NewOperation,
+  Operation,
   Tool,
   Trigger,
 } from '../types/schema.js';
@@ -19,8 +19,8 @@ export interface WorkspaceAutomationDocument {
   kind: 'document' | 'playbook' | 'view' | 'config' | 'tool';
   metadata: Metadata;
   typeLabels: string[];
-  imports: Import[];
-  operations: NewOperation[];
+  imports: ImportDef[];
+  operations: Operation[];
   triggers: Trigger[];
   tools?: Tool[];
 }
@@ -55,16 +55,16 @@ export async function loadWorkspaceAutomationIR(
 
   for (const filePath of filePaths) {
     const content = await readFile(filePath, 'utf-8');
-    const parsed = parseDocument(content);
-    const typeLabels = extractTypeLabels(parsed.metadata.type);
+    const parsed = parseDocument(content, filePath);
+    const typeLabels = parsed.types;
     const kind = inferDocumentKind(typeLabels);
 
     documents.push({
       id: stripBusyExtension(toPosix(path.relative(normalizedRoot, filePath))),
       path: toPosix(path.relative(normalizedRoot, filePath)),
-      name: parsed.metadata.name,
+      name: parsed.name,
       kind,
-      metadata: parsed.metadata,
+      metadata: { name: parsed.name, type: `[${parsed.types.join(', ')}]`, description: parsed.description ?? '', ...(typeof parsed.meta?.Provider === 'string' ? { provider: parsed.meta.Provider } : {}) },
       typeLabels,
       imports: parsed.imports,
       operations: parsed.operations,

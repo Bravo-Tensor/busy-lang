@@ -28,9 +28,9 @@ This horizontal rule must not be parsed as a YAML document.
 
     const doc = parseDocument(content);
 
-    expect(doc.metadata).toEqual({
+    expect(doc).toMatchObject({
       name: 'HorizontalRuleDoc',
-      type: '[Document]',
+      types: ['Document'],
       description: 'Has body separators',
     });
   });

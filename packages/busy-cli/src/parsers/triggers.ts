@@ -1,5 +1,5 @@
 /**
- * Trigger Parser - Matches busy-python trigger parsing
+ * Trigger Parser - Parses BUSY trigger parsing
  *
  * Supports two trigger formats:
  * 1. Time-based (alarm): "Set alarm for <time> to run <Operation>"

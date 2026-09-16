@@ -354,7 +354,7 @@ describe('View and Config Types', () => {
       const viewDoc = repo.byFile[viewDocId].concept;
       expect(viewDoc.kind).toBe('view');
       if (viewDoc.kind === 'view') {
-        expect(viewDoc.params).toBeUndefined();
+        expect(viewDoc.params).toEqual([]);
       }
     });
   });

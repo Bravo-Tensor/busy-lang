@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-import { validateOperationNames } from '../validation/operation-names.js';
-import { validateHeadingLinks } from '../validation/heading-links.js';
 
+import { validateDocument } from '../validation/index.js';
 import { Command } from 'commander';
 import { parseDocument, resolveImports } from '../parser.js';
 import { writeFile, readFile } from 'fs/promises';
@@ -49,7 +48,7 @@ program
       }
 
       const content = await readFile(filePath, 'utf-8');
-      const doc = parseDocument(content);
+      const doc = parseDocument(content, filePath);
 
       const output = options.pretty
         ? JSON.stringify(doc, null, 2)
@@ -58,9 +57,9 @@ program
       if (options.output) {
         await writeFile(options.output, output, 'utf-8');
         console.log(`✓ Parsed ${basename(file)}`);
-        console.log(`  Type: ${doc.metadata.type}`);
+        console.log(`  Type: ${doc.types.join(', ')}`);
         console.log(`  Imports: ${doc.imports.length}`);
-        console.log(`  Definitions: ${doc.definitions.length}`);
+        console.log(`  Definitions: ${doc.localdefs.length}`);
         console.log(`  Operations: ${doc.operations.length}`);
         console.log(`  Triggers: ${doc.triggers.length}`);
         if ('tools' in doc) {
@@ -93,41 +92,18 @@ program
 
       const content = await readFile(filePath, 'utf-8');
 
-      // Parse document (this validates frontmatter and structure)
-      const doc = parseDocument(content);
+      const result = validateDocument(content, filePath, { resolveImports: options.resolveImports });
+      const doc = result.document;
+      const warnings = result.findings.filter(f => f.severity === 'warning').map(f => f.message);
+      const errors = result.findings.filter(f => f.severity === 'error').map(f => f.message);
 
-      console.log(`✓ Valid BUSY document: ${doc.metadata.name}`);
-      console.log(`  Type: ${doc.metadata.type}`);
-      console.log(`  Description: ${doc.metadata.description.slice(0, 60)}${doc.metadata.description.length > 60 ? '...' : ''}`);
-
-      // Check for common issues
-      const warnings: string[] = [];
-      const errors: string[] = [...validateHeadingLinks(content, filePath), ...validateOperationNames(content)];
-
-      // Check if operations have steps
-      for (const op of doc.operations) {
-        if (op.steps.length === 0) {
-          warnings.push(`Operation "${op.name}" has no steps`);
-        }
-      }
-
-      // Check for empty imports
-      if (doc.imports.length === 0 && doc.operations.length > 0) {
-        warnings.push('Document has operations but no imports');
-      }
-
-      // Validate imports if requested
-      if (options.resolveImports) {
-        console.log('\nResolving imports...');
-        try {
-          const resolved = resolveImports(doc, filePath);
-          console.log(`✓ Resolved ${Object.keys(resolved).length} imports`);
-
-          for (const [name, resolvedDoc] of Object.entries(resolved)) {
-            console.log(`  - ${name}: ${resolvedDoc.metadata.name} (${resolvedDoc.metadata.type})`);
-          }
-        } catch (err) {
-          errors.push(`Import resolution failed: ${err instanceof Error ? err.message : err}`);
+      console.log(`Document: ${doc.name}`);
+      console.log(`  Type: ${doc.types.join(', ')}`);
+      console.log(`  Description: ${(doc.description ?? '').slice(0, 60)}${(doc.description ?? '').length > 60 ? '...' : ''}`);
+      if (result.resolvedImports) {
+        console.log(`✓ Resolved ${Object.keys(result.resolvedImports).length} imports`);
+        for (const [name, resolvedDoc] of Object.entries(result.resolvedImports)) {
+          console.log(`  - ${name}: ${resolvedDoc.name} (${resolvedDoc.types.join(', ')})`);
         }
       }
 
@@ -147,6 +123,7 @@ program
         process.exit(1);
       }
 
+      console.log('✓ Direct local Markdown links and reference-definition targets resolved (including heading anchors; code blocks, external URLs, and dynamic template URLs excluded)');
       console.log('\n✓ Validation passed');
     } catch (err) {
       console.error(`✗ Validation failed: ${err instanceof Error ? err.message : err}`);
@@ -171,9 +148,9 @@ program
       }
 
       const content = await readFile(filePath, 'utf-8');
-      const doc = parseDocument(content);
+      const doc = parseDocument(content, filePath);
 
-      console.log(`Resolving imports for: ${doc.metadata.name}`);
+      console.log(`Resolving imports for: ${doc.name}`);
 
       const resolved = resolveImports(doc, filePath);
       const count = Object.keys(resolved).length;
@@ -185,8 +162,8 @@ program
         // Flat list of document names and their metadata
         const flat = Object.entries(resolved).map(([name, resolvedDoc]) => ({
           conceptName: name,
-          name: resolvedDoc.metadata.name,
-          type: resolvedDoc.metadata.type,
+          name: resolvedDoc.name,
+          type: resolvedDoc.types.join(', '),
           operations: resolvedDoc.operations.map(op => op.name),
         }));
         output = JSON.stringify(flat, null, 2);
@@ -292,25 +269,25 @@ program
       }
 
       const content = await readFile(filePath, 'utf-8');
-      const doc = parseDocument(content);
+      const doc = parseDocument(content, filePath);
 
-      console.log(`\n📄 ${doc.metadata.name}`);
+      console.log(`\n📄 ${doc.name}`);
       console.log(`${'─'.repeat(40)}`);
-      console.log(`Type:        ${doc.metadata.type}`);
-      console.log(`Description: ${doc.metadata.description}`);
-      if (doc.metadata.provider) {
-        console.log(`Provider:    ${doc.metadata.provider}`);
+      console.log(`Type:        ${doc.types.join(', ')}`);
+      console.log(`Description: ${(doc.description ?? '')}`);
+      if (doc.meta?.Provider) {
+        console.log(`Provider:    ${doc.meta?.Provider}`);
       }
       console.log(`${'─'.repeat(40)}`);
       console.log(`Imports:     ${doc.imports.length}`);
       if (doc.imports.length > 0) {
         for (const imp of doc.imports) {
-          console.log(`  - [${imp.conceptName}]: ${imp.path}${imp.anchor ? '#' + imp.anchor : ''}`);
+          console.log(`  - [${imp.label}]: ${imp.target}`);
         }
       }
-      console.log(`Definitions: ${doc.definitions.length}`);
-      if (doc.definitions.length > 0) {
-        for (const def of doc.definitions) {
+      console.log(`Definitions: ${doc.localdefs.length}`);
+      if (doc.localdefs.length > 0) {
+        for (const def of doc.localdefs) {
           console.log(`  - ${def.name}`);
         }
       }

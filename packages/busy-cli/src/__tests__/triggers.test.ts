@@ -1,7 +1,7 @@
 /**
- * Trigger Parsing Tests - Match busy-python Trigger model
+ * Trigger Parsing Tests - Match BUSY Trigger model
  *
- * busy-python supports two trigger formats:
+ * BUSY supports two trigger formats:
  * 1. Time-based (alarm): "Set alarm for <time> to run <Operation>"
  * 2. Event-based: "When <event> [from <filter>], run <Operation>"
  *
@@ -273,8 +273,8 @@ Triggers:
 });
 
 describe('Trigger Format Validation', () => {
-  it('should match busy-python alarm pattern', () => {
-    // busy-python pattern: r"(?i)set\s+alarm\s+for\s+(.+?)\s+to\s+run\s+(\w+)"
+  it('should match BUSY alarm pattern', () => {
+    // BUSY pattern: r"(?i)set\s+alarm\s+for\s+(.+?)\s+to\s+run\s+(\w+)"
     const pattern = /(?:set\s+alarm\s+for\s+)(.+?)\s+to\s+run\s+(\w+)/i;
 
     const testCases = [
@@ -291,8 +291,8 @@ describe('Trigger Format Validation', () => {
     }
   });
 
-  it('should match busy-python event pattern', () => {
-    // busy-python pattern: r"(?i)when\s+([\w.]+)(?:\s+from\s+(.+?))?,\s*run\s+(\w+)"
+  it('should match BUSY event pattern', () => {
+    // BUSY pattern: r"(?i)when\s+([\w.]+)(?:\s+from\s+(.+?))?,\s*run\s+(\w+)"
     const pattern = /(?:when\s+)([\w.]+)(?:\s+from\s+(.+?))?,\s*run\s+(\w+)/i;
 
     const testCases = [
