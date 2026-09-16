@@ -15,6 +15,8 @@ Description: A defined unit of work, task, or series of steps to be executed by 
 [RunChecklist]:./checklist.busy.md#runchecklist
 
 # [Setup](./document.busy.md#setup-section)
+Operation identifiers must use lower camelCase: start with a lowercase ASCII letter and contain only letters and digits, with subsequent words capitalized (for example, `preparePersonalDailyCheckin`). Apply this to declarations and references; anchors follow Markdown slug rules.
+
 An [Operation] represents a specific task or set of instructions that an LLM is expected to perform. It can be referenced and called from other [Document]s or [Concept]s. When you encounter an [Operation], read the entire definition first, and
 1. [Evaluate any concepts](./concept.busy.md#evaluateconcept) you come across.
 2. Note any [Input]s required for the [Operation] to succeed or provided as special requests.
