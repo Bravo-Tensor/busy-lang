@@ -1,10 +1,7 @@
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkFrontmatter from 'remark-frontmatter';
 import { visit } from 'unist-util-visit';
-import type { Root, Heading, Node } from 'mdast';
+import type { Heading, Node } from 'mdast';
 import { Section, DocId } from '../types/schema.js';
-import { createSlug } from '../utils/slugify.js';
+import { asMarkdown, linkDestination, type MarkdownSource } from './markdown.js';
 import { debug } from '../utils/logger.js';
 
 interface HeadingInfo {
@@ -22,20 +19,24 @@ interface HeadingInfo {
 export function parseSections(
   content: string,
   docId: DocId,
-  filePath: string
+  filePath: string,
+  source?: MarkdownSource
 ): Section[] {
   debug.sections('Parsing sections for %s', docId);
 
-  const processor = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']);
-
-  const tree = processor.parse(content) as Root;
+  const markdown = source ?? asMarkdown(content);
+  const tree = markdown.tree;
 
   // Extract headings with their positions
   const headings: HeadingInfo[] = [];
 
   visit(tree, 'heading', (node: Heading) => {
     const { title, extends: extendsArr } = parseHeadingNode(node);
-    const slug = createSlug(title);
+    const slug = markdown.headings.get(node)!;
+    visit(node, child => {
+      const target = linkDestination(child, markdown);
+      if (target && /(?:^|\/)operation\.busy\.md(?:#operation)?$/.test(target) && !extendsArr.includes('Operation')) extendsArr.push('Operation');
+    });
     const lineStart = node.position?.start.line ?? 0;
     const lineEnd = node.position?.end.line ?? 0;
 
@@ -164,6 +165,8 @@ function buildSectionTree(
       children: [],
     };
 
+    // Clear metadata from prior parses of the same section ID.
+    sectionExtendsMap.delete(section.id);
     // Store extends metadata separately (not in Section schema)
     if (heading.extends.length > 0) {
       sectionExtendsMap.set(section.id, heading.extends);

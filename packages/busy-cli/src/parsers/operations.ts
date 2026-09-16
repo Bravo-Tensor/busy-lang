@@ -1,5 +1,6 @@
+import { asMarkdown, type MarkdownSource } from './markdown.js';
 import { Section, LegacyOperation, DocId, Step, Checklist, NewOperation } from '../types/schema.js';
-import { getAllSections, findSection, getSectionExtends } from './sections.js';
+import { getAllSections, findSection, getSectionExtends, parseSections } from './sections.js';
 import { debug } from '../utils/logger.js';
 
 const OPERATIONS_SECTION_ALIASES = [
@@ -170,59 +171,37 @@ function parseInputsOutputs(content: string, sectionName: string): string[] {
  * @param content - Full markdown document content
  * @returns Array of NewOperation objects
  */
-export function parseOperations(content: string): NewOperation[] {
-  const operations: NewOperation[] = [];
-
-  // Find Operations section - handle both with and without brackets
-  // Match # Operations or # [Operations]
-  const operationsMatch = content.match(
-    /^#\s*\[?Operations\]?\s*$/im
-  );
-
-  if (!operationsMatch) {
-    return [];
-  }
-
-  // Get content after Operations heading until next top-level section or end
-  const startIndex = operationsMatch.index! + operationsMatch[0].length;
-  const restContent = content.slice(startIndex);
-
-  // Find next top-level heading (# not ##)
-  const nextH1Match = restContent.match(/\n#\s+[^\#]/);
-  const operationsContent = nextH1Match
-    ? restContent.slice(0, nextH1Match.index)
-    : restContent;
-
-  // Split by ## headings to find individual operations
-  // Use a simpler approach: split by ## and process each part
-  const parts = operationsContent.split(/\n(?=##\s+)/);
-
-  for (const part of parts) {
-    if (!part.trim()) continue;
-
-    // Match operation heading: ## OperationName or ## [OperationName][Type]
-    const headingMatch = part.match(/^##\s+(?:\[([^\]]+)\](?:\[[^\]]*\])?|([^\n]+))\s*\n?([\s\S]*)$/);
-
-    if (headingMatch) {
-      const name = (headingMatch[1] || headingMatch[2]).trim();
-      const opContent = headingMatch[3] || '';
-
-      const steps = parseSteps(opContent);
-      const checklist = parseChecklist(opContent);
-      const inputs = parseInputsOutputs(opContent, 'Inputs');
-      const outputs = parseInputsOutputs(opContent, 'Outputs');
-
-      operations.push({
-        name,
-        inputs,
-        outputs,
-        steps,
-        checklist: checklist || undefined,
-      });
+/** Both the compatibility document parser and graph loader use these declarations. */
+export function operationSections(sections: Section[]): Section[] {
+  const declared = new Set<Section>();
+  for (const section of sections) {
+    if (section.depth === 1 && /^(?:core )?operations(?: section)?$/i.test(section.title.replace(/^\[|\]$/g, ''))) {
+      for (const child of section.children) if (child.depth === 2) declared.add(child);
     }
   }
+  for (const section of getAllSections(sections)) {
+    if (section.depth === 2 && getSectionExtends(section.id).some(type => type.toLowerCase() === 'operation')) declared.add(section);
+  }
+  return [...declared];
+}
 
-  return operations;
+export function parseOperations(content: string, source?: MarkdownSource, suppliedSections?: Section[]): NewOperation[] {
+  const markdown = source ?? asMarkdown(content);
+  const sections = suppliedSections ?? parseSections(content, 'document', '', markdown);
+  return operationSections(sections).map(section => {
+    const child = (names: string[]) => section.children.find(c => names.includes(c.title.replace(/^\[|\]$/g, '').toLowerCase()));
+    const steps = child(['steps']);
+    const checklist = child(['checklist']);
+    const inputs = child(['input', 'inputs']);
+    const outputs = child(['output', 'outputs']);
+    return {
+      name: section.title.replace(/^\[([^\]]+)\](?:\[[^\]]*\])?$/, '$1'),
+      steps: parseSteps(steps ? steps.content : section.content),
+      checklist: checklist ? parseChecklist('### Checklist\n' + checklist.content) ?? undefined : undefined,
+      inputs: inputs ? parseInputsOutputs('### Inputs\n' + inputs.content, 'Inputs') : [],
+      outputs: outputs ? parseInputsOutputs('### Outputs\n' + outputs.content, 'Outputs') : [],
+    };
+  });
 }
 
 // =============================================================================
@@ -242,20 +221,8 @@ export function extractOperations(
 ): Operation[] {
   debug.localdefs('Extracting operations for %s', docId);
 
-  // Find the Operations section
-  const operationsSection = findOperationsSection(sections);
-
-  if (!operationsSection) {
-    debug.localdefs('No Operations section found');
-    return [];
-  }
-
-  debug.localdefs('Found Operations section: %s', operationsSection.title);
-
-  // Extract all direct children as Operations
   const operations: Operation[] = [];
-
-  for (const child of operationsSection.children) {
+  for (const child of operationSections(sections)) {
     const operation = createOperation(child, docId, filePath);
 
     // Skip empty operations (just reference headers with no content)

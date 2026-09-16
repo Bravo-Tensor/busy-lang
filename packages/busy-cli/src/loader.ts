@@ -1,3 +1,4 @@
+import { parseMarkdown } from './parsers/markdown.js';
 import { readFile } from 'fs/promises';
 import fg from 'fast-glob';
 import path from 'path';
@@ -107,7 +108,8 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
       parseFrontMatter(content, filePath);
 
     // Parse sections
-    const sections = parseSections(mdContent, docId, filePath);
+    const markdown = parseMarkdown(mdContent);
+    const sections = parseSections(mdContent, docId, filePath, markdown);
 
     // Create file representation (lightweight - just sections)
     files.push({
@@ -200,7 +202,8 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
         section,
         section.content,
         symbols,
-        fileMap
+        fileMap,
+        markdown
       );
       allEdges.push(...linkEdges);
     }

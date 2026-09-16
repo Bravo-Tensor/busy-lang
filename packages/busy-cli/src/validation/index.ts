@@ -1,10 +1,13 @@
+import { parseMarkdown, type MarkdownSource } from '../parsers/markdown.js';
+import { parseSections } from '../parsers/sections.js';
+import type { Section } from '../types/schema.js';
 import { parseDocument, resolveImports } from '../parser.js';
 import { validateHeadingLinks } from './heading-links.js';
 import { validateOperationNames } from './operation-names.js';
 import { validateLocalLinks } from './local-links.js';
 
 type Document = ReturnType<typeof parseDocument>;
-interface ValidationContext { content: string; filePath: string; document: Document }
+interface ValidationContext { content: string; filePath: string; document: Document; markdown: MarkdownSource; sections: Section[] }
 interface Check {
   id: string;
   severity: 'error' | 'warning';
@@ -19,9 +22,9 @@ export interface ValidationResult {
 
 // Register deterministic document checks here; callers need not know individual validators.
 const checks: Check[] = [
-  { id: 'heading-links', severity: 'error', run: c => validateHeadingLinks(c.content, c.filePath) },
-  { id: 'operation-names', severity: 'error', run: c => validateOperationNames(c.content) },
-  { id: 'local-links', severity: 'error', run: c => validateLocalLinks(c.content, c.filePath) },
+  { id: 'heading-links', severity: 'error', run: c => validateHeadingLinks(c.markdown, c.filePath) },
+  { id: 'operation-names', severity: 'error', run: c => validateOperationNames(c.markdown, c.sections) },
+  { id: 'local-links', severity: 'error', run: c => validateLocalLinks(c.markdown, c.filePath) },
   { id: 'operation-steps', severity: 'warning', run: c => c.document.operations
     .filter(op => op.steps.length === 0).map(op => `Operation "${op.name}" has no steps`) },
   { id: 'operation-imports', severity: 'warning', run: c => c.document.imports.length === 0 && c.document.operations.length > 0
@@ -32,8 +35,10 @@ const checks: Check[] = [
  * Parse failures throw because subsequent checks require a valid document structure.
  */
 export function validateDocument(content: string, filePath: string, options: { resolveImports?: boolean } = {}): ValidationResult {
-  const document = parseDocument(content);
-  const context = { content, filePath, document };
+  const markdown = parseMarkdown(content);
+  const sections = parseSections(content, filePath, filePath, markdown);
+  const document = parseDocument(content, markdown, sections);
+  const context = { content, filePath, document, markdown, sections };
   const findings = checks.flatMap(check => check.run(context).map(message => ({ check: check.id, severity: check.severity, message })));
   const result: ValidationResult = { document, findings };
   if (options.resolveImports) {

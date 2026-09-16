@@ -1,3 +1,5 @@
+import { asMarkdown, parseMarkdown, type MarkdownSource } from './parsers/markdown.js';
+import { parseSections } from './parsers/sections.js';
 /**
  * Main Parser Module - busy-python compatible document parsing
  *
@@ -7,17 +9,13 @@
  */
 
 import { resolve, dirname } from 'path';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkFrontmatter from 'remark-frontmatter';
-import { visit } from 'unist-util-visit';
-import GithubSlugger from 'github-slugger';
 import { readFileSync, existsSync } from 'fs';
 import {
   NewBusyDocument as BusyDocument,  // Use new schema types for busy-python compat
   ToolDocument,
   Metadata,
   MetadataSchema,
+  Section,
 } from './types/schema.js';
 import { parseImports } from './parsers/imports.js';
 import { parseOperations } from './parsers/operations.js';
@@ -135,7 +133,7 @@ function parseMetadata(data: Record<string, any>): Metadata {
  * @returns BusyDocument or ToolDocument (if Type is [Tool])
  * @throws Error if frontmatter is missing or invalid
  */
-export function parseDocument(content: string): BusyDocument | ToolDocument {
+export function parseDocument(content: string, source?: MarkdownSource, suppliedSections?: Section[]): BusyDocument | ToolDocument {
   // Trim leading whitespace before the opening frontmatter delimiter
   const trimmedContent = content.trimStart();
 
@@ -165,7 +163,9 @@ export function parseDocument(content: string): BusyDocument | ToolDocument {
   const setup = parseSetup(trimmedContent);
 
   // Parse operations
-  const operations = parseOperations(trimmedContent);
+  const markdown = source ?? asMarkdown(content);
+  const sections = suppliedSections ?? parseSections(content, metadata.name, '', markdown);
+  const operations = parseOperations(content, markdown, sections);
 
   // Parse triggers
   const triggers = parseTriggers(trimmedContent);
@@ -255,15 +255,5 @@ export function resolveImports(
 }
 
 function headingAnchors(content: string): Set<string> {
-  const tree = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']).parse(content);
-  const slugger = new GithubSlugger();
-  const anchors = new Set<string>();
-  function text(node: any): string {
-    if (node.type === 'html') return '';
-    if (typeof node.value === 'string') return node.value;
-    if (node.type === 'image') return node.alt ?? '';
-    return (node.children ?? []).map(text).join('');
-  }
-  visit(tree, 'heading', (node) => { anchors.add(slugger.slug(text(node))); });
-  return anchors;
+  return parseMarkdown(content).anchors;
 }
