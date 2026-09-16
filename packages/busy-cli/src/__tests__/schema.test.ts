@@ -1,24 +1,27 @@
 /**
- * Schema Tests - Define expected data models matching busy-python
+ * Schema Tests - Define expected data models matching BUSY
  *
  * These tests define the API contract for BUSY document parsing.
- * The schemas should match busy-python's Pydantic models as the source of truth.
+ * Parsed documents and indexed entities use the same canonical schemas.
  */
 
 import { describe, it, expect } from 'vitest';
+import { parseDocument } from '../parser.js';
+const operationIdentity = { kind: 'operation', id: 'doc::op', docId: 'doc', slug: 'op', content: '', types: [], extends: [], sectionRef: 'doc#op' };
+const documentIdentity = { kind: 'document', id: 'doc', docId: 'doc', slug: 'doc', name: 'Doc', content: '', types: ['Document'], extends: [], sectionRef: 'doc#', imports: [], localdefs: [], operations: [] };
 import { z } from 'zod';
 
-// Import schemas - use New* schemas for busy-python compatible types
+// Import schemas - canonical BUSY schemas
 import {
   MetadataSchema,
-  ImportSchema,
-  LocalDefinitionSchema,
+  ImportDefSchema,
+  LocalDefSchema,
   StepSchema,
   ChecklistSchema,
   TriggerSchema,
-  NewOperationSchema as OperationSchema,  // Use new schema for busy-python compat
+  OperationSchema,  // canonical schema
   ToolSchema,
-  NewBusyDocumentSchema as BusyDocumentSchema,  // Use new schema for busy-python compat
+  BusyDocumentSchema,  // canonical schema
   ToolDocumentSchema,
 } from '../types/schema';
 
@@ -75,7 +78,7 @@ describe('Schema: Metadata', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should NOT have Extends or Tags fields (removed from busy-python)', () => {
+  it('keeps display metadata distinct from document inheritance', () => {
     const metadataWithExtends = {
       name: 'Test',
       type: '[Document]',
@@ -93,69 +96,27 @@ describe('Schema: Metadata', () => {
   });
 });
 
-describe('Schema: Import', () => {
-  it('should parse import with concept name and path', () => {
-    const validImport = {
-      conceptName: 'Operation',
-      path: './operation.busy.md',
-    };
-
-    const result = ImportSchema.safeParse(validImport);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.conceptName).toBe('Operation');
-      expect(result.data.path).toBe('./operation.busy.md');
-      expect(result.data.anchor).toBeUndefined();
-    }
+describe('Canonical imports and local definitions', () => {
+  const content = '---\nName: Test\nType: [Document]\nDescription: Test.\n---\n[Example]: ./other.busy.md#example\n# Local Definitions\n## Capability\nA system feature.';
+  it('validates imports with identity and one source target', () => {
+    const imp = parseDocument(content).imports[0];
+    expect(ImportDefSchema.safeParse(imp).success).toBe(true);
+    expect(imp.label).toBe('Example');
+    expect(imp.target).toBe('./other.busy.md#example');
   });
-
-  it('should parse import with anchor', () => {
-    const importWithAnchor = {
-      conceptName: 'RunChecklist',
-      path: './checklist.busy.md',
-      anchor: 'runchecklist',
-    };
-
-    const result = ImportSchema.safeParse(importWithAnchor);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.anchor).toBe('runchecklist');
-    }
+  it('requires the import target', () => {
+    const { target, ...missing } = parseDocument(content).imports[0];
+    expect(ImportDefSchema.safeParse(missing).success).toBe(false);
   });
-
-  it('should require concept name and path', () => {
-    const missingPath = {
-      conceptName: 'Test',
-    };
-
-    const result = ImportSchema.safeParse(missingPath);
-    expect(result.success).toBe(false);
+  it('validates local definitions with canonical section identity', () => {
+    const def = parseDocument(content).localdefs[0];
+    expect(LocalDefSchema.safeParse(def).success).toBe(true);
+    expect(def.id).toBe('test::capability');
+    expect(def.content).toBe('A system feature.');
   });
-});
-
-describe('Schema: LocalDefinition', () => {
-  it('should parse local definition with name and content', () => {
-    const validDef = {
-      name: 'Capability',
-      content: 'A system feature or function that can be invoked.',
-    };
-
-    const result = LocalDefinitionSchema.safeParse(validDef);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.name).toBe('Capability');
-      expect(result.data.content).toBe('A system feature or function that can be invoked.');
-    }
-  });
-
-  it('should allow empty content', () => {
-    const emptyContent = {
-      name: 'Placeholder',
-      content: '',
-    };
-
-    const result = LocalDefinitionSchema.safeParse(emptyContent);
-    expect(result.success).toBe(true);
+  it('allows a local definition with empty content', () => {
+    const def = parseDocument(content).localdefs[0];
+    expect(LocalDefSchema.safeParse({ ...def, content: '' }).success).toBe(true);
   });
 });
 
@@ -287,6 +248,7 @@ describe('Schema: Trigger', () => {
 describe('Schema: Operation', () => {
   it('should parse operation with all fields', () => {
     const validOperation = {
+      ...operationIdentity,
       name: 'ExecuteTask',
       inputs: ['task_name: Name of the task', 'context: Execution context'],
       outputs: ['result: The computed result'],
@@ -310,6 +272,7 @@ describe('Schema: Operation', () => {
 
   it('should allow operation with empty inputs/outputs/steps', () => {
     const minimalOperation = {
+      ...operationIdentity,
       name: 'SimpleOp',
       inputs: [],
       outputs: [],
@@ -322,6 +285,7 @@ describe('Schema: Operation', () => {
 
   it('should allow optional checklist', () => {
     const noChecklist = {
+      ...operationIdentity,
       name: 'NoChecklist',
       inputs: [],
       outputs: [],
@@ -373,95 +337,20 @@ describe('Schema: Tool', () => {
   });
 });
 
-describe('Schema: BusyDocument', () => {
-  it('should parse complete document structure', () => {
-    const validDocument = {
-      metadata: {
-        name: 'TestDocument',
-        type: '[Document]',
-        description: 'A test document',
-      },
-      imports: [
-        { conceptName: 'Concept', path: './concept.busy.md' },
-      ],
-      definitions: [
-        { name: 'LocalDef', content: 'A local definition' },
-      ],
-      setup: 'Initialize the document context.',
-      operations: [
-        {
-          name: 'TestOp',
-          inputs: [],
-          outputs: [],
-          steps: [{ stepNumber: 1, instruction: 'Do something' }],
-        },
-      ],
-      triggers: [],
-    };
-
-    const result = BusyDocumentSchema.safeParse(validDocument);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.metadata.name).toBe('TestDocument');
-      expect(result.data.imports).toHaveLength(1);
-      expect(result.data.definitions).toHaveLength(1);
-      expect(result.data.setup).toBe('Initialize the document context.');
-      expect(result.data.operations).toHaveLength(1);
-    }
+describe('Canonical document schemas', () => {
+  it('validates the parsed graph-ready document with operations', () => {
+    const doc = parseDocument('---\nName: Test\nType: [Document]\nDescription: Test.\n---\n# Operations\n## doWork\n### Steps\n1. Work.');
+    expect(BusyDocumentSchema.safeParse(doc).success).toBe(true);
+    expect(doc.operations[0].id).toBe('test::dowork');
   });
-
-  it('should allow optional setup', () => {
-    const noSetup = {
-      metadata: {
-        name: 'NoSetup',
-        type: '[Document]',
-        description: 'Document without setup',
-      },
-      imports: [],
-      definitions: [],
-      operations: [],
-      triggers: [],
-    };
-
-    const result = BusyDocumentSchema.safeParse(noSetup);
+  it('allows absent setup', () => {
+    const result = BusyDocumentSchema.safeParse(documentIdentity);
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.setup).toBeUndefined();
-    }
+    if (result.success) expect(result.data.setup).toBeUndefined();
   });
-});
-
-describe('Schema: ToolDocument', () => {
-  it('should parse tool document with tools array', () => {
-    const validToolDoc = {
-      metadata: {
-        name: 'GmailTools',
-        type: '[Tool]',
-        description: 'Gmail integration tools',
-        provider: 'composio',
-      },
-      imports: [],
-      definitions: [],
-      operations: [],
-      triggers: [],
-      tools: [
-        {
-          name: 'send_email',
-          description: 'Send an email',
-          inputs: ['to: Recipient'],
-          outputs: ['message_id: Message ID'],
-          providers: {
-            composio: { action: 'GMAIL_SEND_EMAIL', parameters: { to: 'to' } },
-          },
-        },
-      ],
-    };
-
-    const result = ToolDocumentSchema.safeParse(validToolDoc);
+  it('validates Tool documents using the same base model', () => {
+    const result = ToolDocumentSchema.safeParse({ ...documentIdentity, kind: 'tool', tools: [{ name: 'send', description: 'Send', inputs: [], outputs: [] }] });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.tools).toHaveLength(1);
-      expect(result.data.metadata.provider).toBe('composio');
-    }
+    if (result.success) expect(result.data.tools).toHaveLength(1);
   });
 });

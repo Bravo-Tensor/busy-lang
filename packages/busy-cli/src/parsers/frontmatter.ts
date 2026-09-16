@@ -19,43 +19,10 @@ export function parseFrontMatter(
   fileContent: string,
   filePath: string
 ): ParsedFrontMatter {
-  let data: any;
-  let content: string;
-
-  // Extract only the first frontmatter block to avoid "multiple documents" error
-  // when the body contains --- horizontal rules
-  try {
-    const parsed = extractYamlFrontmatter(fileContent);
-    if (parsed) {
-      data = parsed.data;
-      content = parsed.content;
-    } else {
-      data = {};
-      content = fileContent;
-    }
-  } catch (err) {
-    warn(`Failed to parse YAML frontmatter in ${filePath}: ${err}`, { file: filePath });
-    data = {};
-    content = fileContent;
-  }
-
-  debug.frontmatter('Parsing frontmatter for %s', filePath);
-
-  // Validate frontmatter
-  let frontmatter: FrontMatter;
-  try {
-    frontmatter = FrontMatterSchema.parse(data);
-  } catch (err) {
-    warn(`Invalid frontmatter schema in ${filePath}`, { file: filePath });
-    // Provide defaults if validation fails
-    frontmatter = {
-      Name: getBasename(filePath),
-      Type: [],
-      Description: undefined,
-      Tags: [],
-      Extends: [],
-    };
-  }
+  const parsed = extractYamlFrontmatter(fileContent.trimStart());
+  if (!parsed) throw new Error('Missing or empty frontmatter');
+  const frontmatter = FrontMatterSchema.parse(parsed.data);
+  const content = parsed.content;
 
   // Normalize docId from Name or filename
   const docId = frontmatter.Name

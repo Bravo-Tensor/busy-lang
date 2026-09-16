@@ -1,298 +1,56 @@
-import { parseMarkdown } from './parsers/markdown.js';
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import fg from 'fast-glob';
-import path from 'path';
-import {
-  Repo,
-  BusyDocument,
-  Playbook,
-  View,
-  Config,
-  ConceptBase,
-  LocalDef,
-  Operation,
-  ImportDef,
-  Edge,
-  Section,
-  File,
-} from './types/schema.js';
-
-/**
- * Union of all top-level document variants the loader produces.
- * Note: BusyDocument covers the generic `document` kind, including plain
- * Document/Model-style docs that don't get a more specific classifier.
- */
-type AnyDocument = BusyDocument | Playbook | View | Config;
-import { parseFrontMatter } from './parsers/frontmatter.js';
-import { parseSections, getAllSections, findSection } from './parsers/sections.js';
-import { extractLocalDefs } from './parsers/localdefs.js';
-import { extractOperations } from './parsers/operations.js';
-import { extractImports, legacyResolveImportTarget } from './parsers/imports.js';
+import { parseSource } from './parser.js';
+import { getAllSections } from './parsers/sections.js';
 import { extractLinksFromSection } from './parsers/links.js';
-import { debug, warn } from './utils/logger.js';
+import { resolveImportTarget } from './parsers/imports.js';
+import { debug } from './utils/logger.js';
+import type { ParsedDocument, BusyDocument, Playbook, View, Config, ConceptBase, Repo, Section, File, LocalDef, Operation, ImportDef, Edge } from './types/schema.js';
+type AnyDocument = ParsedDocument;
 
-/**
- * Load and index a workspace from glob patterns
- */
+/** Index canonical parsed documents; no independent document lowering occurs here. */
 export async function loadRepo(globs: string[]): Promise<Repo> {
-  debug.parser('Loading repo from globs: %o', globs);
-
-  // Find all markdown files
-  const filePaths = await fg(globs, {
-    absolute: true,
-    onlyFiles: true,
-  });
-
-  debug.parser('Found %d files', filePaths.length);
-
-  // Sort files for determinism
-  filePaths.sort();
-
-  // Build file map for resolution
+  const paths = (await fg(globs, { absolute: true, onlyFiles: true })).sort();
+  const sources = await Promise.all(paths.map(async filePath => ({ filePath, ...parseSource(await readFile(filePath, 'utf8'), filePath) })));
   const fileMap = new Map<string, { docId: string; path: string }>();
-
-  // First pass: parse frontmatter to build file map
-  const fileContents = new Map<string, string>();
-
-  for (const filePath of filePaths) {
-    const content = await readFile(filePath, 'utf-8');
-    fileContents.set(filePath, content);
-
-    const { docId } = parseFrontMatter(content, filePath);
-
-    // Store multiple variants for resolution:
-    // - Full basename: "document.busy.md"
-    // - Without .busy: "document.md" (for imports that reference old extension)
-    // - Just name: "document"
-    const basename = path.basename(filePath);
-    const withoutBusy = basename.replace('.busy.md', '.md');
-    const nameOnly = basename.replace(/\.busy\.md$/, '').replace(/\.md$/, '');
-
-    fileMap.set(basename, { docId, path: filePath });
-    if (withoutBusy !== basename) {
-      fileMap.set(withoutBusy, { docId, path: filePath });
-    }
-    fileMap.set(nameOnly, { docId, path: filePath });
+  for (const { filePath, document } of sources) {
+    fileMap.set(filePath, { docId: document.docId, path: filePath });
+    fileMap.set(path.basename(filePath), { docId: document.docId, path: filePath });
+    fileMap.set(path.basename(filePath).replace(/\.busy\.md$/, ''), { docId: document.docId, path: filePath });
   }
-
-  // Second pass: parse documents
-  const files: File[] = []; // Lightweight file representations
-  const docs: AnyDocument[] = []; // Full concept definitions
-  const allLocaldefs = new Map<string, LocalDef>();
+  const docs: AnyDocument[] = sources.map(source => source.document);
+  const files: File[] = [];
+  const allSections = new Map<string, Section>();
   const allOperations = new Map<string, Operation>();
+  const allLocaldefs = new Map<string, LocalDef>();
   const allImports: ImportDef[] = [];
   const allEdges: Edge[] = [];
-  const allSections = new Map<string, Section>();
-
-  // Store document parts temporarily before building final docs
-  const docParts = new Map<string, {
-    filePath: string;
-    content: string;
-    frontmatter: any;
-    docId: string;
-    types: string[];
-    extends: string[];
-    sections: Section[];
-    localdefs: LocalDef[];
-    operations: Operation[];
-    setup: any;
-    imports: ImportDef[];
-    symbols: Record<string, { docId?: string; slug?: string }>;
-  }>();
-
-  for (const filePath of filePaths) {
-    const content = fileContents.get(filePath)!;
-
-    // Parse frontmatter
-    const { frontmatter, content: mdContent, docId, kind, types, extends: extends_ } =
-      parseFrontMatter(content, filePath);
-
-    // Parse sections
-    const markdown = parseMarkdown(mdContent);
-    const sections = parseSections(mdContent, docId, filePath, markdown);
-
-    // Create file representation (lightweight - just sections)
-    files.push({
-      docId,
-      path: filePath,
-      name: frontmatter.Name,
-      sections,
-    });
-
-    // Index all sections
-    for (const section of getAllSections(sections)) {
-      allSections.set(section.id, section);
-    }
-
-    // Extract local definitions
-    const localdefs = extractLocalDefs(sections, docId, filePath);
-    for (const localdef of localdefs) {
-      allLocaldefs.set(localdef.id, localdef);
-    }
-
-    // Extract operations
-    const operations = extractOperations(sections, docId, filePath);
-    for (const operation of operations) {
-      allOperations.set(operation.id, operation);
-    }
-
-    // Extract setup (if present)
-    const setupSection = findSection(sections, 'setup');
-    const setup = setupSection ? {
-      kind: 'setup' as const,
-      id: `${docId}::setup`, // Use :: for concept IDs
-      docId,
-      slug: 'setup',
-      name: 'Setup',
-      content: setupSection.content,
-      types: [],
-      extends: [],
-      sectionRef: setupSection.id, // sectionRef uses # for section references
-    } : undefined;
-
-    // Extract imports
-    const { imports, symbols } = extractImports(content, docId);
-
-    // Store document parts
-    docParts.set(docId, {
-      filePath,
-      content,
-      frontmatter,
-      docId,
-      types,
-      extends: extends_,
-      sections,
-      localdefs,
-      operations,
-      setup,
-      imports,
-      symbols,
-    });
-
-    // Resolve imports
-    for (const importDef of imports) {
-      const resolved = legacyResolveImportTarget(importDef.target, docId, fileMap);
-
-      // Store resolved as ConceptId (string) per schema
+  const docParts = new Map<string, { sections: Section[] }>();
+  for (const { filePath, document: doc, markdown, sections } of sources) {
+    files.push({ docId: doc.docId, name: doc.name, path: filePath, sections });
+    docParts.set(doc.docId, { sections });
+    for (const section of getAllSections(sections)) allSections.set(section.id, section);
+    for (const op of doc.operations) allOperations.set(op.id, op);
+    for (const def of doc.localdefs) allLocaldefs.set(def.id, def);
+    const symbols: Record<string, { docId?: string; slug?: string }> = {};
+    for (const imp of doc.imports) {
+      const resolved = resolveImportTarget(imp.target, fileMap);
+      symbols[imp.label] = resolved;
       if (resolved.docId) {
-        const resolvedId = resolved.slug
-          ? `${resolved.docId}#${resolved.slug}`
-          : resolved.docId;
-        importDef.resolved = resolvedId;
-
-        // Create import edge
-        allEdges.push({
-          from: docId,
-          to: resolvedId,
-          role: 'imports',
-        });
+        imp.resolved = resolved.slug ? `${resolved.docId}#${resolved.slug}` : resolved.docId;
+        allEdges.push({ from: doc.docId, to: imp.resolved, role: 'imports' });
       }
-
-      // Update symbol table (keeps object format for easy lookup)
-      if (symbols[importDef.label]) {
-        symbols[importDef.label] = resolved;
-      }
-
-      allImports.push(importDef);
+      allImports.push(imp);
     }
-
-    // Extract links and create edges
-    for (const section of getAllSections(sections)) {
-      const linkEdges = extractLinksFromSection(
-        section,
-        section.content,
-        symbols,
-        fileMap,
-        markdown
-      );
-      allEdges.push(...linkEdges);
-    }
-
-    // Create extends edges for local definitions
-    for (const localdef of localdefs) {
-      for (const parent of localdef.extends) {
-        const resolvedParent = resolveSymbol(parent, docId, allLocaldefs, docs, symbols);
-        if (resolvedParent) {
-          allEdges.push({
-            from: localdef.id,
-            to: resolvedParent,
-            role: 'extends',
-          });
-        } else {
-          warn(`Unresolved extends: ${parent} in ${localdef.id}`);
-        }
-      }
+    for (const section of getAllSections(sections)) allEdges.push(...extractLinksFromSection(section, section.content, symbols, fileMap, markdown));
+    for (const def of doc.localdefs) for (const parent of def.extends) {
+      const resolved = resolveSymbol(parent, doc.docId, allLocaldefs, docs, symbols);
+      if (resolved) allEdges.push({ from: def.id, to: resolved, role: 'extends' });
     }
   }
-
-  // Build final document structures with inline arrays
-  for (const [docId, parts] of docParts) {
-    const typesLower = parts.types.map((t) => t.toLowerCase());
-    const isPlaybook = typesLower.includes('playbook');
-    const isView = typesLower.includes('view');
-    const isConfig = typesLower.includes('config');
-
-    // Collect extra frontmatter fields as meta for downstream consumers
-    const KNOWN_FRONTMATTER_KEYS = new Set(['Name', 'Type', 'Extends', 'Description', 'Tags']);
-    const meta: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(parts.frontmatter)) {
-      if (!KNOWN_FRONTMATTER_KEYS.has(key)) {
-        meta[key] = value;
-      }
-    }
-
-    // Base fields shared across all document kinds
-    const baseFields = {
-      id: parts.docId,
-      docId: parts.docId,
-      slug: parts.docId.toLowerCase(),
-      name: parts.frontmatter.Name,
-      content: parts.content,
-      types: parts.types,
-      extends: parts.extends,
-      sectionRef: `${parts.docId}#`, // Root reference
-      imports: parts.imports,
-      localdefs: parts.localdefs,
-      setup: parts.setup!,
-      operations: parts.operations,
-      ...(Object.keys(meta).length > 0 ? { meta } : {}),
-    };
-
-    if (isPlaybook) {
-      // Extract sequence from ExecutePlaybook operation
-      const sequence = extractPlaybookSequence(parts.sections);
-      const doc: Playbook = { ...baseFields, kind: 'playbook', sequence };
-      docs.push(doc);
-    } else if (isView) {
-      // Extract template section with full content (including children)
-      const displaySection = findSection(parts.sections, 'display');
-      let displayContent: string | undefined;
-      if (displaySection) {
-        // Reconstruct full template from section + children content
-        displayContent = getSectionFullContent(displaySection);
-      }
-      // Parse Params from frontmatter meta (falls through KNOWN_FRONTMATTER_KEYS)
-      const params = parseViewParams(meta.Params);
-      // Remove Params from meta since it's now a first-class field
-      delete meta.Params;
-      const doc: View = {
-        ...baseFields,
-        kind: 'view',
-        display: displayContent,
-        ...(params.length > 0 ? { params } : {}),
-      };
-      docs.push(doc);
-    } else if (isConfig) {
-      const doc: Config = { ...baseFields, kind: 'config' };
-      docs.push(doc);
-    } else {
-      const doc: BusyDocument = { ...baseFields, kind: 'document' };
-      docs.push(doc);
-    }
-  }
-
   // Inherit operations from parent documents
-  inheritOperations(docs as (BusyDocument | Playbook)[], allOperations);
+  inheritOperations(docs, allOperations);
 
   // Build concepts array (includes all documents as ConceptBase)
   const concepts: ConceptBase[] = docs.map((doc) => ({
@@ -389,7 +147,7 @@ function inheritOperations(
   allOperations: Map<string, Operation>
 ): void {
   // Build doc lookup by name
-  const docByName = new Map<string, BusyDocument | Playbook | View | Config>();
+  const docByName = new Map<string, ParsedDocument>();
   for (const doc of docs) {
     docByName.set(doc.name, doc);
   }
@@ -428,6 +186,7 @@ function inheritOperations(
               docId: doc.docId,
             };
             allOperations.set(inheritedOp.id, inheritedOp);
+            doc.operations.push(inheritedOp);
             existingOps.add(op.slug);
             debug.parser(
               'Inherited operation %s from %s to %s',
@@ -477,94 +236,3 @@ function resolveSymbol(
  * Get the full content of a section including all nested children.
  * Reconstructs the original markdown by walking the section tree.
  */
-function getSectionFullContent(section: Section): string {
-  let content = section.content;
-  for (const child of section.children) {
-    const prefix = '#'.repeat(child.depth);
-    content += `\n${prefix} ${child.title}\n${getSectionFullContent(child)}`;
-  }
-  return content.trim();
-}
-
-/**
- * Parse Params frontmatter value into typed ViewParam array.
- *
- * Accepts YAML-parsed arrays like:
- *   Params:
- *     - prospect: object (required)
- *     - show_hook: boolean
- *
- * Each entry can be:
- *   - A string like "name: type (required)" or "name: type"
- *   - An object like { name: "prospect", type: "object", required: true }
- */
-function parseViewParams(raw: unknown): { name: string; type: string; required: boolean }[] {
-  if (!Array.isArray(raw)) return [];
-
-  const params: { name: string; type: string; required: boolean }[] = [];
-
-  for (const entry of raw) {
-    if (typeof entry === 'string') {
-      // Parse "name: type (required)" or "name: type" or just "name"
-      const match = entry.match(/^\s*([\w-]+)\s*(?::\s*(\w+))?\s*(?:\(([^)]*)\))?\s*$/);
-      if (match) {
-        const name = match[1];
-        const type = match[2] ?? 'string';
-        const modifiers = (match[3] ?? '').toLowerCase();
-        params.push({ name, type, required: modifiers.includes('required') });
-      }
-    } else if (entry && typeof entry === 'object') {
-      // YAML parsed as object — e.g. { prospect: "object (required)" }
-      for (const [key, value] of Object.entries(entry as Record<string, unknown>)) {
-        if (typeof value === 'string') {
-          const match = value.match(/^\s*(\w+)?\s*(?:\(([^)]*)\))?\s*$/);
-          const type = match?.[1] ?? 'string';
-          const modifiers = (match?.[2] ?? '').toLowerCase();
-          params.push({ name: key, type, required: modifiers.includes('required') });
-        } else if (typeof value === 'object' && value !== null) {
-          const v = value as Record<string, unknown>;
-          params.push({
-            name: v.name as string ?? key,
-            type: (v.type as string) ?? 'string',
-            required: (v.required as boolean) ?? false,
-          });
-        }
-      }
-    }
-  }
-
-  return params;
-}
-
-/**
- * Extract sequence of operations from a playbook's ExecutePlaybook operation
- * Looks for sections with "Step" in the title and extracts Target metadata
- */
-function extractPlaybookSequence(sections: Section[]): string[] {
-  const sequence: string[] = [];
-
-  // Find ExecutePlaybook operation in the Operations section
-  const allSecs = getAllSections(sections);
-  const executePlaybook = allSecs.find(
-    (sec) => sec.title.toLowerCase() === 'executeplaybook'
-  );
-
-  if (!executePlaybook) {
-    return sequence;
-  }
-
-  // Look for child sections that are steps (contain "step" in title, case-insensitive)
-  for (const child of executePlaybook.children) {
-    if (child.title.toLowerCase().includes('step')) {
-      // Extract Target field from content
-      // Pattern: - **Target:** `OperationName`
-      const targetMatch = child.content.match(/^\s*-\s*\*\*Target:\*\*\s*`([^`]+)`/m);
-      if (targetMatch) {
-        sequence.push(targetMatch[1]);
-        debug.parser('Found playbook sequence step: %s -> %s', child.title, targetMatch[1]);
-      }
-    }
-  }
-
-  return sequence;
-}

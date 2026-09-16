@@ -1,7 +1,7 @@
 /**
- * Operations Parsing Tests - Match busy-python Operation model
+ * Operations Parsing Tests - Match BUSY Operation model
  *
- * Operations in busy-python have:
+ * Operations in BUSY have:
  * - name: string
  * - inputs: list[str]
  * - outputs: list[str]
@@ -27,7 +27,7 @@ describe('parseSteps', () => {
     expect(steps[0]).toEqual({
       stepNumber: 1,
       instruction: 'Parse the document frontmatter',
-      operationReferences: undefined, // undefined when no references (matches busy-python Optional)
+      operationReferences: undefined, // undefined when no references (matches BUSY Optional)
     });
     expect(steps[1].stepNumber).toBe(2);
     expect(steps[2].stepNumber).toBe(3);

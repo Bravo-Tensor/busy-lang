@@ -15,7 +15,7 @@ describe('document validation pipeline', () => {
   });
   it('returns the parsed document and no findings for valid content', () => {
     const result = validateDocument(header + '# Setup\nNo setup required.', file, { resolveImports: true });
-    expect(result.document.metadata.name).toBe('Test');
+    expect(result.document.name).toBe('Test');
     expect(result.findings).toEqual([]);
     expect(result.resolvedImports).toEqual({});
   });

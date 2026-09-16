@@ -1,15 +1,15 @@
 /**
- * Import Parsing Tests - Match busy-python import format
+ * Import Parsing Tests - Match BUSY import format
  *
- * busy-python uses reference-style markdown links:
+ * BUSY uses reference-style markdown links:
  * [ConceptName]: path or [ConceptName]: path#anchor
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseImports, resolveImportTarget } from '../parsers/imports';
-import type { Import } from '../types/schema';
+import { extractImports, resolveImportTarget } from '../parsers/imports';
+import type { ImportDef } from '../types/schema';
 
-describe('parseImports', () => {
+describe('extractImports', () => {
   it('should parse simple reference-style import', () => {
     const content = `
 # [Imports]
@@ -17,13 +17,9 @@ describe('parseImports', () => {
 [Operation]: ./operation.busy.md
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(1);
-    expect(result.imports[0]).toEqual({
-      conceptName: 'Operation',
-      path: './operation.busy.md',
-      anchor: undefined,
-    });
+    expect(result.imports[0]).toMatchObject({ kind: 'importdef', label: 'Operation', target: './operation.busy.md' });
   });
 
   it('should parse import with anchor', () => {
@@ -31,13 +27,9 @@ describe('parseImports', () => {
 [RunChecklist]: ./checklist.busy.md#runchecklist
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(1);
-    expect(result.imports[0]).toEqual({
-      conceptName: 'RunChecklist',
-      path: './checklist.busy.md',
-      anchor: 'runchecklist',
-    });
+    expect(result.imports[0]).toMatchObject({ kind: 'importdef', label: 'RunChecklist', target: './checklist.busy.md#runchecklist' });
   });
 
   it('should parse multiple imports', () => {
@@ -51,17 +43,16 @@ describe('parseImports', () => {
 [output]: ./operation.busy.md#output
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(5);
 
     // Check specific imports
-    const conceptImport = result.imports.find((i) => i.conceptName === 'Concept');
-    expect(conceptImport?.path).toBe('./concept.busy.md');
-    expect(conceptImport?.anchor).toBeUndefined();
+    const conceptImport = result.imports.find((i) => i.label === 'Concept');
+    expect(conceptImport?.target).toBe('./concept.busy.md');
+    expect(conceptImport?.target).not.toContain('#');
 
-    const inputImport = result.imports.find((i) => i.conceptName === 'input');
-    expect(inputImport?.path).toBe('./operation.busy.md');
-    expect(inputImport?.anchor).toBe('input');
+    const inputImport = result.imports.find((i) => i.label === 'input');
+    expect(inputImport?.target).toBe('./operation.busy.md#input');
   });
 
   it('should handle imports with parent directory paths', () => {
@@ -70,10 +61,10 @@ describe('parseImports', () => {
 [Utils]: ../../shared/utils.busy.md
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(2);
-    expect(result.imports[0].path).toBe('../toolbox/tool.busy.md');
-    expect(result.imports[1].path).toBe('../../shared/utils.busy.md');
+    expect(result.imports[0].target).toBe('../toolbox/tool.busy.md');
+    expect(result.imports[1].target).toBe('../../shared/utils.busy.md');
   });
 
   it('should build symbol table from imports', () => {
@@ -82,7 +73,7 @@ describe('parseImports', () => {
 [RunChecklist]: ./checklist.busy.md#runchecklist
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.symbols).toHaveProperty('Operation');
     expect(result.symbols).toHaveProperty('RunChecklist');
   });
@@ -104,7 +95,7 @@ More content.
 [Other]: ./other.busy.md#anchor
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(2);
   });
 
@@ -115,9 +106,9 @@ This is [not an import](./file.md) in inline format.
 [Actual Import]: ./import.busy.md
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(1);
-    expect(result.imports[0].conceptName).toBe('Actual Import');
+    expect(result.imports[0].label).toBe('Actual Import');
   });
 
   it('should handle concept names with spaces', () => {
@@ -126,10 +117,10 @@ This is [not an import](./file.md) in inline format.
 [Imports Section]: ./document.busy.md#imports-section
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(2);
-    expect(result.imports[0].conceptName).toBe('Local Definitions');
-    expect(result.imports[1].conceptName).toBe('Imports Section');
+    expect(result.imports[0].label).toBe('Local Definitions');
+    expect(result.imports[1].label).toBe('Imports Section');
   });
 
   it('should return empty array for document with no imports', () => {
@@ -145,7 +136,7 @@ Description: Document with no imports
 Just some setup content.
 `;
 
-    const result = parseImports(content);
+    const result = extractImports(content, 'test');
     expect(result.imports).toHaveLength(0);
     expect(result.symbols).toEqual({});
   });
@@ -156,9 +147,9 @@ Just some setup content.
 [RunStep2]: ./steps.busy.md#run-step-2-validation
 `;
 
-    const result = parseImports(content);
-    expect(result.imports[0].anchor).toBe('step-1');
-    expect(result.imports[1].anchor).toBe('run-step-2-validation');
+    const result = extractImports(content, 'test');
+    expect(result.imports[0].target).toBe('./steps.busy.md#step-1');
+    expect(result.imports[1].target).toBe('./steps.busy.md#run-step-2-validation');
   });
 });
 
@@ -202,8 +193,8 @@ describe('resolveImportTarget', () => {
 });
 
 describe('Import Format Validation', () => {
-  it('should match busy-python regex pattern', () => {
-    // busy-python pattern: r"\[([^\]]+)\]:\s*([^\s#]+)(?:#([^\s]+))?"
+  it('should match BUSY regex pattern', () => {
+    // BUSY pattern: r"\[([^\]]+)\]:\s*([^\s#]+)(?:#([^\s]+))?"
     const pattern = /\[([^\]]+)\]:\s*([^\s#]+)(?:#([^\s]+))?/g;
 
     const testCases = [

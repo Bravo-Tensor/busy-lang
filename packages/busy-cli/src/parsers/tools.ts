@@ -1,5 +1,5 @@
 /**
- * Tool Parser - Matches busy-python Tool and ToolDocument models
+ * Tool Parser - Parses BUSY Tool and ToolDocument models
  *
  * Tools have:
  * - name: string

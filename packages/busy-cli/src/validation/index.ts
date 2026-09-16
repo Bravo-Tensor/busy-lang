@@ -1,7 +1,6 @@
-import { parseMarkdown, type MarkdownSource } from '../parsers/markdown.js';
-import { parseSections } from '../parsers/sections.js';
+import { type MarkdownSource } from '../parsers/markdown.js';
 import type { Section } from '../types/schema.js';
-import { parseDocument, resolveImports } from '../parser.js';
+import { parseDocument, parseSource, resolveImports } from '../parser.js';
 import { validateHeadingLinks } from './heading-links.js';
 import { validateOperationNames } from './operation-names.js';
 import { validateLocalLinks } from './local-links.js';
@@ -35,9 +34,7 @@ const checks: Check[] = [
  * Parse failures throw because subsequent checks require a valid document structure.
  */
 export function validateDocument(content: string, filePath: string, options: { resolveImports?: boolean } = {}): ValidationResult {
-  const markdown = parseMarkdown(content);
-  const sections = parseSections(content, filePath, filePath, markdown);
-  const document = parseDocument(content, markdown, sections);
+  const { document, markdown, sections } = parseSource(content, filePath);
   const context = { content, filePath, document, markdown, sections };
   const findings = checks.flatMap(check => check.run(context).map(message => ({ check: check.id, severity: check.severity, message })));
   const result: ValidationResult = { document, findings };

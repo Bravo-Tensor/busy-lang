@@ -48,7 +48,7 @@ program
       }
 
       const content = await readFile(filePath, 'utf-8');
-      const doc = parseDocument(content);
+      const doc = parseDocument(content, filePath);
 
       const output = options.pretty
         ? JSON.stringify(doc, null, 2)
@@ -57,9 +57,9 @@ program
       if (options.output) {
         await writeFile(options.output, output, 'utf-8');
         console.log(`✓ Parsed ${basename(file)}`);
-        console.log(`  Type: ${doc.metadata.type}`);
+        console.log(`  Type: ${doc.types.join(', ')}`);
         console.log(`  Imports: ${doc.imports.length}`);
-        console.log(`  Definitions: ${doc.definitions.length}`);
+        console.log(`  Definitions: ${doc.localdefs.length}`);
         console.log(`  Operations: ${doc.operations.length}`);
         console.log(`  Triggers: ${doc.triggers.length}`);
         if ('tools' in doc) {
@@ -97,13 +97,13 @@ program
       const warnings = result.findings.filter(f => f.severity === 'warning').map(f => f.message);
       const errors = result.findings.filter(f => f.severity === 'error').map(f => f.message);
 
-      console.log(`Document: ${doc.metadata.name}`);
-      console.log(`  Type: ${doc.metadata.type}`);
-      console.log(`  Description: ${doc.metadata.description.slice(0, 60)}${doc.metadata.description.length > 60 ? '...' : ''}`);
+      console.log(`Document: ${doc.name}`);
+      console.log(`  Type: ${doc.types.join(', ')}`);
+      console.log(`  Description: ${(doc.description ?? '').slice(0, 60)}${(doc.description ?? '').length > 60 ? '...' : ''}`);
       if (result.resolvedImports) {
         console.log(`✓ Resolved ${Object.keys(result.resolvedImports).length} imports`);
         for (const [name, resolvedDoc] of Object.entries(result.resolvedImports)) {
-          console.log(`  - ${name}: ${resolvedDoc.metadata.name} (${resolvedDoc.metadata.type})`);
+          console.log(`  - ${name}: ${resolvedDoc.name} (${resolvedDoc.types.join(', ')})`);
         }
       }
 
@@ -148,9 +148,9 @@ program
       }
 
       const content = await readFile(filePath, 'utf-8');
-      const doc = parseDocument(content);
+      const doc = parseDocument(content, filePath);
 
-      console.log(`Resolving imports for: ${doc.metadata.name}`);
+      console.log(`Resolving imports for: ${doc.name}`);
 
       const resolved = resolveImports(doc, filePath);
       const count = Object.keys(resolved).length;
@@ -162,8 +162,8 @@ program
         // Flat list of document names and their metadata
         const flat = Object.entries(resolved).map(([name, resolvedDoc]) => ({
           conceptName: name,
-          name: resolvedDoc.metadata.name,
-          type: resolvedDoc.metadata.type,
+          name: resolvedDoc.name,
+          type: resolvedDoc.types.join(', '),
           operations: resolvedDoc.operations.map(op => op.name),
         }));
         output = JSON.stringify(flat, null, 2);
@@ -269,25 +269,25 @@ program
       }
 
       const content = await readFile(filePath, 'utf-8');
-      const doc = parseDocument(content);
+      const doc = parseDocument(content, filePath);
 
-      console.log(`\n📄 ${doc.metadata.name}`);
+      console.log(`\n📄 ${doc.name}`);
       console.log(`${'─'.repeat(40)}`);
-      console.log(`Type:        ${doc.metadata.type}`);
-      console.log(`Description: ${doc.metadata.description}`);
-      if (doc.metadata.provider) {
-        console.log(`Provider:    ${doc.metadata.provider}`);
+      console.log(`Type:        ${doc.types.join(', ')}`);
+      console.log(`Description: ${(doc.description ?? '')}`);
+      if (doc.meta?.Provider) {
+        console.log(`Provider:    ${doc.meta?.Provider}`);
       }
       console.log(`${'─'.repeat(40)}`);
       console.log(`Imports:     ${doc.imports.length}`);
       if (doc.imports.length > 0) {
         for (const imp of doc.imports) {
-          console.log(`  - [${imp.conceptName}]: ${imp.path}${imp.anchor ? '#' + imp.anchor : ''}`);
+          console.log(`  - [${imp.label}]: ${imp.target}`);
         }
       }
-      console.log(`Definitions: ${doc.definitions.length}`);
-      if (doc.definitions.length > 0) {
-        for (const def of doc.definitions) {
+      console.log(`Definitions: ${doc.localdefs.length}`);
+      if (doc.localdefs.length > 0) {
+        for (const def of doc.localdefs) {
           console.log(`  - ${def.name}`);
         }
       }

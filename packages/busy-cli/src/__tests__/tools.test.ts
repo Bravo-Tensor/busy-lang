@@ -1,7 +1,7 @@
 /**
- * Tool Parsing Tests - Match busy-python Tool and ToolDocument models
+ * Tool Parsing Tests - Match BUSY Tool and ToolDocument models
  *
- * busy-python Tool model:
+ * BUSY Tool model:
  * - name: str
  * - description: str
  * - inputs: list[str]

@@ -1,14 +1,8 @@
 import { z } from 'zod';
 
-// =============================================================================
-// NEW SCHEMAS - Matching busy-python models (source of truth)
-// =============================================================================
-
 /**
- * Metadata schema - matches busy-python Metadata model
  * Required: name, type, description
  * Optional: provider (for tool documents)
- * NOTE: Extends and Tags have been removed (not in busy-python)
  */
 export const MetadataSchema = z.object({
   name: z.string().min(1),
@@ -20,29 +14,6 @@ export const MetadataSchema = z.object({
 export type Metadata = z.infer<typeof MetadataSchema>;
 
 /**
- * Import schema - matches busy-python Import model
- * Reference-style links: [ConceptName]: path/to/file.md[#anchor]
- */
-export const ImportSchema = z.object({
-  conceptName: z.string().min(1),
-  path: z.string().min(1),
-  anchor: z.string().optional(),
-});
-
-export type Import = z.infer<typeof ImportSchema>;
-
-/**
- * LocalDefinition schema - matches busy-python LocalDefinition model
- */
-export const LocalDefinitionSchema = z.object({
-  name: z.string().min(1),
-  content: z.string(),
-});
-
-export type LocalDefinition = z.infer<typeof LocalDefinitionSchema>;
-
-/**
- * Step schema - matches busy-python Step model
  * Steps have stepNumber, instruction, and optional operationReferences
  */
 export const StepSchema = z.object({
@@ -53,9 +24,6 @@ export const StepSchema = z.object({
 
 export type Step = z.infer<typeof StepSchema>;
 
-/**
- * Checklist schema - matches busy-python Checklist model
- */
 export const ChecklistSchema = z.object({
   items: z.array(z.string()),
 });
@@ -63,7 +31,6 @@ export const ChecklistSchema = z.object({
 export type Checklist = z.infer<typeof ChecklistSchema>;
 
 /**
- * Trigger schema - matches busy-python Trigger model
  * Supports both time-based (alarm) and event-based triggers
  */
 export const TriggerSchema = z.object({
@@ -79,21 +46,6 @@ export const TriggerSchema = z.object({
 export type Trigger = z.infer<typeof TriggerSchema>;
 
 /**
- * Operation schema (NEW) - matches busy-python Operation model
- * Different from the old graph-based OperationSchema
- */
-export const NewOperationSchema = z.object({
-  name: z.string().min(1),
-  inputs: z.array(z.string()).default([]),
-  outputs: z.array(z.string()).default([]),
-  steps: z.array(StepSchema).default([]),
-  checklist: ChecklistSchema.optional(),
-});
-
-export type NewOperation = z.infer<typeof NewOperationSchema>;
-
-/**
- * Tool schema - matches busy-python Tool model
  * Tools have provider mappings for external integrations
  */
 export const ToolSchema = z.object({
@@ -109,34 +61,6 @@ export const ToolSchema = z.object({
 });
 
 export type Tool = z.infer<typeof ToolSchema>;
-
-/**
- * BusyDocument schema (NEW) - matches busy-python BusyDocument model
- * This is the new document-centric schema, different from the graph-based one
- */
-export const NewBusyDocumentSchema = z.object({
-  metadata: MetadataSchema,
-  imports: z.array(ImportSchema).default([]),
-  definitions: z.array(LocalDefinitionSchema).default([]),
-  setup: z.string().optional(),
-  operations: z.array(NewOperationSchema).default([]),
-  triggers: z.array(TriggerSchema).default([]),
-});
-
-export type NewBusyDocument = z.infer<typeof NewBusyDocumentSchema>;
-
-/**
- * ToolDocument schema - extends BusyDocument with tools array
- */
-export const ToolDocumentSchema = NewBusyDocumentSchema.extend({
-  tools: z.array(ToolSchema).default([]),
-});
-
-export type ToolDocument = z.infer<typeof ToolDocumentSchema>;
-
-// =============================================================================
-// LEGACY SCHEMAS - Kept for graph functionality (may be refactored later)
-// =============================================================================
 
 // Base types
 export const DocIdSchema = z.string();
@@ -225,16 +149,15 @@ export const SetupSchema = ConceptBaseSchemaObject.extend({
     kind: z.literal('setup'),
 });
 
-// Operation schema (LEGACY) - extends ConceptBase (leaf node, no children)
 // Used for graph-based representation
-export const LegacyOperationSchema = ConceptBaseSchemaObject.extend({
+export const OperationSchema = ConceptBaseSchemaObject.extend({
     kind: z.literal('operation'),
-    steps: z.array(z.string()), // Parsed step items (legacy: strings only)
-    checklist: z.array(z.string()), // Parsed checklist items
+    inputs: z.array(z.string()).default([]),
+    outputs: z.array(z.string()).default([]),
+    steps: z.array(StepSchema),
+    checklist: ChecklistSchema.optional(),
 });
 
-// Keep OperationSchema as the legacy schema for backward compatibility with loader
-export const OperationSchema = LegacyOperationSchema;
 
 // ImportDef schema - extends ConceptBase (leaf node, no children)
 export const ImportDefSchema = ConceptBaseSchemaObject.extend({
@@ -244,20 +167,19 @@ export const ImportDefSchema = ConceptBaseSchemaObject.extend({
     resolved: ConceptIdSchema.optional(),
 });
 
-// BusyDocument schema (LEGACY) - graph-based representation
-export const LegacyBusyDocumentSchema = ConceptBaseSchemaObject.extend({
+export const BusyDocumentSchema = ConceptBaseSchemaObject.extend({
     kind: z.literal('document'),
     imports: z.array(ImportDefSchema),
     localdefs: z.array(LocalDefSchema),
-    setup: SetupSchema,
-    operations: z.array(LegacyOperationSchema)
+    setup: SetupSchema.optional(),
+    description: z.string().optional(),
+    triggers: z.array(TriggerSchema).default([]),
+    tools: z.array(ToolSchema).default([]),
+    operations: z.array(OperationSchema)
   })
 
-// Keep BusyDocumentSchema as the legacy schema for backward compatibility with loader
-export const BusyDocumentSchema = LegacyBusyDocumentSchema;
 
-// Playbook schema - extends LegacyBusyDocument with ordered sequence of operations
-export const PlaybookSchema = LegacyBusyDocumentSchema.extend({
+export const PlaybookSchema = BusyDocumentSchema.extend({
     kind: z.literal('playbook'),
     sequence: z.array(ConceptIdSchema), // Ordered array of operation references
   })
@@ -271,18 +193,20 @@ export const ViewParamSchema = z.object({
 
 export type ViewParam = z.infer<typeof ViewParamSchema>;
 
-// View schema - extends LegacyBusyDocument with display section
 // Views follow MVC: imports=Model, localDefs=ViewModel, template=View, operations=Controller
-export const ViewSchema = LegacyBusyDocumentSchema.extend({
+export const ViewSchema = BusyDocumentSchema.extend({
     kind: z.literal('view'),
     display: z.string().optional(),           // Markdown template (optional — LORE can generate)
     params: z.array(ViewParamSchema).optional(), // Typed params for component views
   })
 
-// Config schema - extends LegacyBusyDocument, semantically a singleton Model
-export const ConfigSchema = LegacyBusyDocumentSchema.extend({
+export const ConfigSchema = BusyDocumentSchema.extend({
     kind: z.literal('config'),
   })
+
+export const ToolDocumentSchema = BusyDocumentSchema.extend({ kind: z.literal('tool') });
+export type ToolDocument = z.infer<typeof ToolDocumentSchema>;
+export type ParsedDocument = BusyDocument | Playbook | View | Config | ToolDocument;
 
 // Edge schema
 export const EdgeRoleSchema = z.enum(['ref', 'calls', 'extends', 'imports']);
@@ -300,26 +224,24 @@ export const FileSchema = z.object({
   sections: z.array(SectionSchema),
 });
 
-// Repo schema (uses legacy schemas for graph functionality)
 export const RepoSchema = z.object({
   files: z.array(FileSchema), // Parsed files with their sections
   concepts: z.array(ConceptBaseSchema), // All concepts (BusyDocuments, Playbooks, etc.)
   localdefs: z.record(LocalDefSchema),
-  operations: z.record(LegacyOperationSchema),
+  operations: z.record(OperationSchema),
   imports: z.array(ImportDefSchema),
-  byId: z.record(z.union([SectionSchema, LocalDefSchema, LegacyOperationSchema, ConceptBaseSchema])),
+  byId: z.record(z.union([SectionSchema, LocalDefSchema, OperationSchema, ConceptBaseSchema])),
   byFile: z.record( // Renamed from byDoc for clarity
     z.object({
-      concept: z.union([LegacyBusyDocumentSchema, PlaybookSchema, ViewSchema, ConfigSchema]), // The concept defined in this file
+      concept: z.union([BusyDocumentSchema, PlaybookSchema, ViewSchema, ConfigSchema, ToolDocumentSchema]), // The concept defined in this file
       bySlug: z.record(SectionSchema),
     })
   ),
   edges: z.array(EdgeSchema),
 });
 
-// ContextPayload schema (uses legacy operation schema)
 export const ContextPayloadSchema = z.object({
-  operation: LegacyOperationSchema,
+  operation: OperationSchema,
   calls: z.array(ConceptIdSchema),
   symbols: z.record(
     z.object({
@@ -331,21 +253,16 @@ export const ContextPayloadSchema = z.object({
 
 // TypeScript types inferred from schemas
 
-// New types (busy-python compatible) - exported at top of file:
-// Metadata, Import, LocalDefinition, Step, Checklist, Trigger,
-// NewOperation (aliased as Operation), Tool, NewBusyDocument (aliased as BusyDocument),
-// ToolDocument
 
-// Legacy graph-based types
 export type DocId = z.infer<typeof DocIdSchema>;
 export type Slug = z.infer<typeof SlugSchema>;
 // Section and ConceptBase types defined above to avoid circular references
-export type LegacyBusyDocument = z.infer<typeof LegacyBusyDocumentSchema>;
+export type BusyDocument = z.infer<typeof BusyDocumentSchema>;
 export type Playbook = z.infer<typeof PlaybookSchema>;
 export type View = z.infer<typeof ViewSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 export type LocalDef = z.infer<typeof LocalDefSchema>;
-export type LegacyOperation = z.infer<typeof LegacyOperationSchema>;
+export type Operation = z.infer<typeof OperationSchema>;
 export type ImportDef = z.infer<typeof ImportDefSchema>;
 export type EdgeRole = z.infer<typeof EdgeRoleSchema>;
 export type Edge = z.infer<typeof EdgeSchema>;
@@ -353,9 +270,6 @@ export type File = z.infer<typeof FileSchema>;
 export type Repo = z.infer<typeof RepoSchema>;
 export type ContextPayload = z.infer<typeof ContextPayloadSchema>;
 
-// Keep legacy types as default for backward compatibility with loader
-export type BusyDocument = LegacyBusyDocument;
-export type Operation = LegacyOperation;
 
 // Front-matter schema
 // Type can be:

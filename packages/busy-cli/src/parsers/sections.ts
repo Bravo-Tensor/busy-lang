@@ -202,7 +202,7 @@ export function findSection(
 
   for (const section of sections) {
     if (
-      section.title.toLowerCase() === target ||
+      section.title.replace(/^\[|\]$/g, '').toLowerCase() === target ||
       section.slug.toLowerCase() === target
     ) {
       return section;
