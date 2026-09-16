@@ -7,6 +7,11 @@
  */
 
 import { resolve, dirname } from 'path';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkFrontmatter from 'remark-frontmatter';
+import { visit } from 'unist-util-visit';
+import GithubSlugger from 'github-slugger';
 import { readFileSync, existsSync } from 'fs';
 import {
   NewBusyDocument as BusyDocument,  // Use new schema types for busy-python compat
@@ -198,85 +203,67 @@ export function parseDocument(content: string): BusyDocument | ToolDocument {
 }
 
 /**
- * Resolve imports in a document to their parsed documents
- *
- * @param document - The document with imports to resolve
- * @param basePath - Base path for resolving relative imports
- * @param visited - Set of visited paths (for circular import detection)
- * @returns Record mapping concept names to their resolved documents
- * @throws Error if circular import detected or file not found
+ * Resolve local imports, validating real Markdown heading anchors.
+ * Cache parsed files while using a separate recursion stack for cycles.
+ * Missing targets/anchors remain warnings for compatibility.
  */
 export function resolveImports(
   document: BusyDocument | ToolDocument,
   basePath: string,
   visited: Set<string> = new Set()
 ): Record<string, BusyDocument | ToolDocument> {
+  const cache = new Map<string, { document: BusyDocument | ToolDocument; anchors: Set<string> }>();
+  const expanded = new Set<string>();
   const resolved: Record<string, BusyDocument | ToolDocument> = {};
+  const stack = new Set(visited);
 
-  for (const imp of document.imports) {
-    // Resolve the import path
-    const importPath = resolve(dirname(basePath), imp.path);
-
-    // Check for circular imports — warn and skip instead of crashing
-    if (visited.has(importPath)) {
-      console.warn(`⚠ Circular import skipped: ${imp.path} (from ${basePath})`);
-      continue;
-    }
-
-    // Check if file exists — warn and skip instead of crashing
-    if (!existsSync(importPath)) {
-      console.warn(`⚠ Import not found: ${imp.path} (resolved to ${importPath})`);
-      continue;
-    }
-
-    // Mark as visited
-    visited.add(importPath);
-
-    try {
-      // Read and parse the imported document
-      const importContent = readFileSync(importPath, 'utf-8');
-      const importedDoc = parseDocument(importContent);
-
-      // Validate anchor if specified
-      if (imp.anchor) {
-        // Check if anchor exists in operations or definitions
-        const hasOperation = importedDoc.operations.some(
-          (op) => op.name.toLowerCase() === imp.anchor!.toLowerCase() ||
-                  slugify(op.name) === imp.anchor!.toLowerCase()
-        );
-        const hasDefinition = importedDoc.definitions.some(
-          (def) => def.name.toLowerCase() === imp.anchor!.toLowerCase() ||
-                   slugify(def.name) === imp.anchor!.toLowerCase()
-        );
-
-        if (!hasOperation && !hasDefinition) {
+  function walk(doc: BusyDocument | ToolDocument, path: string): void {
+    const current = resolve(path);
+    stack.add(current);
+    for (const imp of doc.imports) {
+      const importPath = resolve(dirname(current), imp.path);
+      if (!existsSync(importPath)) {
+        console.warn(`⚠ Import not found: ${imp.path} (resolved to ${importPath})`);
+        continue;
+      }
+      try {
+        let entry = cache.get(importPath);
+        if (!entry) {
+          const content = readFileSync(importPath, 'utf-8');
+          entry = { document: parseDocument(content), anchors: headingAnchors(content) };
+          cache.set(importPath, entry);
+        }
+        if (imp.anchor && !entry.anchors.has(imp.anchor.toLowerCase())) {
           console.warn(`⚠ Anchor '${imp.anchor}' not found in ${imp.path}`);
         }
+        // Every alias is resolved and checked, even when its file was cached.
+        resolved[imp.conceptName] = entry.document;
+        if (stack.has(importPath)) {
+          console.warn(`⚠ Circular import skipped: ${imp.path} (from ${current})`);
+          continue;
+        }
+        if (!expanded.has(importPath)) walk(entry.document, importPath);
+      } catch (e) {
+        console.warn(`⚠ Failed to resolve nested imports in ${imp.path}: ${e}`);
       }
-
-      // Store resolved document
-      resolved[imp.conceptName] = importedDoc;
-
-      // Recursively resolve imports in the imported document
-      const nestedResolved = resolveImports(importedDoc, importPath, visited);
-      Object.assign(resolved, nestedResolved);
-    } catch (e) {
-      // Don't crash on nested resolution failures
-      console.warn(`⚠ Failed to resolve nested imports in ${imp.path}: ${e}`);
     }
-    // NOTE: we intentionally keep importPath in `visited` — once resolved,
-    // don't re-resolve in other branches (prevents exponential recursion)
+    stack.delete(current);
+    expanded.add(current);
   }
-
+  walk(document, basePath);
   return resolved;
 }
 
-/**
- * Simple slugify function for anchor matching
- */
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-');
+function headingAnchors(content: string): Set<string> {
+  const tree = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']).parse(content);
+  const slugger = new GithubSlugger();
+  const anchors = new Set<string>();
+  function text(node: any): string {
+    if (node.type === 'html') return '';
+    if (typeof node.value === 'string') return node.value;
+    if (node.type === 'image') return node.alt ?? '';
+    return (node.children ?? []).map(text).join('');
+  }
+  visit(tree, 'heading', (node) => { anchors.add(slugger.slug(text(node))); });
+  return anchors;
 }
