@@ -1,3 +1,5 @@
+export { validateDocument } from './validation/index.js';
+export type { ValidationFinding, ValidationResult } from './validation/index.js';
 // Main exports
 export { loadRepo } from './loader.js';
 export { parseDocument, resolveImports } from './parser.js';

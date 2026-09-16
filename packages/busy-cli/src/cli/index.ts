@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-import { validateOperationNames } from '../validation/operation-names.js';
-import { validateLocalLinks } from '../validation/local-links.js';
-import { validateHeadingLinks } from '../validation/heading-links.js';
 
+import { validateDocument } from '../validation/index.js';
 import { Command } from 'commander';
 import { parseDocument, resolveImports } from '../parser.js';
 import { writeFile, readFile } from 'fs/promises';
@@ -94,41 +92,18 @@ program
 
       const content = await readFile(filePath, 'utf-8');
 
-      // Parse document (this validates frontmatter and structure)
-      const doc = parseDocument(content);
+      const result = validateDocument(content, filePath, { resolveImports: options.resolveImports });
+      const doc = result.document;
+      const warnings = result.findings.filter(f => f.severity === 'warning').map(f => f.message);
+      const errors = result.findings.filter(f => f.severity === 'error').map(f => f.message);
 
-      console.log(`✓ Valid BUSY document: ${doc.metadata.name}`);
+      console.log(`Document: ${doc.metadata.name}`);
       console.log(`  Type: ${doc.metadata.type}`);
       console.log(`  Description: ${doc.metadata.description.slice(0, 60)}${doc.metadata.description.length > 60 ? '...' : ''}`);
-
-      // Check for common issues
-      const warnings: string[] = [];
-      const errors: string[] = [...validateHeadingLinks(content, filePath), ...validateOperationNames(content), ...validateLocalLinks(content, filePath)];
-
-      // Check if operations have steps
-      for (const op of doc.operations) {
-        if (op.steps.length === 0) {
-          warnings.push(`Operation "${op.name}" has no steps`);
-        }
-      }
-
-      // Check for empty imports
-      if (doc.imports.length === 0 && doc.operations.length > 0) {
-        warnings.push('Document has operations but no imports');
-      }
-
-      // Validate imports if requested
-      if (options.resolveImports) {
-        console.log('\nResolving imports...');
-        try {
-          const resolved = resolveImports(doc, filePath);
-          console.log(`✓ Resolved ${Object.keys(resolved).length} imports`);
-
-          for (const [name, resolvedDoc] of Object.entries(resolved)) {
-            console.log(`  - ${name}: ${resolvedDoc.metadata.name} (${resolvedDoc.metadata.type})`);
-          }
-        } catch (err) {
-          errors.push(`Import resolution failed: ${err instanceof Error ? err.message : err}`);
+      if (result.resolvedImports) {
+        console.log(`✓ Resolved ${Object.keys(result.resolvedImports).length} imports`);
+        for (const [name, resolvedDoc] of Object.entries(result.resolvedImports)) {
+          console.log(`  - ${name}: ${resolvedDoc.metadata.name} (${resolvedDoc.metadata.type})`);
         }
       }
 
