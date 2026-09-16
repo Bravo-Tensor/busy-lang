@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { validateOperationNames } from '../validation/operation-names.js';
+import { validateLocalLinks } from '../validation/local-links.js';
 import { validateHeadingLinks } from '../validation/heading-links.js';
 
 import { Command } from 'commander';
@@ -102,7 +103,7 @@ program
 
       // Check for common issues
       const warnings: string[] = [];
-      const errors: string[] = [...validateHeadingLinks(content, filePath), ...validateOperationNames(content)];
+      const errors: string[] = [...validateHeadingLinks(content, filePath), ...validateOperationNames(content), ...validateLocalLinks(content, filePath)];
 
       // Check if operations have steps
       for (const op of doc.operations) {
@@ -147,6 +148,7 @@ program
         process.exit(1);
       }
 
+      console.log('✓ Direct local Markdown links and reference-definition targets resolved (including heading anchors; code blocks, external URLs, and dynamic template URLs excluded)');
       console.log('\n✓ Validation passed');
     } catch (err) {
       console.error(`✗ Validation failed: ${err instanceof Error ? err.message : err}`);

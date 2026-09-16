@@ -42,7 +42,7 @@ Structural heading and concept-definition requirements apply to the enclosing BU
    1. Confirm frontmatter appears at the very top, delimited by `---`, and defines `Name`, `Type`, and `Description`.
    2. Confirm the frontmatter `Type` is a bracketed reference to the correct BUSY concept (e.g., `[Playbook]`, `[Tool]`).
    3. Confirm reference-style imports follow immediately after the frontmatter, one per line as `[Alias]:relative/path[#anchor]`.
-   4. Verify each import path exists and any anchor resolves to a heading within the target file.
+   4. Use the supplied CLI result for direct local import paths and heading anchors; do not independently repeat resolution checks. Report unavailable or uncovered resolution as a limitation.
    5. Confirm a `# [Imports](../core/document.busy.md#imports-section)` heading appears directly above the reference definitions (even when no external imports are required).
 2. Concept References
    1. Confirm every section heading outside `# Local Definitions` wraps its title in a link to the concept it invokes (e.g., `# [Setup](path)`); if a heading is unlinked, ensure it introduces a new concept first defined under `# Local Definitions`.
