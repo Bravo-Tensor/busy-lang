@@ -19,6 +19,8 @@ Use this [Checklist] whenever you draft or revise a BUSY [Document]. It focuses 
 
 Apply the target's type-specific schema before the generic checks below. In particular, [Tool action documents](../core/tool.busy.md#tool-action-document-structure) use a literal `# [Tools]` section, bare action identifiers, plural Inputs/Outputs, and provider mappings. These action-schema headings are exceptions to the generic heading-link rules. A callable Tool action is not automatically an Operation and does not require Steps, a Checklist, or an Operations section. Apply Operation requirements only to actual Operations, including any separately defined in a Tool. Report a genuine conflict between source definitions as uncertainty, not as a definite violation.
 
+Structural heading and concept-definition requirements apply to the enclosing BUSY document, not fenced or indented code blocks containing examples or template output. Review template content for reference resolution, variable consistency, and intended output usability without requiring its ordinary Markdown headings to be BUSY concept links.
+
 # [Operations](../core/checklist.busy.md#operations)
 
 ## runBusyFormattingRules

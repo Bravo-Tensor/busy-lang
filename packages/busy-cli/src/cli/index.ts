@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { validateOperationNames } from '../validation/operation-names.js';
 import { validateHeadingLinks } from '../validation/heading-links.js';
 
 import { Command } from 'commander';
@@ -101,7 +102,7 @@ program
 
       // Check for common issues
       const warnings: string[] = [];
-      const errors: string[] = validateHeadingLinks(content, filePath);
+      const errors: string[] = [...validateHeadingLinks(content, filePath), ...validateOperationNames(content)];
 
       // Check if operations have steps
       for (const op of doc.operations) {
