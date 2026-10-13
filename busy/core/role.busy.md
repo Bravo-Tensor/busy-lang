@@ -23,19 +23,19 @@ A [Role] is a specialized [Document] that allows the LLM to assume a consistent 
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Persona]
+## Persona
 [Persona]:./role.busy.md#persona
 A high-level description of the character, personality, and communication style the LLM should adopt.
 
-## [Traits]
+## Traits
 [Traits]:./role.busy.md#traits
 A list of specific personality characteristics or qualities that define the [Role]'s behavior.
 
-## [Principles]
+## Principles
 [Principles]:./role.busy.md#principles
 A set of core rules, guidelines, or a code of conduct that the [Role] must adhere to in all its actions and responses.
 
-## [Skillset]
+## Skillset
 [Skillset]:./role.busy.md#skillset
 A list of abilities, areas of expertise, and specialized knowledge that the [Role] possesses.
 

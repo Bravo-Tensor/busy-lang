@@ -24,11 +24,11 @@ A [Document] serves as the primary container for organizing prompts, similar to 
 
 # [Local Definitions](#local-definitions-section)
 
-## [Concept Description]
+## Concept Description
 [Concept Description]:./document.busy.md#concept-description
 Frontmatter in the file, delimited by `---`, containing metadata such as `Name`, `Type`, and `Description`. `Type` identifies the document's specialization (e.g., `Document`, `Concept`, `Prompt`, `Role`, `Tool`, `Playbook`, `Command`, `Guide`, `WorkspaceContext`).
 
-## [Imports Section]
+## Imports Section
 [Imports Section]:./document.busy.md#imports-section
 A section immediately following the frontmatter, listing [Concept]s imported from other files, formatted as `[ConceptName]:(path/to/file#anchor)`.
 Import resolution policy:
@@ -36,15 +36,15 @@ Import resolution policy:
 - Anchors must reference a valid heading within the target file.
 - All imports must resolve deterministically; if any import cannot be resolved, this is an [error].
 
-## [Local Definitions Section]
+## Local Definitions Section
 [Local Definitions Section]:./document.busy.md#local-definitions-section
 For any local [Concept]s that are relevant to overall [Document], create a "heading 2" (i.e., `##`) in its name (e.g., `## LocalVar`) so it can be referenced via link to become a first-class [Concept]. Local Defintions are can also be thought as of "Exports" for the [Document]
 
-## [Setup Section]
+## Setup Section
 [Setup Section]:./document.busy.md#setup-section
 A `# Setup` heading containing instructions or contextual data that needs to be established before any [Operation]s within the [Document] are executed. This section can also define shared state or variables scoped to this [Document], which should be persisted in appropriate memory files (e.g., AGENT.md, CLAUDE.md, GEMINI.md).
 
-## [Operations Section]
+## Operations Section
 [Operations Section]:./document.busy.md#operations-section
 `# Operations` heading, under which one or more [Operation]s are defined. Each [Operation] is a callable [Concept] and is denoted by a level-2 heading (`##`). Each callable may conclude with a `### Checklist` that enumerates required verifications to execute.
 

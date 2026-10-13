@@ -21,11 +21,11 @@ A [Checklist] captures the non-negotiable confirmations that must occur immediat
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Checklist Section]
+## Checklist Section
 [Checklist Section]:./checklist.busy.md#checklist-section
 List of [Checklist Item] that are to be verified, in no particular order. This means they could be done in parallel.
 
-## [Checklist Item]
+## Checklist Item
 [Checklist Item]:./checklist.busy.md#checklist-item
 A single verification statement inside the [Checklist]. Items should be concrete, observable outcomes (e.g., "Repository lint passes without warnings") rather than vague sentiments. Prefer actionable wording so the agent can demonstrate evidence for each item.
 

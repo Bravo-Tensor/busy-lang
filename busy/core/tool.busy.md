@@ -61,19 +61,19 @@ Parameters:
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Capability]
+## Capability
 [Capability]:./tool.busy.md#capability
 A concise description of the effect the [Tool] provides (e.g., "Move inbox files to Gemini", "Send queued emails via SendGrid").
 
-## [Invocation Contract]
+## Invocation Contract
 [Invocation Contract]:./tool.busy.md#invocation-contract
 The precise instructions for calling the underlying resource. Can point to an MCP endpoint, CLI command, script path, or other automation. Should include any required arguments, environment variables, secrets, and failure handling expectations.
 
-## [State]
+## State
 [State]:./tool.busy.md#state
 Optional instructions for maintaining or resetting any local state the [Tool] depends on (PID files, caches, token stores).
 
-## [Response Processing]
+## Response Processing
 [Response Processing]:./tool.busy.md#response-processing
 
 Response Processing defines CLI commands that transform tool responses before returning them to the calling Operation. This is useful for:
@@ -157,7 +157,7 @@ The Tool Agent executes response processing after receiving the provider respons
 
 If processing fails, log warning and return original response (fail-open for reliability).
 
-## [Events]
+## Events
 [Events]:./tool.busy.md#events
 
 The Events section documents what events this [Tool] generates. Events are outputs/capabilities that Tools provide - describing what happens and what data is available when something occurs. [Operation]s declare [Triggers] that reference these events and map event data into operation inputs.
@@ -350,7 +350,7 @@ Configuration:
 - Queue behavior: Events queue during workspace pause (default: true)
 ```
 
-## [Provider Mapping]
+## Provider Mapping
 [Provider Mapping]:./tool.busy.md#provider-mapping
 
 Provider mappings translate BUSY tool actions to provider-specific implementations (Composio, direct API, MCP). This allows workspaces to switch providers without changing operation logic.

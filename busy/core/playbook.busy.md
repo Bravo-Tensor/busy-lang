@@ -26,19 +26,19 @@ A [Playbook] extends the base [Document] pattern to describe a controlled flow o
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Sequence Step]
+## Sequence Step
 [Sequence Step]:./playbook.busy.md#sequence-step
 A single instruction in the playbook that identifies a callable target (operation/document/prompt/tool) and optional metadata such as inputs, role context, and condition.
 
-## [Condition]
+## Condition
 [Condition]:./playbook.busy.md#condition
 A boolean check that determines whether a [Sequence Step] should execute. Use simple statements that can be resolved from the available state or inputs. If the condition cannot be evaluated, return an [error](./operation.busy.md#error) describing what data is missing.
 
-## [Role Context]
+## Role Context
 [Role Context]:./playbook.busy.md#role-context
 Optional metadata for a [Sequence Step] that specifies which [Role] to assume before invoking the target. When provided, adopt the role (via `ExecuteRole`) for the duration of that step and then restore the prior context.
 
-## [Private Operation]
+## Private Operation
 [Private Operation]:./playbook.busy.md#private-operation
 A locally defined [Operation] within the [Playbook] that supports reuse across steps but is not meant to be exposed externally. Convention: prefix the operation heading with an underscore (e.g., `## _PrepareInbox`). Private operations can still be invoked by other steps within the same [Playbook].
 
