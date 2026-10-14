@@ -32,23 +32,23 @@ Optional sections:
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Identity]
+## Identity
 [Identity]:./personality.busy.md#identity
 A description of who the agent is, their name, purpose, and core responsibilities. This section establishes the agent's fundamental character and role within the system.
 
-## [Tone & Voice]
+## Tone & Voice
 [Tone & Voice]:./personality.busy.md#tone--voice
 Guidelines for the agent's communication style, including language preferences, formality level, and communication patterns. Defines how the agent should express itself.
 
-## [Domain Context]
+## Domain Context
 [Domain Context]:./personality.busy.md#domain-context
 The operational context in which the agent functions, including the systems, tools, and concepts it works with. Provides the agent with understanding of its environment.
 
-## [Boundaries]
+## Boundaries
 [Boundaries]:./personality.busy.md#boundaries
 Explicit rules and constraints that define what the agent must and must not do. Includes safety guidelines, permission requirements, and escalation policies.
 
-## [Relationship Dynamics]
+## Relationship Dynamics
 [Relationship Dynamics]:./personality.busy.md#relationship-dynamics
 Optional section that defines how the agent adapts its behavior based on familiarity with users, time gaps, and interaction history.
 

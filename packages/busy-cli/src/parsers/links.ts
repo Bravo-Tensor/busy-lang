@@ -3,6 +3,7 @@ import { visit } from 'unist-util-visit';
 import type { Link, LinkReference } from 'mdast';
 import { Section, Edge, EdgeRole } from '../types/schema.js';
 import { debug } from '../utils/logger.js';
+import { resolveImportTarget } from './imports.js';
 
 
 /**
@@ -27,7 +28,7 @@ export function extractLinksFromSection(
     if (!inSection(node)) return;
     const href = node.url;
 
-    const resolved = resolveLink(href, section.docId, fileMap);
+    const resolved = resolveLink(href, section.docId, fileMap, section.path);
 
     if (resolved) {
       // Temporarily mark as 'ref', will be reclassified in loader
@@ -77,12 +78,18 @@ export function extractLinksFromSection(
 function resolveLink(
   href: string,
   currentDocId: string,
-  fileMap: Map<string, { docId: string; path: string }>
+  fileMap: Map<string, { docId: string; path: string }>,
+  fromPath?: string
 ): string | undefined {
   // Handle internal anchors: #slug
   if (href.startsWith('#')) {
     const slug = href.slice(1);
     return `${currentDocId}#${slug}`;
+  }
+
+  if (fromPath && !/^[a-z][a-z0-9+.-]*:/i.test(href) && !href.includes('{{')) {
+    const target = resolveImportTarget(href, fileMap, fromPath);
+    if (target.docId) return `${target.docId}${target.slug ? `#${target.slug}` : ''}`;
   }
 
   // Handle relative file links: ./file.md or ./file.md#slug

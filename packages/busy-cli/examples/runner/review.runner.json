@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "provenance": "Prepared fixture; no LLM interpretation has run.",
+  "entry": "reviewDocument",
+  "operations": {
+    "reviewDocument": {
+      "inputs": [
+        "workspace",
+        "document"
+      ],
+      "outputs": [
+        "document",
+        "validation",
+        "checklist",
+        "handoff"
+      ],
+      "steps": [
+        {
+          "id": "setup",
+          "source": {
+            "section": "Setup"
+          },
+          "context": [
+            "workspace",
+            "document"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "ready": {
+                "type": "boolean"
+              },
+              "limits": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "ready",
+              "limits"
+            ],
+            "additionalProperties": false
+          },
+          "next": "validate"
+        },
+        {
+          "id": "validate",
+          "source": {
+            "operation": "reviewDocument",
+            "section": "Steps",
+            "item": 1
+          },
+          "context": [
+            "workspace",
+            "document",
+            "ready",
+            "limits"
+          ],
+          "definitions": [
+            "Ready brief"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "validation": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "valid",
+                      "invalid",
+                      "unknown"
+                    ]
+                  },
+                  "errors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "evidence": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "errors",
+                  "evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "validation"
+            ],
+            "additionalProperties": false
+          },
+          "next": "decide"
+        },
+        {
+          "id": "decide",
+          "source": {
+            "operation": "reviewDocument",
+            "section": "Steps",
+            "item": 2
+          },
+          "context": [
+            "document",
+            "validation"
+          ],
+          "definitions": [
+            "Ready brief"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "repairDocument",
+                  "continue"
+                ]
+              }
+            },
+            "required": [
+              "decision"
+            ],
+            "additionalProperties": false
+          },
+          "routes": {
+            "repairDocument": {
+              "call": "repairDocument",
+              "next": "checklist"
+            },
+            "continue": {
+              "next": "checklist"
+            }
+          }
+        },
+        {
+          "id": "checklist",
+          "source": {
+            "operation": "reviewDocument",
+            "section": "Checklist"
+          },
+          "context": [
+            "document",
+            "validation"
+          ],
+          "definitions": [
+            "Ready brief"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "checklist": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string"
+                    },
+                    "satisfied": {
+                      "type": "boolean"
+                    },
+                    "evidence": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "satisfied",
+                    "evidence"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "checklist"
+            ],
+            "additionalProperties": false
+          },
+          "next": "handoff"
+        },
+        {
+          "id": "handoff",
+          "source": {
+            "operation": "reviewDocument",
+            "section": "Steps",
+            "item": 3
+          },
+          "context": [
+            "document",
+            "validation",
+            "checklist"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "handoff": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "handoff"
+            ],
+            "additionalProperties": false
+          },
+          "next": null
+        }
+      ]
+    },
+    "repairDocument": {
+      "inputs": [
+        "workspace",
+        "document",
+        "validation"
+      ],
+      "outputs": [
+        "document",
+        "validation",
+        "repairReceipt",
+        "repairChecklist"
+      ],
+      "steps": [
+        {
+          "id": "repair",
+          "source": {
+            "operation": "repairDocument",
+            "section": "Steps",
+            "item": 1
+          },
+          "context": [
+            "workspace",
+            "document",
+            "validation"
+          ],
+          "definitions": [
+            "Ready brief"
+          ],
+          "tools": [
+            "Document Tool"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "document": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "body"
+                ],
+                "additionalProperties": false
+              },
+              "repairReceipt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "document",
+              "repairReceipt"
+            ],
+            "additionalProperties": false
+          },
+          "next": "revalidate"
+        },
+        {
+          "id": "revalidate",
+          "source": {
+            "operation": "repairDocument",
+            "section": "Steps",
+            "item": 2
+          },
+          "context": [
+            "document",
+            "repairReceipt"
+          ],
+          "definitions": [
+            "Ready brief"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "validation": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "valid",
+                      "invalid",
+                      "unknown"
+                    ]
+                  },
+                  "errors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "evidence": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "errors",
+                  "evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "validation"
+            ],
+            "additionalProperties": false
+          },
+          "next": "repairChecklist"
+        },
+        {
+          "id": "repairChecklist",
+          "source": {
+            "operation": "repairDocument",
+            "section": "Checklist"
+          },
+          "context": [
+            "document",
+            "validation",
+            "repairReceipt"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "repairChecklist": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string"
+                    },
+                    "satisfied": {
+                      "type": "boolean"
+                    },
+                    "evidence": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "satisfied",
+                    "evidence"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "repairChecklist"
+            ],
+            "additionalProperties": false
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

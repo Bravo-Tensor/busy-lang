@@ -1,0 +1,162 @@
+{
+  "issue": null,
+  "entry": "assumeWorkspaceRole",
+  "operations": [
+    {
+      "name": "assumeWorkspaceRole",
+      "inputs": [
+        "role_path"
+      ],
+      "outputs": [
+        "role_context"
+      ],
+      "steps": [
+        {
+          "id": "setup",
+          "sourceId": "assumeWorkspaceRole/setup",
+          "context": [
+            "role_path"
+          ],
+          "definitions": [
+            "Role",
+            "Operation",
+            "role#executerole",
+            "Persona",
+            "Traits",
+            "Principles",
+            "Skillset",
+            "role#setup",
+            "role#local-definitions"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "read_role",
+          "routes": []
+        },
+        {
+          "id": "read_role",
+          "sourceId": "assumeWorkspaceRole/steps/1",
+          "context": [
+            "role_path"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "role_document",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "evaluate_role",
+          "routes": []
+        },
+        {
+          "id": "evaluate_role",
+          "sourceId": "assumeWorkspaceRole/steps/2",
+          "context": [
+            "role_document"
+          ],
+          "definitions": [
+            "Role",
+            "Document"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "extract_role",
+          "routes": []
+        },
+        {
+          "id": "extract_role",
+          "sourceId": "assumeWorkspaceRole/steps/3",
+          "context": [
+            "role_document"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "persona",
+              "type": "string",
+              "options": []
+            },
+            {
+              "name": "traits",
+              "type": "string",
+              "options": []
+            },
+            {
+              "name": "principles",
+              "type": "string",
+              "options": []
+            },
+            {
+              "name": "skillset",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "merge_role",
+          "routes": []
+        },
+        {
+          "id": "merge_role",
+          "sourceId": "assumeWorkspaceRole/steps/4",
+          "context": [
+            "persona",
+            "traits",
+            "principles",
+            "skillset"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "role_context",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "log_assumption",
+          "routes": []
+        },
+        {
+          "id": "log_assumption",
+          "sourceId": "assumeWorkspaceRole/steps/5",
+          "context": [
+            "role_context"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [],
+          "next": "operate_merged",
+          "routes": []
+        },
+        {
+          "id": "operate_merged",
+          "sourceId": "assumeWorkspaceRole/steps/6",
+          "context": [
+            "role_context"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [],
+          "next": "output",
+          "routes": []
+        },
+        {
+          "id": "output",
+          "sourceId": "assumeWorkspaceRole/output",
+          "context": [
+            "role_context"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [],
+          "next": null,
+          "routes": []
+        }
+      ]
+    }
+  ]
+}

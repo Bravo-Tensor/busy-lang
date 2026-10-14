@@ -1,0 +1,7 @@
+{
+  "workspace": "In-memory sample document only",
+  "document": {
+    "path": "sample/brief.md",
+    "body": "# Release brief\n\nWe are ready to ship.\n\nOwner: \n"
+  }
+}

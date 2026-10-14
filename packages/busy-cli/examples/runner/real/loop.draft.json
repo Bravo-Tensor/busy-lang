@@ -1,0 +1,648 @@
+{
+  "issue": null,
+  "entry": "createDocument",
+  "operations": [
+    {
+      "name": "createDocument",
+      "inputs": [
+        "document_type",
+        "goal",
+        "output_path"
+      ],
+      "outputs": [
+        "document"
+      ],
+      "steps": [
+        {
+          "id": "cd_setup",
+          "sourceId": "createDocument/setup",
+          "context": [
+            "document_type",
+            "goal",
+            "output_path"
+          ],
+          "definitions": [
+            "Role",
+            "Operation",
+            "role#executerole",
+            "Persona",
+            "Traits",
+            "Principles",
+            "Skillset"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "cd_1",
+          "routes": []
+        },
+        {
+          "id": "cd_1",
+          "sourceId": "createDocument/steps/1",
+          "context": [
+            "document_type",
+            "goal"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "requirements",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "cd_2",
+          "routes": []
+        },
+        {
+          "id": "cd_2",
+          "sourceId": "createDocument/steps/2",
+          "context": [
+            "document_type",
+            "goal",
+            "requirements"
+          ],
+          "definitions": [
+            "Document",
+            "document#imports-section",
+            "document#setup-section",
+            "document#operations-section"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "draft",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "cd_3",
+          "routes": []
+        },
+        {
+          "id": "cd_3",
+          "sourceId": "createDocument/steps/3",
+          "context": [
+            "draft"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "draft",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "cd_v",
+          "routes": []
+        },
+        {
+          "id": "cd_v",
+          "sourceId": "createDocument/steps/4",
+          "context": [
+            "draft"
+          ],
+          "definitions": [
+            "ValidateDocument"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "target_doc",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": null,
+          "routes": [
+            {
+              "decision": "validate_draft",
+              "call": "validateDocument",
+              "next": "cd_after_validate"
+            }
+          ]
+        },
+        {
+          "id": "cd_after_validate",
+          "sourceId": "createDocument/steps/5",
+          "context": [
+            "draft"
+          ],
+          "definitions": [
+            "Document"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "validation_status",
+              "type": "string",
+              "options": [
+                "passed",
+                "failed"
+              ]
+            },
+            {
+              "name": "draft",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": null,
+          "routes": [
+            {
+              "decision": "passed",
+              "call": null,
+              "next": "cd_save"
+            },
+            {
+              "decision": "failed",
+              "call": null,
+              "next": "cd_fix"
+            }
+          ]
+        },
+        {
+          "id": "cd_fix",
+          "sourceId": "createDocument/steps/5",
+          "context": [
+            "draft"
+          ],
+          "definitions": [
+            "Document"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "draft",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "cd_v",
+          "routes": []
+        },
+        {
+          "id": "cd_save",
+          "sourceId": "createDocument/steps/6",
+          "context": [
+            "draft",
+            "output_path"
+          ],
+          "definitions": [
+            "Document"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "cd_output",
+          "routes": []
+        },
+        {
+          "id": "cd_output",
+          "sourceId": "createDocument/output",
+          "context": [
+            "draft",
+            "output_path"
+          ],
+          "definitions": [
+            "Document"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "document",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "cd_check",
+          "routes": []
+        },
+        {
+          "id": "cd_check",
+          "sourceId": "createDocument/checklist",
+          "context": [
+            "draft",
+            "output_path"
+          ],
+          "definitions": [
+            "ValidateDocument"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": null,
+          "routes": []
+        }
+      ]
+    },
+    {
+      "name": "validateDocument",
+      "inputs": [
+        "target_doc"
+      ],
+      "outputs": [
+        "validation_report"
+      ],
+      "steps": [
+        {
+          "id": "vd_setup",
+          "sourceId": "validateDocument/setup",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "Role",
+            "Operation",
+            "role#executerole",
+            "Persona",
+            "Traits",
+            "Principles",
+            "Skillset"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "vd_1",
+          "routes": []
+        },
+        {
+          "id": "vd_1",
+          "sourceId": "validateDocument/steps/1",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "RunBusyFormattingRules",
+            "tool#tool-action-document-structure"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": null,
+          "routes": [
+            {
+              "decision": "schema_applied_run_formatting_rules",
+              "call": "runBusyFormattingRules",
+              "next": "vd_2"
+            }
+          ]
+        },
+        {
+          "id": "vd_2",
+          "sourceId": "validateDocument/steps/2",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "findings",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "vd_3",
+          "routes": []
+        },
+        {
+          "id": "vd_3",
+          "sourceId": "validateDocument/steps/3",
+          "context": [
+            "target_doc",
+            "findings"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "validation_report",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "vd_4",
+          "routes": []
+        },
+        {
+          "id": "vd_4",
+          "sourceId": "validateDocument/steps/4",
+          "context": [
+            "target_doc",
+            "validation_report"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [],
+          "next": "vd_output",
+          "routes": []
+        },
+        {
+          "id": "vd_output",
+          "sourceId": "validateDocument/output",
+          "context": [
+            "validation_report"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [],
+          "next": "vd_check",
+          "routes": []
+        },
+        {
+          "id": "vd_check",
+          "sourceId": "validateDocument/checklist",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "Operation",
+            "Steps",
+            "EvaluateDocument"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": null,
+          "routes": []
+        }
+      ]
+    },
+    {
+      "name": "runBusyFormattingRules",
+      "inputs": [
+        "target_doc"
+      ],
+      "outputs": [
+        "formatting_assessment"
+      ],
+      "steps": [
+        {
+          "id": "fr_setup",
+          "sourceId": "runBusyFormattingRules/setup",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "Checklist",
+            "Document",
+            "EvaluateDocument",
+            "document#setup-section",
+            "tool#tool-action-document-structure"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "fr_1",
+          "routes": []
+        },
+        {
+          "id": "fr_1",
+          "sourceId": "runBusyFormattingRules/steps/1",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "EvaluateDocument",
+            "document#imports-section",
+            "document#setup-section",
+            "document#operations-section"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "fr_2",
+          "routes": []
+        },
+        {
+          "id": "fr_2",
+          "sourceId": "runBusyFormattingRules/steps/2",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "Document",
+            "Checklist"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "assessment",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "fr_3",
+          "routes": []
+        },
+        {
+          "id": "fr_3",
+          "sourceId": "runBusyFormattingRules/steps/3",
+          "context": [
+            "assessment"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "gaps",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "fr_4",
+          "routes": []
+        },
+        {
+          "id": "fr_4",
+          "sourceId": "runBusyFormattingRules/steps/4",
+          "context": [
+            "assessment",
+            "gaps"
+          ],
+          "definitions": [
+            "RunChecklist"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "checklist",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": null,
+          "routes": [
+            {
+              "decision": "verify_formatting_checklist",
+              "call": "runChecklist",
+              "next": "fr_output"
+            }
+          ]
+        },
+        {
+          "id": "fr_output",
+          "sourceId": "runBusyFormattingRules/output",
+          "context": [
+            "assessment",
+            "gaps"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "formatting_assessment",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "fr_check",
+          "routes": []
+        },
+        {
+          "id": "fr_check",
+          "sourceId": "runBusyFormattingRules/checklist",
+          "context": [
+            "target_doc"
+          ],
+          "definitions": [
+            "Document",
+            "Operation",
+            "EvaluateDocument",
+            "document#setup-section",
+            "document#operations-section"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": null,
+          "routes": []
+        }
+      ]
+    },
+    {
+      "name": "runChecklist",
+      "inputs": [
+        "checklist"
+      ],
+      "outputs": [
+        "verification_summary"
+      ],
+      "steps": [
+        {
+          "id": "rc_setup",
+          "sourceId": "runChecklist/setup",
+          "context": [
+            "checklist"
+          ],
+          "definitions": [
+            "Checklist",
+            "Operation",
+            "Playbook",
+            "Checklist Section",
+            "Checklist Item"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "rc_1",
+          "routes": []
+        },
+        {
+          "id": "rc_1",
+          "sourceId": "runChecklist/steps/1",
+          "context": [
+            "checklist"
+          ],
+          "definitions": [
+            "Checklist Item"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "rc_2",
+          "routes": []
+        },
+        {
+          "id": "rc_2",
+          "sourceId": "runChecklist/steps/2",
+          "context": [
+            "checklist"
+          ],
+          "definitions": [
+            "error"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "verification_result",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "rc_3",
+          "routes": []
+        },
+        {
+          "id": "rc_3",
+          "sourceId": "runChecklist/steps/3",
+          "context": [
+            "verification_result"
+          ],
+          "definitions": [],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "evidence",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "rc_4",
+          "routes": []
+        },
+        {
+          "id": "rc_4",
+          "sourceId": "runChecklist/steps/4",
+          "context": [
+            "verification_result",
+            "evidence"
+          ],
+          "definitions": [
+            "Checklist"
+          ],
+          "tools": [],
+          "returnValues": [
+            {
+              "name": "verification_summary",
+              "type": "string",
+              "options": []
+            }
+          ],
+          "next": "rc_output",
+          "routes": []
+        },
+        {
+          "id": "rc_output",
+          "sourceId": "runChecklist/output",
+          "context": [
+            "verification_summary"
+          ],
+          "definitions": [
+            "Checklist Item"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": "rc_check",
+          "routes": []
+        },
+        {
+          "id": "rc_check",
+          "sourceId": "runChecklist/checklist",
+          "context": [
+            "verification_summary"
+          ],
+          "definitions": [
+            "error"
+          ],
+          "tools": [],
+          "returnValues": [],
+          "next": null,
+          "routes": []
+        }
+      ]
+    }
+  ]
+}

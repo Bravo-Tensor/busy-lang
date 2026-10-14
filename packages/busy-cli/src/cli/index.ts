@@ -18,6 +18,7 @@ import {
 } from '../commands/package.js';
 import { loadWorkspaceGraph, formatGraph, type GraphFormat } from '../commands/graph.js';
 import { loadWorkspaceAutomationIR } from '../commands/automation-ir.js';
+import { registerRunCommands } from '../commands/run.js';
 
 // Read version from package.json
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -568,4 +569,5 @@ packageCmd
     }
   });
 
-program.parse();
+registerRunCommands(program);
+await program.parseAsync();
