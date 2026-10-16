@@ -74,6 +74,21 @@ describe('constrained BUSY compilation', () => {
     expect(expanded.sourceCatalog.filter(s => s.id.endsWith('/document-checklist'))).toHaveLength(2);
   });
 
+  it('catalogs plural Outputs headings and rejects their omission', async () => {
+    writeFileSync(file, readFileSync(file, 'utf8').replaceAll('[Output]', '[Outputs]'));
+    const loaded = await loadRunSource(file);
+    const catalog = buildCompilationCatalog(file, 'roundTrip', loaded);
+    const output = catalog.sourceCatalog.find(s => s.id === 'roundTrip/output');
+    expect(output?.source).toEqual({ operation: 'roundTrip', section: 'Outputs' });
+    const plan = lowerConstrainedDraft(catalog, toolDraft());
+    expect(checkCoverage(catalog, plan)).toEqual([]);
+    const program = await lowerRun(file, plan, 'offline-test', loaded);
+    expect(program.operations.roundTrip.steps.find(s => s.id === 'output')!.instruction).toContain('Written file path');
+    const missing = toolDraft();
+    missing.operations[0].steps = missing.operations[0].steps.filter(s => s.id !== 'output');
+    expect(checkCoverage(catalog, lowerConstrainedDraft(catalog, missing))).toContain('Uncovered instruction: roundTrip/output');
+  });
+
   it('repairs once, retains diagnostics and serves the accepted cache without a provider or key', async () => {
     const transport = vi.fn(async (_request: ProviderRequest) => ({ draft: toolDraft(), model: 'test' }));
     transport.mockImplementationOnce(async () => { const bad = toolDraft(); bad.operations[0].steps[1].context.push('undefinedBinding'); return { draft: bad, model: 'test' }; });

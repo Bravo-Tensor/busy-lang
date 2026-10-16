@@ -20,6 +20,11 @@ export interface GuidanceLink {
 }
 export interface GuidanceClosure { policy: GuidancePolicy; seeds: string[]; files: GuidanceFile[]; links: GuidanceLink[] }
 
+const inBoundary = (file: string, boundary: string): boolean => {
+  const relative = path.relative(path.resolve(boundary), path.resolve(file));
+  return relative === '' || (!relative.startsWith('../') && !path.isAbsolute(relative));
+};
+
 /** Parsed local links only. Policy is caller-owned; this never fetches remote content. */
 export async function resolveGuidanceClosure(root: string, seeds: string[], policy: GuidancePolicy): Promise<GuidanceClosure> {
   const queue = [...new Set(seeds)].sort(), seen = new Set(), files: GuidanceFile[] = [], links: GuidanceLink[] = [];
@@ -59,9 +64,9 @@ export async function resolveGuidanceClosure(root: string, seeds: string[], poli
       const target = path.relative(root, absolute);
       let disposition: GuidanceLink['disposition'] = 'local-guidance';
       if (target.startsWith('../') || path.isAbsolute(target)) disposition = 'outside-repository';
-      else if (policy.excluded.some(p => target.startsWith(p))) disposition = 'generated-artifact';
+      else if (policy.excluded.some(p => inBoundary(target, p))) disposition = 'generated-artifact';
       else if (local.endsWith('.busy.md')) disposition = 'BUSY-dependency-loader-boundary';
-      else if (!policy.roots.some(p => target.startsWith(p)) && !policy.pinnedLeaves.includes(target)) disposition = 'outside-guidance-boundary';
+      else if (!policy.roots.some(p => inBoundary(target, p)) && !policy.pinnedLeaves.includes(target)) disposition = 'outside-guidance-boundary';
       links.push({ from: source, href, target, disposition });
       if (disposition === 'local-guidance') queue.push(target);
     }

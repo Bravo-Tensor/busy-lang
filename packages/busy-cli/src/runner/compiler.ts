@@ -11,7 +11,7 @@ import { interpretationSchema, type Interpretation, type PreparedStep, type Repl
 import { checkBindings } from './checks.js';
 import { compilerPrompt } from './prompt.js';
 
-const version = 4;
+const version = 5;
 export const defaultCompilerModel = 'openai/gpt-6-luna';
 export interface CompilationOptions {
   entry: string; model?: string; keyFile?: string; cacheDir?: string; refresh?: boolean;
@@ -115,7 +115,7 @@ export function buildCompilationCatalog(file: string, entry: string, loaded: Awa
     if (owner.sections.some(s => sectionName(s.title) === 'setup')) add('setup', { section: 'Setup' });
     if (owner.sections.some(s => sectionName(s.title) === 'checklist')) add('document-checklist', { section: 'Checklist' });
     for (const section of sections) {
-      const title = sectionName(section.title);
+      const title = sectionName(section.title) === 'outputs' ? 'output' : sectionName(section.title);
       if (!['steps', 'output', 'checklist'].includes(title)) continue;
       const end = Math.max(...getAllSections([section]).map(s => s.lineEnd));
       const list = owner.markdown.tree.children.find(n => n.type === 'list' && n.ordered && n.position!.start.line > section.lineStart && n.position!.end.line <= end);

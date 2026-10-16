@@ -11,7 +11,7 @@ export type { CompilationOptions, CompilationResult } from './runner/compiler.js
 export type { RunProgram, RunStep } from './runner/program.js';
 export { BusyRunner } from './runner/store.js';
 export type { RunExchange, RunEvent, Sense, Frame } from './runner/store.js';
-export type { Interpretation, ReplySchema, Json, Values } from './runner/schema.js';
+export type { Interpretation, PreparedStep, ReplySchema, Json, Values } from './runner/schema.js';
 export { loadWorkspaceAutomationIR } from './commands/automation-ir.js';
 export { buildContext, writeContext, get, parentsOf, childrenOf, getConceptContext } from './builders/context.js';
 export { mergeRepos, extendRepo, loadRepoFromJSON } from './merge.js';

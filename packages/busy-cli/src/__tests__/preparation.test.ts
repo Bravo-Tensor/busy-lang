@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtemp, cp, readFile, writeFile, rm, mkdir, unlink } from 'node:fs/promises';
+import { mkdtemp, cp, readFile, writeFile, rm, mkdir, unlink, symlink } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -57,6 +57,22 @@ describe('offline preparation and source identity', () => {
     await writeFile(join(dir, 'docs/b.md'), original);
     await writeFile(join(dir, 'docs/future.md'), 'Now available.\n');
     await expect(checkGuidanceClosure(dir, snapshot)).rejects.toThrow('closure changed');
+  });
+  it('uses directory boundaries rather than shared path prefixes for guidance', async () => {
+    const dir = await temp();
+    for (const folder of ['docs', 'docs-old', 'docs/generated', 'docs/generated-notes']) await mkdir(join(dir, folder), { recursive: true });
+    await writeFile(join(dir, 'docs/start.md'), '[outside](../docs-old/a.md)\n[generated](generated/a.md)\n[notes](generated-notes/a.md)\n');
+    await writeFile(join(dir, 'docs/generated-notes/a.md'), 'Included guidance.');
+    const snapshot = await resolveGuidanceClosure(dir, ['docs/start.md'], { version: 1, roots: ['docs'], pinnedLeaves: [], excluded: ['docs/generated'] });
+    expect(snapshot.files.map(f => f.source)).toEqual(['docs/generated-notes/a.md', 'docs/start.md']);
+    expect(snapshot.links.find(l => l.target === 'docs-old/a.md')!.disposition).toBe('outside-guidance-boundary');
+    expect(snapshot.links.find(l => l.target === 'docs/generated/a.md')!.disposition).toBe('generated-artifact');
+  });
+  it('rejects fingerprint symlinks outside the selected root', async () => {
+    const dir = await temp(), outside = await temp();
+    await writeFile(join(outside, 'outside.md'), 'Outside root.');
+    await symlink(join(outside, 'outside.md'), join(dir, 'linked.md'));
+    await expect(fingerprintFiles(dir, ['linked.md'])).rejects.toThrow('symlink escapes root');
   });
   it('rejects stale file fingerprints and files outside the selected root', async () => {
     const dir = await temp(); await writeFile(join(dir, 'source.md'), 'Initial source.\n');

@@ -16,9 +16,12 @@ export async function listSourceFiles(directory: string, excludedDirectories: st
 }
 export async function fingerprintFiles(root: string, files: string[]): Promise<{ sha256: string; files: [string, string][] }> {
   const rows: [string, string][] = [];
+  const realRoot = await fs.realpath(root);
   for (const file of [...files].sort()) {
     const relative = path.relative(root, path.resolve(root, file));
     if (relative.startsWith('../') || path.isAbsolute(relative)) throw new Error('Fingerprint file escapes root: ' + file);
+    const realRelative = path.relative(realRoot, await fs.realpath(path.resolve(root, file)));
+    if (realRelative.startsWith('../') || path.isAbsolute(realRelative)) throw new Error('Fingerprint symlink escapes root: ' + file);
     rows.push([file, sha256Bytes(await fs.readFile(path.resolve(root, file)))]);
   }
   return { sha256: sha256Bytes(JSON.stringify(rows)), files: rows };
