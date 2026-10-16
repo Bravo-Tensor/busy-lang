@@ -52,7 +52,11 @@ function operation(repo: Repo, docId: string, reference: string): Operation {
 export function instruction(sources: RepoSource[], op: Operation, reference: PreparedStep['source'], base: string): Pick<RunStep, 'instruction' | 'source'> {
   const owner = sources.find(s => s.document.docId === op.docId)!;
   let sections = owner.sections;
-  if (sectionName(reference.section) !== 'setup') {
+  // An unqualified Checklist selects the shared document checklist when present.
+  // Explicit operation selectors always select that operation's checklist.
+  const sharedChecklist = !reference.operation && sectionName(reference.section) === 'checklist'
+    && owner.sections.some(s => sectionName(s.title) === 'checklist');
+  if (sectionName(reference.section) !== 'setup' && !sharedChecklist) {
     const selected = reference.operation ? owner.document.operations.find(o => o.name === reference.operation) : op;
     if (!selected) throw new Error(`Source operation not found: ${reference.operation}`);
     sections = getAllSections(owner.sections).find(s => s.id === selected.sectionRef)?.children ?? [];

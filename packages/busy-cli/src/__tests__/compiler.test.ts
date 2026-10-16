@@ -48,6 +48,32 @@ describe('constrained BUSY compilation', () => {
     }
   });
 
+  it('requires shared document checklists for each operation and keeps local checklists distinct', async () => {
+    const shared = '\n# [Checklist]\n\n- [ ] Verify the shared outcome.\n';
+    writeFileSync(file, readFileSync(file, 'utf8') + shared);
+    const loaded = await loadRunSource(file);
+    const catalog = buildCompilationCatalog(file, 'roundTrip', loaded);
+    const record = catalog.sourceCatalog.find(s => s.id === 'roundTrip/document-checklist')!;
+    expect(record.source).toEqual({ section: 'Checklist' });
+    expect(record.text).toContain('Verify the shared outcome.');
+    expect(catalog.sourceCatalog.find(s => s.id === 'roundTrip/checklist')!.source.operation).toBe('roundTrip');
+    const draft = toolDraft();
+    expect(checkCoverage(catalog, lowerConstrainedDraft(catalog, draft))).toContain('Uncovered instruction: roundTrip/document-checklist');
+    draft.operations[0].steps.at(-1)!.routes = [];
+    draft.operations[0].steps.at(-1)!.next = 'shared';
+    draft.operations[0].steps.push({ id: 'shared', sourceId: record.id, context: [], returnValues: [], next: null, definitions: [], tools: [], routes: [] });
+    const plan = lowerConstrainedDraft(catalog, draft);
+    expect(checkCoverage(catalog, plan)).toEqual([]);
+    const program = await lowerRun(file, plan, 'offline-test', loaded);
+    const steps = program.operations.roundTrip.steps;
+    expect(steps.at(-1)!.instruction).toContain('Verify the shared outcome.');
+    expect(steps.find(s => s.id === 'checklist')!.instruction).not.toContain('Verify the shared outcome.');
+    // A second defining operation receives the same shared obligation independently.
+    writeFileSync(file, readFileSync(file, 'utf8').replace(shared, '\n## inspectResult\n\n### [Steps]\n\n1. Inspect the result.\n' + shared));
+    const expanded = buildCompilationCatalog(file, 'roundTrip', await loadRunSource(file));
+    expect(expanded.sourceCatalog.filter(s => s.id.endsWith('/document-checklist'))).toHaveLength(2);
+  });
+
   it('repairs once, retains diagnostics and serves the accepted cache without a provider or key', async () => {
     const transport = vi.fn(async (_request: ProviderRequest) => ({ draft: toolDraft(), model: 'test' }));
     transport.mockImplementationOnce(async () => { const bad = toolDraft(); bad.operations[0].steps[1].context.push('undefinedBinding'); return { draft: bad, model: 'test' }; });

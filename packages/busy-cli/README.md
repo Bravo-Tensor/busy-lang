@@ -139,3 +139,7 @@ rtk npm test --workspace busy-cli -- --run
 ```
 
 The CLI tests build and invoke the real executable in separate processes. Runner tests cover nested calls, caller-controlled loops, imported context, source pinning, stale replies, transactional rollback, cancellation, and restart.
+
+### Shared document checklists
+
+The compiler includes a document-level Checklist for every defining operation in that document, alongside any operation-level Checklist. Coverage checks require both. In prepared interpretations, `{ "section": "Checklist" }` selects the document checklist when one exists; `{ "operation": "operationName", "section": "Checklist" }` selects the operation checklist. Without a document checklist, the unqualified selector retains its existing operation-level behavior. Compiler cache version 4 invalidates earlier generated catalogs so the shared obligation cannot remain silently omitted.

@@ -11,7 +11,7 @@ import { interpretationSchema, type Interpretation, type PreparedStep, type Repl
 import { checkBindings } from './checks.js';
 import { compilerPrompt } from './prompt.js';
 
-const version = 3;
+const version = 4;
 export const defaultCompilerModel = 'openai/gpt-6-luna';
 export interface CompilationOptions {
   entry: string; model?: string; keyFile?: string; cacheDir?: string; refresh?: boolean;
@@ -113,6 +113,7 @@ export function buildCompilationCatalog(file: string, entry: string, loaded: Awa
         requiredDefinitions: [...refs].filter(l => Object.hasOwn(definitions, l)), requiredTools: [...refs].filter(l => Object.hasOwn(tools, l)) });
     };
     if (owner.sections.some(s => sectionName(s.title) === 'setup')) add('setup', { section: 'Setup' });
+    if (owner.sections.some(s => sectionName(s.title) === 'checklist')) add('document-checklist', { section: 'Checklist' });
     for (const section of sections) {
       const title = sectionName(section.title);
       if (!['steps', 'output', 'checklist'].includes(title)) continue;
