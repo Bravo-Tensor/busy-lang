@@ -23,7 +23,7 @@ A [Prompt] is a top-level [Document] that an LLM will directly interact with. It
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Prompt Text]
+## Prompt Text
 [Prompt Text]:./prompt.busy.md#prompt-text
 The text that is being provided to be executed by an LLM as a user. The [Operations Section] and any other [Concept]s required for the [Document] to process the [Prompt Text] may be explicitly provided, in part or whole, or may need to be inferred in real time to meet the format and control flow of a [Document].
 

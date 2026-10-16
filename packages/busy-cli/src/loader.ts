@@ -1,18 +1,43 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import fg from 'fast-glob';
-import { parseSource } from './parser.js';
+import { parseSource, resolveImports, type ParsedSource } from './parser.js';
 import { getAllSections } from './parsers/sections.js';
 import { extractLinksFromSection } from './parsers/links.js';
 import { resolveImportTarget } from './parsers/imports.js';
 import { debug } from './utils/logger.js';
 import type { ParsedDocument, BusyDocument, Playbook, View, Config, ConceptBase, Repo, Section, File, LocalDef, Operation, ImportDef, Edge } from './types/schema.js';
 type AnyDocument = ParsedDocument;
+export interface RepoSource extends ParsedSource { filePath: string }
 
 /** Index canonical parsed documents; no independent document lowering occurs here. */
 export async function loadRepo(globs: string[]): Promise<Repo> {
   const paths = (await fg(globs, { absolute: true, onlyFiles: true })).sort();
   const sources = await Promise.all(paths.map(async filePath => ({ filePath, ...parseSource(await readFile(filePath, 'utf8'), filePath) })));
+  return buildRepo(sources);
+}
+
+/** Resolve and pin one document's transitive local imports using the canonical resolver. */
+export async function loadResolvedRepo(file: string): Promise<{ repo: Repo; sources: RepoSource[] }> {
+  const filePath = path.resolve(file);
+  const entry = parseSource(await readFile(filePath, 'utf8'), filePath);
+  const sources: RepoSource[] = [];
+  resolveImports(entry.document, filePath, new Set(), {
+    strict: true,
+    includeInline: true,
+    onSource: (sourcePath, source) => sources.push({ filePath: sourcePath, ...source }),
+  });
+  const ids = new Map<string, string>();
+  for (const source of sources) {
+    const previous = ids.get(source.document.docId);
+    if (previous) throw new Error(`Ambiguous document id ${source.document.docId}: ${previous} and ${source.filePath}`);
+    ids.set(source.document.docId, source.filePath);
+  }
+  return { repo: buildRepo(sources), sources };
+}
+
+/** Index already-parsed snapshots without rereading or independently parsing their source. */
+export function buildRepo(sources: RepoSource[]): Repo {
   const fileMap = new Map<string, { docId: string; path: string }>();
   for (const { filePath, document } of sources) {
     fileMap.set(filePath, { docId: document.docId, path: filePath });
@@ -35,7 +60,7 @@ export async function loadRepo(globs: string[]): Promise<Repo> {
     for (const def of doc.localdefs) allLocaldefs.set(def.id, def);
     const symbols: Record<string, { docId?: string; slug?: string }> = {};
     for (const imp of doc.imports) {
-      const resolved = resolveImportTarget(imp.target, fileMap);
+      const resolved = resolveImportTarget(imp.target, fileMap, filePath);
       symbols[imp.label] = resolved;
       if (resolved.docId) {
         imp.resolved = resolved.slug ? `${resolved.docId}#${resolved.slug}` : resolved.docId;

@@ -1,5 +1,6 @@
 import { visit } from 'unist-util-visit';
 import type { Definition } from 'mdast';
+import { resolve, dirname } from 'node:path';
 import { ImportDef, DocId } from '../types/schema.js';
 import { debug } from '../utils/logger.js';
 import { asMarkdown, type MarkdownSource } from './markdown.js';
@@ -54,7 +55,8 @@ export function extractImports(
 
 export function resolveImportTarget(
   target: string,
-  fileMap: Map<string, { docId: string; path: string }>
+  fileMap: Map<string, { docId: string; path: string }>,
+  fromPath?: string
 ): { docId?: string; slug?: string } {
   // Parse target: "file.md", "./file.md", "../core/file.md", or "file.md#slug"
   const hashIndex = target.indexOf('#');
@@ -64,6 +66,14 @@ export function resolveImportTarget(
   if (hashIndex !== -1) {
     filePath = target.slice(0, hashIndex);
     slug = target.slice(hashIndex + 1);
+  }
+
+  // When the importing file is known, resolve against it rather than a basename alias.
+  if (fromPath) {
+    if (/^[a-z][a-z0-9+.-]*:/i.test(filePath) || filePath.includes('{{')) return {};
+    const absolute = filePath ? resolve(dirname(fromPath), decodeURIComponent(filePath.split('?')[0])) : resolve(fromPath);
+    const info = fileMap.get(absolute);
+    return info ? { docId: info.docId, slug: slug ? decodeURIComponent(slug) : undefined } : {};
   }
 
   // Remove leading ./ if present

@@ -68,22 +68,22 @@ This keeps data ownership at the page level while allowing reusable display frag
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Data Source]
+## Data Source
 [Data Source]:./view.busy.md#data-source
 A reference to an imported [Model], [Config], or other explicit persisted source that provides data for this view. Each data source maps imported fields to the view model. Imported renderable [View]s are page/composition references, not runtime data sources by default.
 
-## [View Model Field]
+## View Model Field
 [View Model Field]:./view.busy.md#view-model-field
 A field in the view model, derived from one or more [Data Source]s. Can be:
 - **Direct mapping**: field comes straight from a [Model] field
 - **Computed**: derived from multiple fields or logic (e.g., days since a date)
 - **Aggregated**: summarized across multiple instances (e.g., count, average)
 
-## [Filter]
+## Filter
 [Filter]:./view.busy.md#filter
 A constraint that narrows which [Model] instances are included in the view. Filters can be static (defined in the view) or dynamic (set by user actions via operations).
 
-## [Display Section]
+## Display Section
 [Display Section]:./view.busy.md#display-section
 The presentation layout written in markdown. May include Handlebars-style placeholders (`{{field}}`, `{{#each items}}`, `{{#if condition}}`) that are resolved against the view model at render time. This section is optional — when omitted, a compiler can generate a default layout from the local definitions.
 

@@ -26,12 +26,12 @@ Every [Model] must be explainable to a non-technical person and could be tracked
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Identity Section]
+## Identity Section
 [Identity Section]:./model.busy.md#identity-section
 [Identity]:./model.busy.md#identity-section
 Defines what makes each instance of this model unique. This is the field or combination of fields that distinguishes one instance from another - like a person's name tag or an order's ticket number.
 
-## [Fields Section]
+## Fields Section
 [Fields Section]:./model.busy.md#fields-section
 [Fields]:./model.busy.md#fields-section
 A table listing what information this model holds. Each field has:
@@ -40,7 +40,7 @@ A table listing what information this model holds. Each field has:
 - **Meaning**: What this field represents in plain language
 - **Required**: Whether every instance must have this field (Yes/No)
 
-## [Lifecycle Section]
+## Lifecycle Section
 [Lifecycle Section]:./model.busy.md#lifecycle-section
 [Lifecycle]:./model.busy.md#lifecycle-section
 A table showing valid states and transitions. Each row has:
@@ -48,12 +48,12 @@ A table showing valid states and transitions. Each row has:
 - **Can Transition To**: Which states can follow this one
 - **Trigger**: What causes the transition (or "-" if manual)
 
-## [Rules Section]
+## Rules Section
 [Rules Section]:./model.busy.md#rules-section
 [Rules]:./model.busy.md#rules-section
 Constraints that must always hold true. These are facts about the model that can never be violated - like "an order must have at least one item" or "a person's age cannot be negative".
 
-## [Relationships Section]
+## Relationships Section
 [Relationships Section]:./model.busy.md#relationships-section
 [Relationships]:./model.busy.md#relationships-section
 How this model connects to other models:
@@ -61,7 +61,7 @@ How this model connects to other models:
 - **contains**: Owns other models (like a cart containing items)
 - **belongs_to**: Is owned by another model (like an item belonging to a cart)
 
-## [Persistence Section]
+## Persistence Section
 [Persistence Section]:./model.busy.md#persistence-section
 [Persistence]:./model.busy.md#persistence-section
 Declares which adapter handles storage for this model. Models define **what** data looks like, not **where** or **how** it's stored.

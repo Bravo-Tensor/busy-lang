@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "entry": "roundTrip",
+  "operations": {
+    "roundTrip": {
+      "ref": "tool_round_trip_harness::roundtrip",
+      "inputs": [
+        "source_path",
+        "output_path"
+      ],
+      "outputs": [
+        "written_path",
+        "log_id"
+      ],
+      "steps": [
+        {
+          "id": "setup",
+          "source": {
+            "section": "Setup"
+          },
+          "context": [
+            "source_path",
+            "output_path"
+          ],
+          "definitions": [],
+          "tools": [
+            "File Tool",
+            "Logging Tool"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": "read"
+        },
+        {
+          "id": "read",
+          "source": {
+            "operation": "roundTrip",
+            "section": "Steps",
+            "item": 1
+          },
+          "context": [
+            "source_path"
+          ],
+          "definitions": [],
+          "tools": [
+            "File Tool"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ],
+            "additionalProperties": false
+          },
+          "next": "write"
+        },
+        {
+          "id": "write",
+          "source": {
+            "operation": "roundTrip",
+            "section": "Steps",
+            "item": 2
+          },
+          "context": [
+            "content",
+            "output_path"
+          ],
+          "definitions": [],
+          "tools": [
+            "File Tool"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "written_path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "written_path"
+            ],
+            "additionalProperties": false
+          },
+          "next": "log"
+        },
+        {
+          "id": "log",
+          "source": {
+            "operation": "roundTrip",
+            "section": "Steps",
+            "item": 3
+          },
+          "context": [
+            "written_path"
+          ],
+          "definitions": [],
+          "tools": [
+            "Logging Tool"
+          ],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "log_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "log_id"
+            ],
+            "additionalProperties": false
+          },
+          "next": "output"
+        },
+        {
+          "id": "output",
+          "source": {
+            "operation": "roundTrip",
+            "section": "Output"
+          },
+          "context": [
+            "written_path",
+            "log_id"
+          ],
+          "definitions": [
+            "Output"
+          ],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": "checklist"
+        },
+        {
+          "id": "checklist",
+          "source": {
+            "operation": "roundTrip",
+            "section": "Checklist"
+          },
+          "context": [
+            "content",
+            "source_path",
+            "output_path",
+            "written_path",
+            "log_id"
+          ],
+          "definitions": [
+            "Checklist"
+          ],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

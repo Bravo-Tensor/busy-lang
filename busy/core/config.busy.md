@@ -33,17 +33,17 @@ Think of a [Config] like a settings file — it defines what knobs exist and the
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Fields Section]
+## Fields Section
 [Fields Section]:./config.busy.md#fields-section
 [Fields]:./config.busy.md#fields-section
 Same as [Model] Fields — a table of field names, types, meanings, and whether they're required. Each field represents a configuration value.
 
-## [Defaults Section]
+## Defaults Section
 [Defaults Section]:./config.busy.md#defaults-section
 [Defaults]:./config.busy.md#defaults-section
 Default values for each field when the config is initialized. Unlike [Model] instances which may have no defaults, every [Config] field should have a sensible default.
 
-## [Rules Section]
+## Rules Section
 [Rules Section]:./config.busy.md#rules-section
 [Rules]:./config.busy.md#rules-section
 Same as [Model] Rules — constraints that must hold. For configs, these are typically value range constraints (e.g., "port must be between 1024 and 65535") or mutual exclusion rules.

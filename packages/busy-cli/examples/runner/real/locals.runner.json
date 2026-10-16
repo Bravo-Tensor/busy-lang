@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "entry": "assumeWorkspaceRole",
+  "operations": {
+    "assumeWorkspaceRole": {
+      "ref": "workspace_agent::assumeworkspacerole",
+      "inputs": [
+        "role_path"
+      ],
+      "outputs": [
+        "role_context"
+      ],
+      "steps": [
+        {
+          "id": "setup",
+          "source": {
+            "section": "Setup"
+          },
+          "context": [
+            "role_path"
+          ],
+          "definitions": [
+            "Role",
+            "Operation",
+            "role#executerole",
+            "Persona",
+            "Traits",
+            "Principles",
+            "Skillset",
+            "role#setup",
+            "role#local-definitions"
+          ],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": "read_role"
+        },
+        {
+          "id": "read_role",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Steps",
+            "item": 1
+          },
+          "context": [
+            "role_path"
+          ],
+          "definitions": [],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "role_document": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role_document"
+            ],
+            "additionalProperties": false
+          },
+          "next": "evaluate_role"
+        },
+        {
+          "id": "evaluate_role",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Steps",
+            "item": 2
+          },
+          "context": [
+            "role_document"
+          ],
+          "definitions": [
+            "Role",
+            "Document"
+          ],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": "extract_role"
+        },
+        {
+          "id": "extract_role",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Steps",
+            "item": 3
+          },
+          "context": [
+            "role_document"
+          ],
+          "definitions": [],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "persona": {
+                "type": "string"
+              },
+              "traits": {
+                "type": "string"
+              },
+              "principles": {
+                "type": "string"
+              },
+              "skillset": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "persona",
+              "traits",
+              "principles",
+              "skillset"
+            ],
+            "additionalProperties": false
+          },
+          "next": "merge_role"
+        },
+        {
+          "id": "merge_role",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Steps",
+            "item": 4
+          },
+          "context": [
+            "persona",
+            "traits",
+            "principles",
+            "skillset"
+          ],
+          "definitions": [],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {
+              "role_context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role_context"
+            ],
+            "additionalProperties": false
+          },
+          "next": "log_assumption"
+        },
+        {
+          "id": "log_assumption",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Steps",
+            "item": 5
+          },
+          "context": [
+            "role_context"
+          ],
+          "definitions": [],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": "operate_merged"
+        },
+        {
+          "id": "operate_merged",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Steps",
+            "item": 6
+          },
+          "context": [
+            "role_context"
+          ],
+          "definitions": [],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": "output"
+        },
+        {
+          "id": "output",
+          "source": {
+            "operation": "assumeWorkspaceRole",
+            "section": "Output"
+          },
+          "context": [
+            "role_context"
+          ],
+          "definitions": [],
+          "tools": [],
+          "respondWith": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

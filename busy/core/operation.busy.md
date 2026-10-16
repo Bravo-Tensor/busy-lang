@@ -25,39 +25,39 @@ An [Operation] represents a specific task or set of instructions that an LLM is 
 
 # [Local Definitions](./document.busy.md#local-definitions-section)
 
-## [Input]
+## Input
 [Input]:./operation.busy.md#input
 A single piece of data or state required for an [Operation] to proceed. May be explicit or implicit, potentially even in [Concept] format.
 
-## [Input Section]
+## Input Section
 [Input Section]:./operation.busy.md#input-section
 The section header (`### [Input]`) where [Input]s are defined within an [Operation]. Lists all [Input]s required for the [Operation] to succeed. May come in the form of a "hint" or additional context, or a special request to modify the standard process or [Output].
 
-## [Output]
+## Output
 [Output]:./operation.busy.md#output
 A single result, artifact, or state change produced by an [Operation].
 
-## [Output Section]
+## Output Section
 [Output Section]:./operation.busy.md#output-section
 The section header (`### [Output]`) where [Output]s are defined within an [Operation]. Lists what should be returned or created at completion. The caller may also request a certain format via an [Input].
 
-## [Error]
+## Error
 [Error]:./operation.busy.md#error
 A failure condition. If you are unclear what to do, or unable to perform the [Operation], return with an [Error] which clearly describes the issue and context so it can be troubleshooted.
 
-## [Steps]
+## Steps
 [Steps]:./operation.busy.md#steps
 The ordered list of instructions to execute within an [Operation].
 
-## [Steps Section]
+## Steps Section
 [Steps Section]:./operation.busy.md#steps-section
 The section header (`### [Steps]`) containing the [Steps] to complete the [Operation]. May reference other [Operation]s - if so, execute that operation fully before continuing.
 
-## [Trigger]
+## Trigger
 [Trigger]:./operation.busy.md#trigger
 A declaration that an [Operation] should execute in response to a specific [Event].
 
-## [Triggers Section]
+## Triggers Section
 [Triggers Section]:./operation.busy.md#triggers-section
 The section header (`### [Triggers]`) where [Trigger]s are declared within an [Operation]. Lists what [Event]s cause this [Operation] to execute.
 
@@ -112,11 +112,11 @@ Builder/Architect agents discover triggers by reading Operation definitions with
 | Declaration | This document | Operations declare trigger requirements in their `### [Triggers]` section |
 | Configuration | Workspace .workspace file | Workspace configures runtime event-to-operation routing based on declarations |
 
-## [Emit]
+## Emit
 [Emit]:./operation.busy.md#emit
 A declaration that an [Operation] publishes a specific [Event] as part of its execution. [Emit]s are the outbound counterpart to [Trigger]s: where [Trigger]s say which events cause an [Operation] to run, [Emit]s say which events the [Operation] publishes and under what conditions.
 
-## [Emits Section]
+## Emits Section
 [Emits Section]:./operation.busy.md#emits-section
 The section header (`### [Emits]`) where [Emit]s are declared within an [Operation]. Lists every [Event] this [Operation] may publish and when.
 
@@ -172,7 +172,7 @@ Builder/Architect agents discover emits by reading Operation definitions within 
 
 # Core Operations
 
-## ExecuteOperation
+## executeOperation
 
 This operation executes a BUSY [Operation]. It requires an operation_definition (the BUSY [Operation] to execute) and optionally provided_inputs (data values or state supplied by the caller to satisfy [Input] requirements).
 

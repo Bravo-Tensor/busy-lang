@@ -1,0 +1,335 @@
+{
+  "origin": "busy-lang repository; frozen real source copies, not originals edited in place",
+  "files": [
+    {
+      "file": "busy/base/busy-assistant.busy.md",
+      "originalSha256": "b1a2a8c30c1e0b3a392b4394ab61be6b27a3bbed9da4f48deb64d80153ecf833",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/base/busy-assistant.busy.md",
+          "before": "[RunBusyFormattingRules]:./busy-formatting-rules.busy.md#runbusyformattingrules",
+          "after": "[RunBusyFormattingRules]:./busy-formatting-rules.busy.md#runbusyformattingrules\n[ValidateDocument]:./busy-assistant.busy.md#validatedocument",
+          "reason": "Bind the otherwise unresolved ValidateDocument shortcut to the existing local operation."
+        }
+      ]
+    },
+    {
+      "file": "busy/core/role.busy.md",
+      "originalSha256": "5ea86f73864047081e93614974ba6c91892a494b9ed840e0ae37b9c9e5a874a6",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/role.busy.md",
+          "line": 26,
+          "before": "## [Persona]",
+          "after": "## Persona",
+          "reason": "Line 26: heading links to itself (./role.busy.md#persona)"
+        },
+        {
+          "file": "busy-lang/busy/core/role.busy.md",
+          "line": 30,
+          "before": "## [Traits]",
+          "after": "## Traits",
+          "reason": "Line 30: heading links to itself (./role.busy.md#traits)"
+        },
+        {
+          "file": "busy-lang/busy/core/role.busy.md",
+          "line": 34,
+          "before": "## [Principles]",
+          "after": "## Principles",
+          "reason": "Line 34: heading links to itself (./role.busy.md#principles)"
+        },
+        {
+          "file": "busy-lang/busy/core/role.busy.md",
+          "line": 38,
+          "before": "## [Skillset]",
+          "after": "## Skillset",
+          "reason": "Line 38: heading links to itself (./role.busy.md#skillset)"
+        }
+      ]
+    },
+    {
+      "file": "busy/core/document.busy.md",
+      "originalSha256": "64fc5bf627cad45619d56729d037fbbcfccf80f7529028d1e9d75803ba81d40a",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/document.busy.md",
+          "line": 27,
+          "before": "## [Concept Description]",
+          "after": "## Concept Description",
+          "reason": "Line 27: heading links to itself (./document.busy.md#concept-description)"
+        },
+        {
+          "file": "busy-lang/busy/core/document.busy.md",
+          "line": 31,
+          "before": "## [Imports Section]",
+          "after": "## Imports Section",
+          "reason": "Line 31: heading links to itself (./document.busy.md#imports-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/document.busy.md",
+          "line": 39,
+          "before": "## [Local Definitions Section]",
+          "after": "## Local Definitions Section",
+          "reason": "Line 39: heading links to itself (./document.busy.md#local-definitions-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/document.busy.md",
+          "line": 43,
+          "before": "## [Setup Section]",
+          "after": "## Setup Section",
+          "reason": "Line 43: heading links to itself (./document.busy.md#setup-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/document.busy.md",
+          "line": 47,
+          "before": "## [Operations Section]",
+          "after": "## Operations Section",
+          "reason": "Line 47: heading links to itself (./document.busy.md#operations-section)"
+        }
+      ]
+    },
+    {
+      "file": "busy/core/concept.busy.md",
+      "originalSha256": "478505a810343553d7d586901a135783f7883354b04232290be89043cf838605",
+      "corrections": []
+    },
+    {
+      "file": "busy/core/operation.busy.md",
+      "originalSha256": "a0b2e6dccb8e9a74d6b1fe4248563690cd32bd7a7ee4d856fc4040bb1e298eb6",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 28,
+          "before": "## [Input]",
+          "after": "## Input",
+          "reason": "Line 28: heading links to itself (./operation.busy.md#input)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 32,
+          "before": "## [Input Section]",
+          "after": "## Input Section",
+          "reason": "Line 32: heading links to itself (./operation.busy.md#input-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 36,
+          "before": "## [Output]",
+          "after": "## Output",
+          "reason": "Line 36: heading links to itself (./operation.busy.md#output)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 40,
+          "before": "## [Output Section]",
+          "after": "## Output Section",
+          "reason": "Line 40: heading links to itself (./operation.busy.md#output-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 44,
+          "before": "## [Error]",
+          "after": "## Error",
+          "reason": "Line 44: heading links to itself (./operation.busy.md#error)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 48,
+          "before": "## [Steps]",
+          "after": "## Steps",
+          "reason": "Line 48: heading links to itself (./operation.busy.md#steps)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 52,
+          "before": "## [Steps Section]",
+          "after": "## Steps Section",
+          "reason": "Line 52: heading links to itself (./operation.busy.md#steps-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 56,
+          "before": "## [Trigger]",
+          "after": "## Trigger",
+          "reason": "Line 56: heading links to itself (./operation.busy.md#trigger)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 60,
+          "before": "## [Triggers Section]",
+          "after": "## Triggers Section",
+          "reason": "Line 60: heading links to itself (./operation.busy.md#triggers-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 115,
+          "before": "## [Emit]",
+          "after": "## Emit",
+          "reason": "Line 115: heading links to itself (./operation.busy.md#emit)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 119,
+          "before": "## [Emits Section]",
+          "after": "## Emits Section",
+          "reason": "Line 119: heading links to itself (./operation.busy.md#emits-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/operation.busy.md",
+          "line": 175,
+          "before": "## ExecuteOperation",
+          "after": "## executeOperation",
+          "reason": "Line 175: Operation \"ExecuteOperation\" must use lower camelCase (start lowercase; letters and digits only)"
+        }
+      ]
+    },
+    {
+      "file": "busy/core/tool.busy.md",
+      "originalSha256": "6f2bcc26751a9ec74ab1944e8137e70edf929a253031a3d7c84b58d96ede5c83",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/tool.busy.md",
+          "line": 64,
+          "before": "## [Capability]",
+          "after": "## Capability",
+          "reason": "Line 64: heading links to itself (./tool.busy.md#capability)"
+        },
+        {
+          "file": "busy-lang/busy/core/tool.busy.md",
+          "line": 68,
+          "before": "## [Invocation Contract]",
+          "after": "## Invocation Contract",
+          "reason": "Line 68: heading links to itself (./tool.busy.md#invocation-contract)"
+        },
+        {
+          "file": "busy-lang/busy/core/tool.busy.md",
+          "line": 72,
+          "before": "## [State]",
+          "after": "## State",
+          "reason": "Line 72: heading links to itself (./tool.busy.md#state)"
+        },
+        {
+          "file": "busy-lang/busy/core/tool.busy.md",
+          "line": 76,
+          "before": "## [Response Processing]",
+          "after": "## Response Processing",
+          "reason": "Line 76: heading links to itself (./tool.busy.md#response-processing)"
+        },
+        {
+          "file": "busy-lang/busy/core/tool.busy.md",
+          "line": 160,
+          "before": "## [Events]",
+          "after": "## Events",
+          "reason": "Line 160: heading links to itself (./tool.busy.md#events)"
+        },
+        {
+          "file": "busy-lang/busy/core/tool.busy.md",
+          "line": 353,
+          "before": "## [Provider Mapping]",
+          "after": "## Provider Mapping",
+          "reason": "Line 353: heading links to itself (./tool.busy.md#provider-mapping)"
+        }
+      ]
+    },
+    {
+      "file": "busy/core/checklist.busy.md",
+      "originalSha256": "84b3d545acd8c9f3e97fbafb81ea73c5cf9d2ef71b5320f5dc4cae8cbfeb1c6e",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/checklist.busy.md",
+          "line": 24,
+          "before": "## [Checklist Section]",
+          "after": "## Checklist Section",
+          "reason": "Line 24: heading links to itself (./checklist.busy.md#checklist-section)"
+        },
+        {
+          "file": "busy-lang/busy/core/checklist.busy.md",
+          "line": 28,
+          "before": "## [Checklist Item]",
+          "after": "## Checklist Item",
+          "reason": "Line 28: heading links to itself (./checklist.busy.md#checklist-item)"
+        }
+      ]
+    },
+    {
+      "file": "busy/core/playbook.busy.md",
+      "originalSha256": "970d29f068998be11e1819b9843613d7edcaa249e0848933141a53094650d79f",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/playbook.busy.md",
+          "line": 29,
+          "before": "## [Sequence Step]",
+          "after": "## Sequence Step",
+          "reason": "Line 29: heading links to itself (./playbook.busy.md#sequence-step)"
+        },
+        {
+          "file": "busy-lang/busy/core/playbook.busy.md",
+          "line": 33,
+          "before": "## [Condition]",
+          "after": "## Condition",
+          "reason": "Line 33: heading links to itself (./playbook.busy.md#condition)"
+        },
+        {
+          "file": "busy-lang/busy/core/playbook.busy.md",
+          "line": 37,
+          "before": "## [Role Context]",
+          "after": "## Role Context",
+          "reason": "Line 37: heading links to itself (./playbook.busy.md#role-context)"
+        },
+        {
+          "file": "busy-lang/busy/core/playbook.busy.md",
+          "line": 41,
+          "before": "## [Private Operation]",
+          "after": "## Private Operation",
+          "reason": "Line 41: heading links to itself (./playbook.busy.md#private-operation)"
+        }
+      ]
+    },
+    {
+      "file": "busy/core/prompt.busy.md",
+      "originalSha256": "e7d33a4041460a7f2b16960916e473692bf17b802c46f53d22da9c6d888d4bbd",
+      "corrections": [
+        {
+          "file": "busy-lang/busy/core/prompt.busy.md",
+          "line": 26,
+          "before": "## [Prompt Text]",
+          "after": "## Prompt Text",
+          "reason": "Line 26: heading links to itself (./prompt.busy.md#prompt-text)"
+        }
+      ]
+    },
+    {
+      "file": "busy/base/busy-formatting-rules.busy.md",
+      "originalSha256": "e4c42dc0806d3f934d95eae1d11fca6981fa20be9ed93c3fb4249eb8226c55e2",
+      "corrections": []
+    },
+    {
+      "file": "busy/core/workspace.busy.md",
+      "originalSha256": "61afd33e3adfbdf55df22f9f99a9fb79cd4333f6650c3a0f69724ca8b048284f",
+      "corrections": []
+    },
+    {
+      "file": "busy/toolbox/file-tool.busy.md",
+      "originalSha256": "6b878701aea834a2bba451bb9b90de76b200b11e436da36e388d5db3bec93b62",
+      "corrections": [
+        {
+          "reason": "Use current core Tool action schema: Tools heading, plural bracketed Inputs/Outputs, Examples and Providers. Provider contracts and examples unchanged."
+        }
+      ]
+    },
+    {
+      "file": "busy/toolbox/logging-tool.busy.md",
+      "originalSha256": "d52d1a6dea0e60f5cb15c61b1f4b10cf2282930dae88bd58ff9c31c2cbf50fe4",
+      "corrections": [
+        {
+          "reason": "Use current core Tool action schema: Tools heading, plural bracketed Inputs/Outputs, Examples and Providers. Provider contracts and examples unchanged."
+        }
+      ]
+    },
+    {
+      "file": "busy/base/workspace-agent.busy.md",
+      "originalSha256": "81247c58de77ad0cf486cb5329ffde658b2db43cd5b4f5fb5c85584a3bb99824",
+      "corrections": []
+    }
+  ]
+}

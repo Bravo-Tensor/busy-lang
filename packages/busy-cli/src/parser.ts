@@ -10,8 +10,17 @@ import { extractImports } from './parsers/imports.js';
 import { parseTriggers } from './parsers/triggers.js';
 import { parseTools } from './parsers/tools.js';
 import { debug } from './utils/logger.js';
+import { visit } from 'unist-util-visit';
 
 export interface ParsedSource { document: ParsedDocument; markdown: MarkdownSource; sections: Section[] }
+export interface ResolveImportOptions {
+  /** Fail instead of skipping missing, unpinnable, or invalid imports. */
+  strict?: boolean;
+  /** Capture each parsed source once, including the entry document. */
+  onSource?: (filePath: string, source: ParsedSource) => void;
+  /** Also pin inline links to BUSY documents; ordinary files remain caller/Tool resources. */
+  includeInline?: boolean;
+}
 
 /** One source-to-BUSY lowering for CLI, validation, and workspace graph indexing. */
 export function parseSource(content: string, filePath = 'document.busy.md'): ParsedSource {
@@ -46,45 +55,68 @@ export function parseDocument(content: string, filePath = 'document.busy.md'): P
 export function resolveImports(
   document: ParsedDocument,
   basePath: string,
-  visited: Set<string> = new Set()
+  visited: Set<string> = new Set(),
+  options: ResolveImportOptions = {}
 ): Record<string, ParsedDocument> {
-  const cache = new Map<string, { document: ParsedDocument; anchors: Set<string> }>();
+  const cache = new Map<string, ParsedSource>();
   const expanded = new Set<string>();
   const resolved: Record<string, ParsedDocument> = {};
   const stack = new Set(visited);
+  const report = (message: string): void => {
+    if (options.strict) throw new Error(message);
+    console.warn(`⚠ ${message}`);
+  };
+  const root = parseSource(document.content, resolve(basePath));
+  root.document = document;
+  cache.set(resolve(basePath), root);
+  options.onSource?.(resolve(basePath), root);
 
   function walk(doc: ParsedDocument, path: string): void {
     const current = resolve(path);
     stack.add(current);
-    for (const imp of doc.imports) {
+    const targets: { target: string; label?: string }[] = doc.imports.map(imp => ({ target: imp.target, label: imp.label }));
+    if (options.includeInline) {
+      const seen = new Set(targets.map(t => t.target));
+      visit(cache.get(current)!.markdown.tree, 'link', node => {
+        // Remote prose citations and template URLs are observations for the caller, not declared imports.
+        if (/\.busy\.md(?:[?#]|$)/i.test(node.url) && !/^[a-z][a-z0-9+.-]*:/i.test(node.url) && !node.url.includes('{{') && !seen.has(node.url)) {
+          targets.push({ target: node.url }); seen.add(node.url);
+        }
+      });
+    }
+    for (const imp of targets) {
       const hash = imp.target.indexOf('#');
       const targetPath = hash < 0 ? imp.target : imp.target.slice(0, hash);
       const fragment = hash < 0 ? '' : imp.target.slice(hash + 1);
-      if (/^[a-z][a-z0-9+.-]*:/i.test(targetPath) || targetPath.includes('{{')) continue;
+      if (/^[a-z][a-z0-9+.-]*:/i.test(targetPath) || targetPath.includes('{{')) {
+        if (options.strict) report(`Cannot pin non-local or dynamic import: ${imp.target}`);
+        continue;
+      }
       const importPath = targetPath ? resolve(dirname(current), decodeURIComponent(targetPath.split('?')[0])) : current;
       if (!existsSync(importPath)) {
-        console.warn(`⚠ Import not found: ${targetPath} (resolved to ${importPath})`);
+        report(`Import not found: ${targetPath} (resolved to ${importPath})`);
         continue;
       }
       try {
         let entry = cache.get(importPath);
         if (!entry) {
           const content = readFileSync(importPath, 'utf-8');
-          entry = { document: parseDocument(content, importPath), anchors: parseMarkdown(content).anchors };
+          entry = parseSource(content, importPath);
           cache.set(importPath, entry);
+          options.onSource?.(importPath, entry);
         }
-        if (fragment && !entry.anchors.has(fragment)) {
-          console.warn(`⚠ Anchor '${fragment}' not found in ${targetPath}`);
+        if (fragment && !entry.markdown.anchors.has(decodeURIComponent(fragment))) {
+          report(`Anchor '${fragment}' not found in ${targetPath}`);
         }
         // Every alias is resolved and checked, even when its file was cached.
-        resolved[imp.label] = entry.document;
+        if (imp.label !== undefined) resolved[imp.label] = entry.document;
         if (stack.has(importPath)) {
           console.warn(`⚠ Circular import skipped: ${targetPath} (from ${current})`);
           continue;
         }
         if (!expanded.has(importPath)) walk(entry.document, importPath);
       } catch (e) {
-        console.warn(`⚠ Failed to resolve nested imports in ${targetPath}: ${e}`);
+        report(`Failed to resolve nested imports in ${targetPath}: ${e}`);
       }
     }
     stack.delete(current);
