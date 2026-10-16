@@ -73,3 +73,16 @@ export {
   ContextPayloadSchema,
   FrontMatterSchema,
 } from './types/schema.js';
+
+export { prepareRun, checkPreparedRun, createCursorDraft } from './runner/preparation.js';
+export { loadRunSource, lowerRun, canonical } from './runner/program.js';
+export { buildCompilationCatalog, lowerConstrainedDraft, checkCoverage } from './runner/compiler.js';
+export type { CompilationCatalog } from './runner/compiler.js';
+export { checkBindings } from './runner/checks.js';
+
+export { resolveGuidanceClosure } from './runner/guidance.js';
+export type { GuidancePolicy, GuidanceClosure, GuidanceFile, GuidanceLink } from './runner/guidance.js';
+export { sha256Bytes, listSourceFiles, fingerprintFiles, portableRunProgram, getRunnerIdentity } from './runner/identity.js';
+export { checkGuidanceClosure } from './runner/guidance.js';
+export { checkFileFingerprint } from './runner/identity.js';
+export { parseMarkdown } from './parsers/markdown.js';

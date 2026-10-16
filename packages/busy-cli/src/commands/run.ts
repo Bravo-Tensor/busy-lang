@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { compileRun } from '../runner/program.js';
 import { CompilationFailure, generateRun, type CompilationOptions } from '../runner/compiler.js';
+import { prepareRun, checkPreparedRun } from '../runner/preparation.js';
 import { BusyRunner } from '../runner/store.js';
 import type { Values } from '../runner/schema.js';
 
@@ -29,6 +30,31 @@ export function registerRunCommands(program: Command): void {
     .option('--key-file <file>', 'OpenRouter credential file (or use OPENROUTER_API_KEY)')
     .option('--cache-dir <directory>', 'Compiled artifacts and draft diagnostics (default: .busy/compiled)')
     .option('--refresh', 'Generate again even when a compiled artifact is cached');
+  run.command('prepare').description('Prepare an offline caller instruction cursor or lower an authored constrained draft; no provider')
+    .argument('<file>', 'BUSY source file').requiredOption('--entry <operation>', 'Defining operation')
+    .option('--draft <file>', 'Authored constrained draft JSON; otherwise use a caller instruction cursor')
+    .option('--out <file>', 'Interpretation output; defaults to colocated single-entry or named multi-entry path')
+    .action(async (file: string, options: { entry: string; draft?: string; out?: string }) => {
+      try {
+        if (options.out && !options.out.endsWith('.json')) throw new Error('--out must be a JSON file');
+        const result = await prepareRun(file, { entry: options.entry,
+          ...(options.draft ? { draft: await jsonFile(options.draft) } : {}),
+          ...(options.out ? { interpretationFile: resolve(options.out) } : {}) });
+        await writeFile(result.interpretationFile, JSON.stringify(result.interpretation, null, 2) + '\n');
+        console.log(JSON.stringify({ interpretationFile: result.interpretationFile, programId: result.id,
+          sourceHash: result.sourceHash, interpretationHash: result.interpretationHash,
+          meaning: 'Prepared exchanges only; caller owns decisions, nested work and execution.' }, null, 2));
+      } catch (error) { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; }
+    });
+  run.command('check').description('Validate prepared IR, source coverage and bindings without starting a run')
+    .argument('<file>', 'BUSY source file').option('--interpretation <file>', 'Prepared IR; default sibling for a single entry')
+    .action(async (file: string, options: { interpretation?: string }) => {
+      try {
+        const result = await checkPreparedRun(file, options.interpretation);
+        console.log(JSON.stringify({ entry: result.entry, programId: result.id, sourceHash: result.sourceHash,
+          interpretationHash: result.interpretationHash, coverage: 'passed', bindings: 'passed' }, null, 2));
+      } catch (error) { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; }
+    });
   compilationOptions(run.command('compile').description('Generate a constrained draft, check it and cache the compiled program')
     .argument('<file>', 'BUSY source file').option('--out <file>', 'Also write the accepted prepared IR to this JSON file'))
     .action(async (file: string, options: CompilationOptions & { out?: string }) => {
