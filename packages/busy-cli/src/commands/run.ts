@@ -90,6 +90,16 @@ export function registerRunCommands(program: Command): void {
     .argument('<reply>', 'JSON, @file, or - for stdin')
     .action((id: string, token: string, reply: string) => execute(async runner =>
       runner.emit(id, token, reply === '-' || reply.startsWith('@') ? await jsonFile(reply) : JSON.parse(reply))));
+  run.command('fail').description('Return a reported step failure to the caller without advancing; retain stack and partial effects')
+    .argument('<id>', 'Run ID').argument('<token>', 'Token from the current sense')
+    .argument('<failure>', 'Failure JSON with reason and optional evidence/partialEffects string arrays; @file or - for stdin')
+    .action((id: string, token: string, failure: string) => execute(async runner =>
+      runner.fail(id, token, failure === '-' || failure.startsWith('@') ? await jsonFile(failure) : JSON.parse(failure))));
+  run.command('resume').description('Explicitly retry the same failed instruction with a fresh token; does not undo partial effects')
+    .argument('<id>', 'Run ID').argument('<token>', 'Recovery token from the failed sense')
+    .option('--values <file>', 'Correct current frame bindings as JSON; - reads stdin')
+    .action((id: string, token: string, options: { values?: string }) => execute(async runner =>
+      runner.resume(id, token, options.values ? await jsonFile(options.values) as Values : {})));
   for (const name of ['inspect', 'history', 'receipt'] as const) {
     run.command(name).description({ inspect: 'Inspect source, call stack, bindings and history', history: 'Read the session event log', receipt: 'Export the exchange receipt' }[name])
       .argument('<id>', 'Run ID').action((id: string) => execute(runner => runner[name](id)));

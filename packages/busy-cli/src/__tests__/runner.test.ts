@@ -52,7 +52,7 @@ describe('caller-executed runner', () => {
     expect(program.operations.repairDocument.steps[0].tools['Document Tool'])
       .toBe((getConceptContext(repo, toolId).concept as { content: string }).content);
     let sense = runner.start(program, inputs);
-    expect(Object.keys(sense.packet!)).toEqual(['context', 'respondWith']);
+    expect(Object.keys(sense.packet!)).toEqual(['context', 'respondWith', 'failWith']);
     expect(sense.packet!.context.instruction).toContain('Confirm the workspace');
     sense = emit(sense);
     expect(sense.packet!.context.instruction).toContain('- Report unknown when evidence is insufficient');

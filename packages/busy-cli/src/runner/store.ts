@@ -9,17 +9,29 @@ import type { RunProgram, RunStep } from './program.js';
 export interface Sense {
   token: string;
   pointer: { operation: string; step: string; source: RunStep['source'] };
-  packet: { context: Values; respondWith: ReplySchema };
+  packet: { context: Values; respondWith: ReplySchema; failWith: ReplySchema };
 }
 export interface Frame { operation: string; step: string | null; values: Values }
+const failureSchema: ReplySchema = { type: 'object', properties: {
+  reason: { type: 'string' }, evidence: { type: 'array', items: { type: 'string' } },
+  partialEffects: { type: 'array', items: { type: 'string' } },
+}, required: ['reason'], additionalProperties: false };
+export interface RunFailure {
+  id: string; reason: string; evidence: string[]; partialEffects: string[];
+  pointer: Sense['pointer']; inputs: Values; stack: Frame[];
+  /** The invoking frame's continuation; it has not executed while its child failed. */
+  caller: { operation: string; step: string | null } | null;
+}
 interface RunState {
-  id: string; programId: string; status: 'waiting' | 'completed' | 'cancelled'; createdAt: string;
+  id: string; programId: string; status: 'waiting' | 'failed' | 'completed' | 'cancelled'; createdAt: string;
   inputs: Values; sequence: number; stack: Frame[]; restartedFrom: string | null;
   current: Sense | null; result: Values | null;
+  failure?: RunFailure | null;
 }
 export interface RunEvent { seq: number; at: string; type: string; [key: string]: unknown }
 export interface RunExchange extends Partial<Sense> {
   runId: string; status: RunState['status']; result?: Values | null;
+  failure?: RunFailure;
 }
 
 /** Storage and control flow only. The caller owns execution and semantic judgments. */
@@ -56,7 +68,10 @@ export class BusyRunner {
     return JSON.parse(row.state as string) as RunState;
   }
   private exchange(state: RunState): RunExchange {
-    return { runId: state.id, status: state.status, ...(state.current ?? {}), ...(state.status === 'completed' ? { result: state.result } : {}) };
+    // Also advertise the universal failure path when reopening a pre-existing run.
+    const current = state.current ? { ...state.current, packet: { ...state.current.packet, failWith: structuredClone(failureSchema) } } : {};
+    return { runId: state.id, status: state.status, ...current, ...(state.failure ? { failure: state.failure } : {}),
+      ...(state.status === 'completed' ? { result: state.result } : {}) };
   }
   sense(id: string): RunExchange { return this.exchange(this.state(id)); }
   list(): { runId: string; status: RunState['status']; createdAt: string; programId: string }[] {
@@ -91,7 +106,7 @@ export class BusyRunner {
     if (Object.keys(step.tools).length) context.tools = step.tools;
     state.current = {
       token: randomUUID(), pointer: { operation: frame.operation, step: step.id, source: step.source },
-      packet: { context, respondWith: step.respondWith },
+      packet: { context, respondWith: step.respondWith, failWith: failureSchema },
     };
     this.event(state, 'sense', { ...state.current, stack: state.stack.map(({ operation, step }) => ({ operation, step })) });
   }
@@ -156,11 +171,51 @@ export class BusyRunner {
       return this.exchange(state);
     });
   }
+  /** Report inability to follow the current instruction, independent of its success schema. */
+  fail(id: string, token: string, report: unknown): RunExchange {
+    return this.atomic(() => {
+      const state = this.state(id);
+      if (state.status !== 'waiting') throw new Error(`Run is ${state.status}`);
+      if (!token || state.current!.token !== token) throw new Error('Stale reply: use busy run sense to read the current token');
+      checkReply(report, failureSchema, 'failure');
+      const value = report as { reason: string; evidence?: string[]; partialEffects?: string[] };
+      if (!value.reason.trim()) throw new Error('Give a failure reason');
+      const caller = state.stack.at(-2);
+      state.failure = { id: randomUUID(), reason: value.reason, evidence: value.evidence ?? [],
+        partialEffects: value.partialEffects ?? [], pointer: state.current!.pointer,
+        inputs: state.inputs, stack: state.stack,
+        caller: caller ? { operation: caller.operation, step: caller.step } : null };
+      state.status = 'failed';
+      state.current!.token = randomUUID();
+      this.event(state, 'failed', { token, recoveryToken: state.current!.token, failure: state.failure });
+      this.save(state);
+      return this.exchange(state);
+    });
+  }
+  /** Explicitly retry the pinned failed instruction, optionally correcting scoped values. */
+  resume(id: string, token: string, updates: Values = {}): RunExchange {
+    const values = z.record(jsonValue).parse(updates);
+    return this.atomic(() => {
+      const state = this.state(id);
+      if (state.status !== 'failed') throw new Error(`Run is ${state.status}; resume requires a failed run`);
+      if (!token || state.current!.token !== token) throw new Error('Stale recovery: use busy run sense to read the current token');
+      const program = this.program(state.programId);
+      const { frame, step } = this.locate(state, program);
+      const allowed = new Set([...Object.keys(frame.values), ...program.operations[frame.operation].inputs, ...step.context]);
+      for (const key of Object.keys(values)) if (!allowed.has(key)) throw new Error(`Unknown recovery binding: ${key}`);
+      this.event(state, 'resumed', { failureId: state.failure!.id, pointer: state.current!.pointer, updates: values });
+      Object.assign(frame.values, values);
+      state.status = 'waiting'; state.failure = null;
+      this.present(state, program);
+      this.save(state);
+      return this.exchange(state);
+    });
+  }
   cancel(id: string, reason: string): RunExchange {
     if (!reason.trim()) throw new Error('Give a cancellation reason');
     return this.atomic(() => {
       const state = this.state(id);
-      if (state.status !== 'waiting') throw new Error(`Run is ${state.status}`);
+      if (state.status !== 'waiting' && state.status !== 'failed') throw new Error(`Run is ${state.status}`);
       this.event(state, 'cancelled', { reason, pointer: state.current!.pointer, stack: state.stack });
       state.status = 'cancelled'; state.current = null;
       this.save(state);
@@ -172,11 +227,12 @@ export class BusyRunner {
     return { ...state, program: this.program(state.programId), history: this.history(id) };
   }
   receipt(id: string): Record<string, unknown> {
-    const { status, program, history, result } = this.inspect(id);
+    const { status, program, history, result, failure } = this.inspect(id);
     return {
       runId: id, status, programId: program.id, sourceHash: program.sourceHash, interpretationHash: program.interpretationHash,
       meaning: 'Records presented instructions and accepted replies. It does not independently verify execution, truth, or semantic compliance.',
       exchanges: history.filter(event => event.type === 'emit').length, result, history,
+      ...(failure ? { failure } : {}),
     };
   }
 }
