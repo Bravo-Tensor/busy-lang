@@ -37,17 +37,33 @@ busy run emit RUN_ID TOKEN @reply.json
 
 `start` returns the first sense. `emit` accepts a reply and returns the next sense. `sense` rereads the current exchange without advancing or changing its token. Each invocation can be a separate process. Replies can be inline JSON, `@file.json`, or `-` for stdin. Input files also accept `-` for stdin.
 
-Normal stdout is JSON with `runId`, `status`, `token`, `pointer`, and `packet`. The packet contains only `context` and `respondWith`. Completion returns `runId`, `status: "completed"`, and the caller-returned `result`. Errors go to stderr with a nonzero exit code. Malformed or stale replies do not advance the run.
+Normal stdout is JSON with `runId`, `status`, `token`, `pointer`, and `packet`. The packet contains `context`, the authored success schema `respondWith`, and a universal `failWith` schema. Completion returns `runId`, `status: "completed"`, and the caller-returned `result`. Errors go to stderr with a nonzero exit code. Malformed or stale replies do not advance the run.
 
 ### Follow the current instruction
 
-Start or resume the run before performing new work that it is meant to guide. Read the current packet, carry out its instruction using the caller's own tools and judgment, then emit the requested values or decision. Return only fields allowed by `respondWith`. If required work or a child result is pending, leave the run at that exchange; do not advance it with a promise to fill in the evidence later.
+Start or resume the run before performing new work that it is meant to guide. Read the current packet, carry out its instruction using the caller's own tools and judgment, then emit the requested values or decision. Return only fields allowed by `respondWith`. If required work or a child result cannot be completed, use `fail`; do not advance with a promise to fill in the evidence later.
 
 An existing result may already satisfy an instruction. Review its relevance to the current inputs, revision and permissions, and identify it as reused prior evidence in the allowed reply or linked artifact. Retain its original actor, time, source revision and result, and say what was checked during this exchange. Do not repeat sound work solely to create a new receipt. A later exchange can record review or reuse of that evidence; it cannot establish that the earlier work was directed by this run.
 
 Follow the source's order when invoking or dispatching another operation. Complete required preparation before dispatch, and keep the parent at the waiting exchange until the required child results are available. Separate callers can run their own CLI sessions and return their run IDs, reports and receipts to the parent; the CLI does not launch them automatically.
 
 Preserve the actual replies, tool results and evidence limits. A `completed` receipt means the exchanges finished, not that every returned claim is verified or that an external release occurred. If an observation or the next instruction conflicts with the caller's history, inspect the run and resolve the mismatch before advancing; cancel or restart when appropriate.
+
+### Fail back to the caller and recover explicitly
+
+Every presented instruction has a failure path, including authored packets whose success schema accepts only notes or a decision. `fail` does not need a fabricated successful response or a declared failure route in the IR:
+
+```sh
+busy run fail RUN_ID TOKEN '{"reason":"Publication is blocked","evidence":["local/report.md"],"partialEffects":["Report prepared locally; nothing published"]}'
+busy run inspect RUN_ID
+busy run resume RUN_ID RECOVERY_TOKEN --values corrected-values.json
+```
+
+Only `reason` is required and it must be nonblank. `evidence` and `partialEffects` are optional arrays of caller-reported strings. A valid failure report returns JSON with `status: "failed"`, the same instruction pointer, a new recovery token and `failure`: the reason, source pointer, original inputs, complete stack with current bindings, immediate caller continuation and reported effects. Accepting a report is a successful CLI command; consumers must inspect `status` rather than treating exit code zero as completed work.
+
+The run stays failed across processes. `emit` cannot bypass it or return to the parent as success. `resume` requires the current recovery token, records any corrected scoped values and presents the same pinned instruction with a fresh reply token. It does not undo partial effects, retry tools, change the source/IR or expand authority. Inspect the effects and decide whether retry is safe first. Failure and recovery events remain in history and receipts. A caller may instead cancel, or use `restart --file` for an author-repaired source/IR version; that creates a linked run while retaining the failed run and its snapshots.
+
+Existing success replies and interpretation files remain unchanged, and saved waiting runs also advertise `failWith` when reopened. `emit` is the caller's report that it followed the instruction. The runtime does not classify notes such as promises or independently prove execution: a caller can still misreport success. Universal failure removes the need to do so; source-specific evidence requirements and caller/reviewer judgment remain necessary.
 
 ### Inspect, cancel, or restart
 
@@ -101,7 +117,7 @@ Compilation uses OpenRouter `openai/gpt-6-luna` by default (`--model` overrides 
 
 For secure file-based authentication, keep the key outside the repository in a private file readable only by its owner, for example `~/.config/busy/openrouter-key.txt` with mode `0600`, and pass `--key-file` to `compile` or generated `start`. Do not put the key itself in command arguments, checked-in configuration, replies or logs. `OPENROUTER_API_KEY` is also supported. Source validation happens before provider generation, so a source-stage failure has not tested authentication; a provider-stage missing-key failure needs one of these supported credential routes. No default secret-file path is loaded automatically.
 
-Code constructs the catalog through BUSY's parser, resolver and context APIs. It owns source spans, scoped definition/tool identities and response-schema lowering. The model chooses binding names, relevant context and routes. Checks cover source validity, instruction coverage, route/schema shape and binding availability on every path. They do not establish semantic fidelity or truth. Scalar returns and string arrays keep the draft small; richer artifacts can be returned as text. The runtime still asks only for `context` and `respondWith`.
+Code constructs the catalog through BUSY's parser, resolver and context APIs. It owns source spans, scoped definition/tool identities and response-schema lowering. The model chooses binding names, relevant context and routes. Checks cover source validity, instruction coverage, route/schema shape and binding availability on every path. They do not establish semantic fidelity or truth. Scalar returns and string arrays keep the draft small; richer artifacts can be returned as text. The runtime supplies context, the authored success schema and the universal failure schema.
 
 Artifacts are stored in `.busy/compiled/` (`--cache-dir` changes it). The key covers the entry, complete transitive source contents, model, prompt, schema and compiler version. `--refresh` regenerates explicitly. Accepted programs and failed attempts retain exact source snapshots, drafts, diagnostics and usage, without the credential. Treat these files as private source material. The accepted artifact is re-lowered against the current source before cache reuse. `compile` reports the required input names so the caller can prepare its starting values.
 

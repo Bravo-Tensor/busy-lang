@@ -78,6 +78,28 @@ describe('busy run CLI', () => {
     expect(invoke(['sense', current.runId])).toEqual(next);
   });
 
+  it('reports failure and explicitly resumes through separate processes without advancing', () => {
+    const first = start();
+    const before = invoke(['history', first.runId]);
+    expect(raw(['fail', first.runId, first.token!, '{"reason":" "}']).status).toBe(1);
+    expect(invoke(['history', first.runId])).toEqual(before);
+    const failed = invoke(['fail', first.runId, first.token!, '-'], JSON.stringify({
+      reason: 'Workspace permission is missing', partialEffects: ['Local inspection only'], evidence: ['local/readback.json'],
+    }));
+    expect(failed).toMatchObject({ status: 'failed', pointer: first.pointer });
+    expect(invoke(['sense', first.runId])).toEqual(failed);
+    expect(raw(['emit', first.runId, failed.token, '{"ready":true,"limits":"later"}']).status).toBe(1);
+    expect(raw(['resume', first.runId, first.token!]).status).toBe(1);
+    expect(raw(['resume', first.runId, failed.token, '--values', '-'], '{"unknown":true}').status).toBe(1);
+    expect(invoke(['sense', first.runId])).toEqual(failed);
+    const resumed = invoke(['resume', first.runId, failed.token]);
+    expect(resumed).toMatchObject({ status: 'waiting', pointer: first.pointer });
+    expect(resumed.token).not.toBe(failed.token);
+    const next = invoke(['emit', first.runId, resumed.token, '{"ready":true,"limits":"permission resolved"}']);
+    expect(next.pointer.step).toBe('validate');
+    expect(invoke(['history', first.runId]).filter((e: { type: string }) => e.type === 'failed')).toHaveLength(1);
+  });
+
   it('accepts only one of two processes competing to reply to the same sense', async () => {
     const first = start();
     const compete = (caller: string) => promisify(execFile)(process.execPath, [
