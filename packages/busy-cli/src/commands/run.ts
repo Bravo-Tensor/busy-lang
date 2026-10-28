@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import { readFile, writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { compileRun } from '../runner/program.js';
 import { CompilationFailure, generateRun, type CompilationOptions } from '../runner/compiler.js';
 import { prepareRun, checkPreparedRun } from '../runner/preparation.js';
@@ -14,7 +15,7 @@ async function jsonFile(file: string): Promise<unknown> {
 
 export function registerRunCommands(program: Command): void {
   const run = program.command('run').description('Compile and run caller-executed BUSY instructions')
-    .option('--db <file>', 'SQLite session database', process.env.BUSY_RUNNER_DB || '.busy/runs.sqlite');
+    .option('--db <file>', 'SQLite session database', process.env.BUSY_RUNNER_DB || join(homedir(), '.busy', 'runs.sqlite'));
   const execute = async (action: (runner: BusyRunner) => unknown | Promise<unknown>): Promise<void> => {
     let runner: BusyRunner | undefined;
     try {

@@ -83,7 +83,7 @@ busy run list
 
 A plain restart uses the original pinned program and starting inputs. `--file` loads an edited program; `--inputs` replaces starting values. Restart creates a new run and retains the old source and history. An active old run is cancelled only after the replacement is ready. Failed preparation leaves it intact.
 
-SQLite state defaults to `.busy/runs.sqlite` in the current directory. Use the same directory across invocations, set `BUSY_RUNNER_DB`, or pass `busy run --db /path/to/runs.sqlite ...`. Each accepted reply and resulting transition are committed together. The sense token prevents two callers from advancing the same exchange twice; it does not make external tool work exactly-once.
+SQLite state defaults to `~/.busy/runs.sqlite`, shared across working directories and worktrees for the current user. `BUSY_RUNNER_DB` overrides that default; an explicit `busy run --db /path/to/runs.sqlite ...` takes precedence over both. Existing per-directory databases are not automatically moved or imported: continue their runs with `--db /absolute/old/worktree/.busy/runs.sqlite` until a verified migration is performed. Source snapshots remain pinned in the database; moving the default does not upgrade a loaded program. Each accepted reply and resulting transition are committed together. The sense token prevents two callers from advancing the same exchange twice; it does not make external tool work exactly-once.
 
 ### Prepared interpretation
 
