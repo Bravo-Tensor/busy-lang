@@ -32,7 +32,10 @@ export interface RunEvent { seq: number; at: string; type: string; [key: string]
 export interface RunExchange extends Partial<Sense> {
   runId: string; status: RunState['status']; result?: Values | null;
   failure?: RunFailure;
+  recoveryGuidance?: string;
 }
+
+const recoveryGuidance = 'Failure recorded; the goal remains open. Diagnose the failed boundary and take the next authorized repair action. Check the owning Tool’s documented providers and setup before declaring it unavailable. Preserve partial effects and explicit no-retry limits; this guidance grants no new authority or automatic retry. Verify the repair before explicitly resuming this instruction. If blocked externally, record the dependency, owner and next action/checkpoint. Do not advance or imply completion while required work remains unmet.';
 
 /** Storage and control flow only. The caller owns execution and semantic judgments. */
 export class BusyRunner {
@@ -71,6 +74,7 @@ export class BusyRunner {
     // Also advertise the universal failure path when reopening a pre-existing run.
     const current = state.current ? { ...state.current, packet: { ...state.current.packet, failWith: structuredClone(failureSchema) } } : {};
     return { runId: state.id, status: state.status, ...current, ...(state.failure ? { failure: state.failure } : {}),
+      ...(state.status === 'failed' ? { recoveryGuidance } : {}),
       ...(state.status === 'completed' ? { result: state.result } : {}) };
   }
   sense(id: string): RunExchange { return this.exchange(this.state(id)); }
