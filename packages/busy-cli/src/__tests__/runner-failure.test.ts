@@ -131,3 +131,29 @@ it('offers failure to existing saved runs without changing their authored reply 
   expect(runner.cancel(first.runId, 'Ask the author to clarify').status).toBe('cancelled');
   expect(runner.receipt(first.runId)).toHaveProperty('failure');
 });
+
+
+it('keeps guidance inside failures and supplies it for legacy state without rewriting history', async () => {
+  const first = runner.start(await compileRun(join(dir, 'publish.busy.md')), { target: 'report' });
+  const failed = runner.fail(first.runId, first.token!, { reason: 'Missing tool dependency' });
+  expect(failed).not.toHaveProperty('recoveryGuidance');
+  expect(failed.failure!.recoveryGuidance).toContain('next authorized repair action');
+  expect(runner.inspect(first.runId).failure).toEqual(failed.failure);
+  expect(runner.receipt(first.runId).failure).toEqual(failed.failure);
+  runner.close();
+  const { DatabaseSync } = await import('node:sqlite');
+  const db = new DatabaseSync(join(dir, 'runs.sqlite'));
+  const row = db.prepare('SELECT state FROM runs WHERE id = ?').get(first.runId)!;
+  const legacy = JSON.parse(row.state as string);
+  delete legacy.failure.recoveryGuidance;
+  const stored = JSON.stringify(legacy);
+  db.prepare('UPDATE runs SET state = ? WHERE id = ?').run(stored, first.runId);
+  const events = db.prepare('SELECT record FROM events WHERE run_id = ? ORDER BY seq').all(first.runId);
+  runner = await BusyRunner.open(join(dir, 'runs.sqlite'));
+  expect(runner.sense(first.runId).failure).toEqual(failed.failure);
+  expect(runner.inspect(first.runId).failure).toEqual(failed.failure);
+  expect(runner.receipt(first.runId).failure).toEqual(failed.failure);
+  expect(db.prepare('SELECT state FROM runs WHERE id = ?').get(first.runId)!.state).toBe(stored);
+  expect(db.prepare('SELECT record FROM events WHERE run_id = ? ORDER BY seq').all(first.runId)).toEqual(events);
+  db.close();
+});

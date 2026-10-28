@@ -87,8 +87,8 @@ describe('busy run CLI', () => {
       reason: 'Workspace permission is missing', partialEffects: ['Local inspection only'], evidence: ['local/readback.json'],
     }));
     expect(failed).toMatchObject({ status: 'failed', pointer: first.pointer });
-    expect(failed.recoveryGuidance).toContain('next authorized repair action');
-    expect(failed.recoveryGuidance).toContain('no new authority or automatic retry');
+    expect(failed.failure.recoveryGuidance).toContain('next authorized repair action');
+    expect(failed.failure.recoveryGuidance).toContain('no new authority or automatic retry');
     expect(invoke(['sense', first.runId])).toEqual(failed);
     expect(raw(['emit', first.runId, failed.token, '{"ready":true,"limits":"later"}']).status).toBe(1);
     expect(raw(['resume', first.runId, first.token!]).status).toBe(1);
@@ -96,7 +96,9 @@ describe('busy run CLI', () => {
     expect(invoke(['sense', first.runId])).toEqual(failed);
     const resumed = invoke(['resume', first.runId, failed.token]);
     expect(resumed).toMatchObject({ status: 'waiting', pointer: first.pointer });
-    expect(resumed).not.toHaveProperty('recoveryGuidance');
+    expect(failed).not.toHaveProperty('recoveryGuidance');
+    expect(invoke(['inspect', first.runId]).failure).toBeNull();
+    expect(resumed).not.toHaveProperty('failure');
     expect(resumed.token).not.toBe(failed.token);
     const next = invoke(['emit', first.runId, resumed.token, '{"ready":true,"limits":"permission resolved"}']);
     expect(next.pointer.step).toBe('validate');
