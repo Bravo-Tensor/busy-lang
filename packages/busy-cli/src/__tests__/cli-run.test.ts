@@ -3,7 +3,7 @@ import { execFile, execFileSync, spawnSync } from 'node:child_process';
 import { promisify } from 'node:util';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { RunExchange } from '../runner/store.js';
 import { generateRun } from '../runner/compiler.js';
@@ -31,6 +31,28 @@ describe('busy run CLI', () => {
     return JSON.parse(result.stdout);
   };
   const start = (): RunExchange => invoke(['start', 'review.busy.md', '--inputs', 'inputs.json']);
+
+
+  it('advertises a shared user database and supports cross-directory runs with explicit overrides', () => {
+    const env = { ...process.env };
+    delete env.BUSY_RUNNER_DB;
+    const help = spawnSync(process.execPath, [cli, 'run', '--help'], { env, encoding: 'utf8' });
+    expect(help.status).toBe(0);
+    // Help reads the default without creating a database in the real user directory.
+    expect(help.stdout).toContain(join(homedir(), '.busy', 'runs.sqlite'));
+    const shared = join(dir, 'shared.sqlite');
+    const run = (cwd: string, args: string[]) => {
+      const output = spawnSync(process.execPath, [cli, 'run', ...args], {
+        cwd, env: { ...env, BUSY_RUNNER_DB: shared }, encoding: 'utf8', timeout: 10_000,
+      });
+      expect(output.status, output.stderr).toBe(0);
+      return JSON.parse(output.stdout);
+    };
+    const first = run(dir, ['start', 'review.busy.md', '--inputs', 'inputs.json']);
+    expect(run(root, ['sense', first.runId])).toEqual(first);
+    expect(run(root, ['--db', db, 'list'])).toEqual([]);
+    expect(run(root, ['list']).map((r: { runId: string }) => r.runId)).toContain(first.runId);
+  });
 
   it('runs entirely through separate CLI processes with JSON output and stdin replies', () => {
     let current = start();
