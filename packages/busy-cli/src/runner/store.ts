@@ -18,6 +18,7 @@ const failureSchema: ReplySchema = { type: 'object', properties: {
 }, required: ['reason'], additionalProperties: false };
 export interface RunFailure {
   id: string; reason: string; evidence: string[]; partialEffects: string[];
+  recoveryGuidance: string;
   pointer: Sense['pointer']; inputs: Values; stack: Frame[];
   /** The invoking frame's continuation; it has not executed while its child failed. */
   caller: { operation: string; step: string | null } | null;
@@ -33,6 +34,8 @@ export interface RunExchange extends Partial<Sense> {
   runId: string; status: RunState['status']; result?: Values | null;
   failure?: RunFailure;
 }
+
+const recoveryGuidance = 'Failure recorded; the goal remains open. Diagnose the failed boundary and take the next authorized repair action. Check the owning Tool’s documented providers and setup before declaring it unavailable. Preserve partial effects and explicit no-retry limits; this guidance grants no new authority or automatic retry. Verify the repair before explicitly resuming this instruction. If blocked externally, record the dependency, owner and next action/checkpoint. Do not advance or imply completion while required work remains unmet.';
 
 /** Storage and control flow only. The caller owns execution and semantic judgments. */
 export class BusyRunner {
@@ -65,7 +68,12 @@ export class BusyRunner {
   private state(id: string): RunState {
     const row = this.db.prepare('SELECT state FROM runs WHERE id = ?').get(id);
     if (!row) throw new Error(`Unknown run: ${id}`);
-    return JSON.parse(row.state as string) as RunState;
+    const state = JSON.parse(row.state as string) as RunState;
+    // Supply guidance for legacy failures without rewriting their stored history.
+    if (state.failure && !state.failure.recoveryGuidance) {
+      state.failure = { ...state.failure, recoveryGuidance };
+    }
+    return state;
   }
   private exchange(state: RunState): RunExchange {
     // Also advertise the universal failure path when reopening a pre-existing run.
@@ -181,7 +189,7 @@ export class BusyRunner {
       const value = report as { reason: string; evidence?: string[]; partialEffects?: string[] };
       if (!value.reason.trim()) throw new Error('Give a failure reason');
       const caller = state.stack.at(-2);
-      state.failure = { id: randomUUID(), reason: value.reason, evidence: value.evidence ?? [],
+      state.failure = { id: randomUUID(), reason: value.reason, recoveryGuidance, evidence: value.evidence ?? [],
         partialEffects: value.partialEffects ?? [], pointer: state.current!.pointer,
         inputs: state.inputs, stack: state.stack,
         caller: caller ? { operation: caller.operation, step: caller.step } : null };
